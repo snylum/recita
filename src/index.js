@@ -2,15 +2,9 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // Serve frontend
-    if (url.pathname === "/" || url.pathname.startsWith("/public")) {
-      return await serveAsset(url);
-    }
-
-    // Example API endpoint (you can expand this)
-    if (url.pathname === "/api/ping") {
-      return new Response(JSON.stringify({ msg: "pong" }), {
-        headers: { "Content-Type": "application/json" },
+    if (url.pathname === "/") {
+      return new Response(indexHtml, {
+        headers: { "Content-Type": "text/html" },
       });
     }
 
@@ -18,16 +12,87 @@ export default {
   },
 };
 
-// Serve static assets (from public/)
-async function serveAsset(url) {
-  if (url.pathname === "/") url.pathname = "/public/index.html";
+const indexHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Random Student Picker</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    textarea { width: 100%; height: 100px; }
+    button { margin: 5px; padding: 8px 12px; }
+    #results { margin-top: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>🎲 Random Student Picker</h1>
 
-  try {
-    const asset = await fetch(
-      new URL("." + url.pathname, import.meta.url),
-    );
-    return asset;
-  } catch {
-    return new Response("Asset not found", { status: 404 });
-  }
-}
+  <h3>Class Roster</h3>
+  <textarea id="roster" placeholder="Enter one student per line"></textarea>
+  <br />
+  <button onclick="loadRoster()">Load Roster</button>
+
+  <h3>Actions</h3>
+  <button onclick="pickRandom()">Pick Random Student</button>
+  <div id="current"></div>
+
+  <h3>Class Records</h3>
+  <table id="records">
+    <thead>
+      <tr><th>Name</th><th>Attendance</th><th>Recitation</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    let students = [];
+    let records = {};
+
+    function loadRoster() {
+      students = document.getElementById("roster").value.split("\\n").filter(s => s.trim() !== "");
+      records = {};
+      students.forEach(s => {
+        records[s] = { attendance: "Absent", recitation: 0 };
+      });
+      renderTable();
+    }
+
+    function pickRandom() {
+      if (students.length === 0) return alert("No students loaded!");
+      const idx = Math.floor(Math.random() * students.length);
+      const student = students[idx];
+      document.getElementById("current").innerHTML = \`<h2>🎉 \${student}</h2>
+        <button onclick="markPresent('\${student}')">Mark Present</button>
+        <button onclick="givePoints('\${student}', 5)">+5 pts</button>
+        <button onclick="givePoints('\${student}', 10)">+10 pts</button>\`;
+    }
+
+    function markPresent(name) {
+      records[name].attendance = "Present";
+      renderTable();
+    }
+
+    function givePoints(name, pts) {
+      records[name].attendance = "Present";
+      records[name].recitation += pts;
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.querySelector("#records tbody");
+      tbody.innerHTML = "";
+      for (const [name, data] of Object.entries(records)) {
+        tbody.innerHTML += \`<tr>
+          <td>\${name}</td>
+          <td>\${data.attendance}</td>
+          <td>\${data.recitation}</td>
+        </tr>\`;
+      }
+    }
+  </script>
+</body>
+</html>
+`;
