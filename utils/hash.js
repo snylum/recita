@@ -1,12 +1,10 @@
 export async function hashPassword(password) {
-  const enc = new TextEncoder().encode(password);
-  const digest = await crypto.subtle.digest("SHA-256", enc);
-  return Array.from(new Uint8Array(digest))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
+  const msgBuffer = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+  return btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
 }
 
-export async function verifyPassword(password, hash) {
-  const hashed = await hashPassword(password);
-  return hashed === hash;
+export async function verifyPassword(password, hashed) {
+  const attempt = await hashPassword(password);
+  return attempt === hashed;
 }
