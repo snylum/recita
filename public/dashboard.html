@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Recita - Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recita Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>Dashboard</h1>
-  <button id="logoutBtn">Logout</button>
+<body class="bg-gray-100 min-h-screen">
+  <nav class="bg-white shadow p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Recita</h1>
+    <button id="logoutBtn" class="text-red-500 hover:underline">Logout</button>
+  </nav>
 
-  <h2>Classes</h2>
-  <div id="classes"></div>
-  <input id="newClass" placeholder="New class">
-  <button id="addClassBtn">Add Class</button>
+  <main class="p-6">
+    <div class="bg-white rounded-xl shadow p-6 mb-6 max-w-md">
+      <h2 class="text-lg font-bold mb-4">Create Class</h2>
+      <form id="createClassForm" class="space-y-4">
+        <input id="className" type="text" placeholder="Class name" class="w-full p-3 border rounded-lg" required>
+        <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Create</button>
+      </form>
+    </div>
 
-  <h2>Students</h2>
-  <div id="students"></div>
-  <input id="newStudent" placeholder="New student">
-  <button id="addStudentBtn">Add Student</button>
-
-  <h2>Attendance</h2>
-  <button id="markPresent">Mark Present</button>
-  <button id="markAbsent">Mark Absent</button>
-  <button id="markSkip">Mark Skip</button>
-
-  <h2>Export</h2>
-  <button id="exportCSV">Download CSV</button>
-
+    <div>
+      <h2 class="text-lg font-bold mb-4">My Classes</h2>
+      <div id="classList" class="grid md:grid-cols-3 gap-4"></div>
+    </div>
+  </main>
   <script src="app.js"></script>
 </body>
 </html>
