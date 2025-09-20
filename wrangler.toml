@@ -1,13 +1,11 @@
 name = "recita"
-compatibility_date = "2023-12-01"
-
-[assets]
-directory = "./public"
-[site]
-bucket = "./public"
+compatibility_date = "2025-09-20"
 
 [[d1_databases]]
-binding = "DB"
-database_name = "recita-users"
-database_id = "dc1e30d0-5b1c-469c-a8e0-250d23d703cf"
+binding = "recita-users"          # used in your functions code/CLI
+database_name = "recita-users"    # your actual D1 database name
+database_id = "dc1e30d0-5b1c-469c-a8e0-250d23d703cf"    # from `npx wrangler d1 list`
 
+[site]
+bucket = "./public"
+entry-point = "functions"
