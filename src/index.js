@@ -1,98 +1,78 @@
 export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
+  async fetch(request) {
+    return new Response(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Speak Up – Random Picker</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body class="bg-gray-100 min-h-screen flex items-center justify-center">
+        <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-lg">
+          <h1 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            🎤 Speak Up
+          </h1>
+          <p class="text-gray-600 mb-6">Click below to randomly select a student for recitation.</p>
+          
+          <button 
+            onclick="pickStudent()" 
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+          >
+            Pick Student
+          </button>
 
-    if (url.pathname === "/") {
-      return new Response(indexHtml, {
-        headers: { "Content-Type": "text/html" },
-      });
-    }
+          <ul id="studentList" class="mt-6 divide-y divide-gray-200"></ul>
+        </div>
 
-    return new Response("Not found", { status: 404 });
+        <script>
+          // Example student list
+          let students = [
+            { name: "Alice", grade: "" },
+            { name: "Bob", grade: "" },
+            { name: "Charlie", grade: "" },
+            { name: "Diana", grade: "" }
+          ];
+
+          const studentList = document.getElementById("studentList");
+
+          function renderList() {
+            studentList.innerHTML = "";
+            students.forEach((s, i) => {
+              const li = document.createElement("li");
+              li.className = "flex justify-between items-center py-2 px-2 " + (s.picked ? "bg-blue-50" : "");
+              li.innerHTML = \`
+                <span class="font-medium text-gray-800">\${s.name}</span>
+                <input 
+                  type="number" 
+                  min="0" max="10" 
+                  value="\${s.grade}" 
+                  onchange="setGrade(\${i}, this.value)"
+                  class="w-16 border border-gray-300 rounded px-2 py-1 text-center"
+                >
+              \`;
+              studentList.appendChild(li);
+            });
+          }
+
+          function pickStudent() {
+            const index = Math.floor(Math.random() * students.length);
+            students.forEach(s => s.picked = false);
+            students[index].picked = true;
+            renderList();
+          }
+
+          function setGrade(i, val) {
+            students[i].grade = val;
+          }
+
+          renderList();
+        </script>
+      </body>
+      </html>
+    `, {
+      headers: { "content-type": "text/html" },
+    });
   },
 };
-
-const indexHtml = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Random Student Picker</title>
-  <style>
-    body { font-family: sans-serif; margin: 2rem; }
-    textarea { width: 100%; height: 100px; }
-    button { margin: 5px; padding: 8px 12px; }
-    #results { margin-top: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-  </style>
-</head>
-<body>
-  <h1>🎲 Random Student Picker</h1>
-
-  <h3>Class Roster</h3>
-  <textarea id="roster" placeholder="Enter one student per line"></textarea>
-  <br />
-  <button onclick="loadRoster()">Load Roster</button>
-
-  <h3>Actions</h3>
-  <button onclick="pickRandom()">Pick Random Student</button>
-  <div id="current"></div>
-
-  <h3>Class Records</h3>
-  <table id="records">
-    <thead>
-      <tr><th>Name</th><th>Attendance</th><th>Recitation</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <script>
-    let students = [];
-    let records = {};
-
-    function loadRoster() {
-      students = document.getElementById("roster").value.split("\\n").filter(s => s.trim() !== "");
-      records = {};
-      students.forEach(s => {
-        records[s] = { attendance: "Absent", recitation: 0 };
-      });
-      renderTable();
-    }
-
-    function pickRandom() {
-      if (students.length === 0) return alert("No students loaded!");
-      const idx = Math.floor(Math.random() * students.length);
-      const student = students[idx];
-      document.getElementById("current").innerHTML = \`<h2>🎉 \${student}</h2>
-        <button onclick="markPresent('\${student}')">Mark Present</button>
-        <button onclick="givePoints('\${student}', 5)">+5 pts</button>
-        <button onclick="givePoints('\${student}', 10)">+10 pts</button>\`;
-    }
-
-    function markPresent(name) {
-      records[name].attendance = "Present";
-      renderTable();
-    }
-
-    function givePoints(name, pts) {
-      records[name].attendance = "Present";
-      records[name].recitation += pts;
-      renderTable();
-    }
-
-    function renderTable() {
-      const tbody = document.querySelector("#records tbody");
-      tbody.innerHTML = "";
-      for (const [name, data] of Object.entries(records)) {
-        tbody.innerHTML += \`<tr>
-          <td>\${name}</td>
-          <td>\${data.attendance}</td>
-          <td>\${data.recitation}</td>
-        </tr>\`;
-      }
-    }
-  </script>
-</body>
-</html>
-`;
