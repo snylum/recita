@@ -4,4 +4,5 @@ compatibility_date = "2023-10-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "recita-users"
-database_id = "xxxx-xxxx-xxxx"  # Replace with actual ID after creating in Cloudflare
+database_id = "dc1e30d0-5b1c-469c-a8e0-250d23d703cf"  # Replace with actual ID after creating in Cloudflare
+
