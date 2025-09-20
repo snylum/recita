@@ -1,3 +1,6 @@
+-- Enable foreign keys in SQLite (important for D1)
+PRAGMA foreign_keys = ON;
+
 -- Teachers table (accounts)
 CREATE TABLE IF NOT EXISTS teachers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -5,7 +8,7 @@ CREATE TABLE IF NOT EXISTS teachers (
   password TEXT NOT NULL
 );
 
--- Sessions table (for login cookies)
+-- Sessions table (login cookies)
 CREATE TABLE IF NOT EXISTS sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   teacher_id INTEGER NOT NULL,
@@ -34,8 +37,8 @@ CREATE TABLE IF NOT EXISTS students (
 CREATE TABLE IF NOT EXISTS attendance (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   student_id INTEGER NOT NULL,
-  status TEXT NOT NULL,  -- "Present", "Absent", "Skip"
+  status TEXT NOT NULL CHECK (status IN ('Present', 'Absent', 'Skip')),
   points INTEGER DEFAULT 0,
-  created_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
