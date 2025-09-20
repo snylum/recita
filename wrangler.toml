@@ -2,12 +2,6 @@ name = "recita"
 pages_build_output_dir = "./public"
 
 [[d1_databases]]
-binding = "DB"               # This must match the code: env.DB
+binding = "DB" # this must match env.DB in your functions
 database_name = "recita-users"
-database_id = "dc1e30d0-5b1c-469c-a8e0-250d23d703cf"  # replace with your real DB ID
-
-[site]
-bucket = "./public"
-entry-point = "functions"
-
-
+database_id = "dc1e30d0-5b1c-469c-a8e0-250d23d703cf" # put your real database_id here
