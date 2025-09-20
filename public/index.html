@@ -36,4 +36,31 @@
       <!-- Random Picker -->
       <section>
         <h3>Random Picker</h3>
-        <button onclick="pickStudent()">Pick
+        <button onclick="pickStudent()">Pick Student</button>
+        <div id="picked-student"></div>
+      </section>
+
+      <!-- Export -->
+      <section>
+        <h3>Export Attendance/Grades</h3>
+        <button onclick="exportCSV()">Download CSV</button>
+      </section>
+    </div>
+
+  </div>
+
+  <!-- Student Action Popup -->
+  <div id="popup" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3 id="popup-student-name"></h3>
+      <p id="popup-class-name"></p>
+      <button onclick="markAttendance('Present', 5)">+5 pts</button>
+      <button onclick="markAttendance('Present', 10)">+10 pts</button>
+      <button onclick="markAttendance('Skip', 0)">Skip</button>
+      <button onclick="markAttendance('Absent', 0)">Absent</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
