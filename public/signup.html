@@ -13,13 +13,17 @@
       <input id="name" type="text" placeholder="Name" class="w-full p-3 border rounded-lg" required>
       <input id="email" type="email" placeholder="Email" class="w-full p-3 border rounded-lg" required>
       <input id="password" type="password" placeholder="Password" class="w-full p-3 border rounded-lg" required>
-      <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Sign Up</button>
+      <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
+        Sign Up
+      </button>
     </form>
     <p class="mt-4 text-center text-sm">
       Already have an account? 
       <a href="index.html" class="text-blue-500 hover:underline">Login</a>
     </p>
   </div>
-  <script src="app.js"></script>
+
+  <!-- IMPORTANT: load app.js as an ES module -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
