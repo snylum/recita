@@ -1,12 +1,12 @@
 import { verifyPassword } from "../../utils/hash.js";
 
 export async function onRequestPost({ request, env }) {
-  const { username, password } = await request.json();
+  const { email, password } = await request.json();
 
   const row = await env.DB.prepare(
-    "SELECT id, password FROM teachers WHERE username = ?"
+    "SELECT id, password FROM teachers WHERE email = ?"
   )
-    .bind(username)
+    .bind(email)
     .first();
 
   if (!row) {
@@ -24,14 +24,14 @@ export async function onRequestPost({ request, env }) {
     });
   }
 
-  return await createSession(username, env);
+  return await createSession(email, env);
 }
 
-async function createSession(username, env) {
+async function createSession(email, env) {
   const teacher = await env.DB.prepare(
-    "SELECT id FROM teachers WHERE username = ?"
+    "SELECT id FROM teachers WHERE email = ?"
   )
-    .bind(username)
+    .bind(email)
     .first();
 
   const sessionId = crypto.randomUUID();
