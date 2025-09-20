@@ -1,50 +1,29 @@
-export async function onRequestPost(context) {
+export async function onRequest(context) {
   const { request, env } = context;
-  const { action, name, sectionId } = await request.json();
+  const url = new URL(request.url);
 
-  if (action === "addSection") {
-    const teacherId = await getTeacherId(request, env);
-    await env.DB.prepare(
-      "INSERT INTO sections (teacher_id, name) VALUES (?, ?)"
-    ).bind(teacherId, name).run();
-    return new Response(JSON.stringify({ success: true }));
-  }
-
-  if (action === "addStudent") {
-    await env.DB.prepare(
-      "INSERT INTO students (section_id, name) VALUES (?, ?)"
-    ).bind(sectionId, name).run();
-    return new Response(JSON.stringify({ success: true }));
-  }
-
-  return new Response("Invalid action", { status: 400 });
-}
-
-export async function onRequestGet(context) {
-  const { request, env } = context;
-  const teacherId = await getTeacherId(request, env);
-  const sections = await env.DB.prepare(
-    "SELECT * FROM sections WHERE teacher_id = ?"
-  ).bind(teacherId).all();
-
-  for (let section of sections.results) {
-    section.students = await env.DB.prepare(
-      "SELECT * FROM students WHERE section_id = ?"
-    ).bind(section.id).all().then(r => r.results);
-  }
-
-  return new Response(JSON.stringify(sections.results), { status: 200 });
-}
-
-async function getTeacherId(request, env) {
-  const cookie = request.headers.get("Cookie") || "";
-  const sessionId = cookie.split("session=")[1]?.split(";")[0];
-  if (!sessionId) throw new Error("Not logged in");
-
-  const session = await env.DB.prepare(
-    "SELECT * FROM sessions WHERE id = ? AND expires_at > CURRENT_TIMESTAMP"
+  // Verify session
+  const sessionId = request.headers.get("Cookie")?.split("=")[1];
+  if (!sessionId) return new Response("Unauthorized", { status: 401 });
+  const teacher = await env.DB.prepare(
+    "SELECT teacher_id FROM sessions WHERE session_id = ? AND expires_at > datetime('now')"
   ).bind(sessionId).first();
+  if (!teacher) return new Response("Unauthorized", { status: 401 });
 
-  if (!session) throw new Error("Invalid session");
-  return session.teacher_id;
+  if (request.method === "POST" && url.pathname.endsWith("/class")) {
+    const { name } = await request.json();
+    await env.DB.prepare(
+      "INSERT INTO classes (teacher_id, name) VALUES (?, ?)"
+    ).bind(teacher.teacher_id, name).run();
+    return new Response("Class added", { status: 200 });
+  }
+
+  if (request.method === "GET" && url.pathname.endsWith("/classes")) {
+    const rows = await env.DB.prepare(
+      "SELECT * FROM classes WHERE teacher_id = ?"
+    ).bind(teacher.teacher_id).all();
+    return Response.json(rows.results);
+  }
+
+  return new Response("Not found", { status: 404 });
 }
