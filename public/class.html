@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <nav class="bg-white shadow p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Recita</h1>
+    <button onclick="window.location.href='dashboard.html'" class="text-blue-500 hover:underline">Back</button>
+  </nav>
+
+  <main class="p-6 max-w-3xl mx-auto">
+    <div class="bg-white rounded-xl shadow p-6 mb-6">
+      <h2 class="text-lg font-bold mb-4">Add Students</h2>
+      <textarea id="studentInput" placeholder="One student per line" class="w-full p-3 border rounded-lg h-32"></textarea>
+      <button id="addStudentsBtn" class="mt-4 w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Add Students</button>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6 mb-6">
+      <h2 class="text-lg font-bold mb-4">Students</h2>
+      <ul id="studentList" class="space-y-2"></ul>
+    </div>
+
+    <div class="flex gap-4">
+      <button onclick="window.location.href='recita.html'" class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600">Add Recita!</button>
+      <button id="exportCsvBtn" class="flex-1 bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600">Export CSV</button>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
