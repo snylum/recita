@@ -1,4 +1,6 @@
+// -------------------
 // Base helpers
+// -------------------
 async function apiFetch(url, options = {}) {
   const res = await fetch(url, {
     credentials: "include", // keep session cookies
@@ -9,67 +11,25 @@ async function apiFetch(url, options = {}) {
   return res.json();
 }
 
-// Redirect helper
 function go(url) {
   window.location.href = url;
 }
 
+// -------------------
+// IMPORT AUTH HANDLERS
+// -------------------
+import { setupLogin } from "./functions/auth/login.js";
+import { setupSignup } from "./functions/auth/signup.js";
+import { setupLogout } from "./functions/auth/logout.js";
+
+// -------------------
+// INIT APP
+// -------------------
 document.addEventListener("DOMContentLoaded", () => {
-  // -------------------
-  // LOGIN
-  // -------------------
-  const loginForm = document.getElementById("loginForm");
-  if (loginForm) {
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      try {
-        await apiFetch("/login", {
-          method: "POST",
-          body: JSON.stringify({ email, password }),
-        });
-        go("dashboard.html");
-      } catch (err) {
-        alert("Login failed: " + err.message);
-      }
-    });
-  }
-
-  // -------------------
-  // SIGNUP
-  // -------------------
-  const signupForm = document.getElementById("signupForm");
-  if (signupForm) {
-    signupForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("name").value;
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      try {
-        await apiFetch("/signup", {
-          method: "POST",
-          body: JSON.stringify({ name, email, password }),
-        });
-        go("dashboard.html");
-      } catch (err) {
-        alert("Signup failed: " + err.message);
-      }
-    });
-  }
-
-  // -------------------
-  // LOGOUT
-  // -------------------
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        await apiFetch("/logout", { method: "POST" });
-      } catch (_) {}
-      go("index.html");
-    });
-  }
+  // Setup authentication
+  setupLogin(apiFetch, go);
+  setupSignup(apiFetch, go);
+  setupLogout(apiFetch, go);
 
   // -------------------
   // DASHBOARD: CREATE + LIST CLASSES
@@ -92,13 +52,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Load classes on dashboard
     (async () => {
       try {
         const classes = await apiFetch("/classes");
         classes.forEach((c) => {
           const div = document.createElement("div");
-          div.className = "bg-white p-4 rounded-lg shadow hover:bg-gray-50 cursor-pointer";
+          div.className =
+            "bg-white p-4 rounded-lg shadow hover:bg-gray-50 cursor-pointer";
           div.textContent = c.name;
           div.addEventListener("click", () => {
             localStorage.setItem("classId", c.id);
@@ -141,7 +101,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Load students for class
     (async () => {
       try {
         const students = await apiFetch(`/students?classId=${classId}`);
@@ -158,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------
-  // RECITA PAGE: CREATE + PICK STUDENTS
+  // RECITA PAGE
   // -------------------
   const saveRecitaBtn = document.getElementById("saveRecitaBtn");
   const pickSection = document.getElementById("pickSection");
