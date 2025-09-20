@@ -1,13 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Recita</title>
+  <meta charset="UTF-8">
+  <title>Recita – Classroom Tool</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Recita</h1>
-  <p><a href="/signup.html">Sign Up</a></p>
-  <p><a href="/login.html">Log In</a></p>
-</body>
-</html>
+  <div id="app">
+
+    <!-- Login / Signup -->
+    <div id="auth-section">
+      <h2>Login</h2>
+      <input type="text" id="login-username" placeholder="Username">
+      <input type="password" id="login-password" placeholder="Password">
+      <button onclick="login()">Login</button>
+      <p>or</p>
+      <input type="text" id="signup-username" placeholder="New Username">
+      <input type="password" id="signup-password" placeholder="New Password">
+      <button onclick="signup()">Sign Up</button>
+    </div>
+
+    <!-- Main App -->
+    <div id="main-section" style="display:none;">
+      <h2>Welcome to Recita</h2>
+      <button onclick="logout()">Log Out</button>
+
+      <!-- Class Roster -->
+      <section>
+        <h3>Class Roster</h3>
+        <input type="text" id="class-name" placeholder="Section Name">
+        <button onclick="addClass()">Add Section</button>
+        <div id="classes"></div>
+      </section>
+
+      <!-- Random Picker -->
+      <section>
+        <h3>Random Picker</h3>
+        <button onclick="pickStudent()">Pick
