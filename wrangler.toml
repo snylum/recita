@@ -1,12 +1,13 @@
 name = "recita"
-compatibility_date = "2025-09-20"
+pages_build_output_dir = "./public"
 
 [[d1_databases]]
-binding = "DB"          # used in your functions code/CLI
-database_name = "recita-users"    # your actual D1 database name
-database_id = "dc1e30d0-5b1c-469c-a8e0-250d23d703cf"    # from `npx wrangler d1 list`
+binding = "DB"               # This must match the code: env.DB
+database_name = "recita-users"
+database_id = "dc1e30d0-5b1c-469c-a8e0-250d23d703cf"  # replace with your real DB ID
 
 [site]
 bucket = "./public"
 entry-point = "functions"
+
 
