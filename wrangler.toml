@@ -1,8 +1,3 @@
-name = "random-picker-worker"
+name = "speak-up"
 main = "src/index.js"
 compatibility_date = "2023-10-01"
-
-# Uncomment this later once you create a KV namespace in Cloudflare
-# [[kv_namespaces]]
-# binding = "RANDOM_PICKER"
-# id = "your-namespace-id"
