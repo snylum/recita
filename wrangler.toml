@@ -1,0 +1,9 @@
+// Place this file at the project root before using `wrangler`.
+// Replace `your-account-id` and `your-email` with your Cloudflare account details.
+name = "random-picker-worker"
+main = "src/index.js"
+compatibility_date = "2025-09-20"
+# Add this KV binding after you create the KV namespace (see README below)
+# [[kv_namespaces]]
+# binding = "RANDOM_PICKER"
+# id = "<KV_NAMESPACE_ID>"
