@@ -16,11 +16,59 @@ function go(url) {
 }
 
 // -------------------
-// IMPORT AUTH HANDLERS
+// AUTH FORMS
 // -------------------
-import { setupLogin } from "./functions/auth/login.js";
-import { setupSignup } from "./functions/auth/signup.js";
-import { setupLogout } from "./functions/auth/logout.js";
+function setupLogin(apiFetch, go) {
+  const form = document.getElementById("loginForm");
+  if (!form) return;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    try {
+      await apiFetch("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      go("dashboard.html");
+    } catch (err) {
+      alert("Login failed: " + err.message);
+    }
+  });
+}
+
+function setupSignup(apiFetch, go) {
+  const form = document.getElementById("signupForm");
+  if (!form) return;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    try {
+      await apiFetch("/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({ name, email, password }),
+      });
+      go("dashboard.html");
+    } catch (err) {
+      alert("Signup failed: " + err.message);
+    }
+  });
+}
+
+function setupLogout(apiFetch, go) {
+  const btn = document.getElementById("logoutBtn");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    try {
+      await apiFetch("/auth/logout", { method: "POST" });
+      go("index.html");
+    } catch (err) {
+      alert("Logout failed: " + err.message);
+    }
+  });
+}
 
 // -------------------
 // INIT APP
