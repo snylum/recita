@@ -4,23 +4,211 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/logo.png">
-
-  <title>Recita Login</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Recita - Random Student Picker</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-  <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-sm">
-    <h1 class="text-2xl font-bold mb-6 text-center">Recita Login</h1>
-    <form id="loginForm" class="space-y-4">
-      <input id="email" type="email" placeholder="Email" class="w-full p-3 border rounded-lg" required>
-      <input id="password" type="password" placeholder="Password" class="w-full p-3 border rounded-lg" required>
-      <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Login</button>
-    </form>
-    <p class="mt-4 text-center text-sm">
-      New here? 
-      <a href="signup.html" class="text-blue-500 hover:underline">Sign up</a>
-    </p>
+<body>
+  <!-- Header -->
+  <div style="text-align: center; margin-bottom: 20px;">
+    <h1 style="color: #2c3e50; margin-bottom: 10px;">Recita</h1>
+    <button id="showLoginBtn" style="width: auto; display: inline-block; margin: 0; padding: 8px 16px;">
+      Login / Sign Up
+    </button>
   </div>
+
+  <!-- Main Guest Mode Interface -->
+  <div id="app">
+    <div id="guestRecita">
+      <!-- Welcome Section -->
+      <h2>Try Recita Free!</h2>
+      <p style="margin-bottom: 20px; color: #666;">Random student picker for fair classroom participation. No login required to try it out!</p>
+      
+      <!-- Student Input -->
+      <div style="margin-bottom: 20px;">
+        <label for="guestStudentList" style="display: block; margin-bottom: 8px; font-weight: bold;">
+          Paste student names here (one per line):
+        </label>
+        <textarea 
+          id="guestStudentList" 
+          style="height: 120px; resize: vertical; font-family: monospace;" 
+          placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;...">
+        </textarea>
+      </div>
+      
+      <!-- Pick Button -->
+      <button id="guestPickBtn" style="background: #10b981; font-size: 16px;">
+        Pick Random Student
+      </button>
+      <button id="guestPickBtn:hover" style="display: none; background: #059669;"></button>
+
+      <!-- Called Students Section -->
+      <div style="margin-top: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h3 style="margin: 0;">Called Students</h3>
+          <button 
+            class="guestSaveBtn" 
+            style="width: auto; display: inline-block; margin: 0; padding: 8px 12px; background: #8b5cf6; font-size: 14px;">
+            Save Data / Export CSV
+          </button>
+        </div>
+        <div id="guestCalledStudents" style="min-height: 50px;">
+          <p style="color: #888; font-style: italic;">No students called yet</p>
+        </div>
+      </div>
+
+      <!-- Clear Data Button -->
+      <div style="text-align: center; margin-top: 20px;">
+        <button 
+          id="clearGuestData" 
+          style="width: auto; display: inline-block; margin: 0; padding: 8px 16px; background: #ef4444; font-size: 14px;">
+          Clear All Data
+        </button>
+      </div>
+
+      <!-- Features Info -->
+      <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 20px; margin-top: 30px;">
+        <h3 style="color: #1e40af; margin-top: 0;">Why Create an Account?</h3>
+        <ul style="color: #1e40af; margin: 15px 0; padding-left: 20px;">
+          <li>Save your class rosters permanently</li>
+          <li>Export attendance data to CSV</li>
+          <li>Track student participation over time</li>
+          <li>Create multiple classes</li>
+          <li>Access your data from any device</li>
+        </ul>
+        <button class="guestSaveBtn" style="width: auto; display: inline-block; margin: 10px 0 0 0; padding: 10px 16px; background: #2563eb;">
+          Get Started Free
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal (Hidden by default) -->
+  <div id="loginModal" class="modal" style="display: none;">
+    <div class="modal-content" style="width: 350px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">Welcome Back</h2>
+        <button id="closeLoginModal" style="width: 30px; height: 30px; margin: 0; padding: 0; background: #f3f4f6; color: #666; border: 1px solid #d1d5db;">×</button>
+      </div>
+      
+      <!-- Login Form -->
+      <div id="loginSection">
+        <form id="loginForm" style="margin-bottom: 15px;">
+          <input id="email" type="email" placeholder="Email" required>
+          <input id="password" type="password" placeholder="Password" required>
+          <button type="submit">Login</button>
+        </form>
+        <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
+          New here? 
+          <button type="button" id="showSignupBtn" style="background: none; border: none; color: #4f46e5; text-decoration: underline; padding: 0; width: auto; display: inline; cursor: pointer;">Create Account</button>
+        </p>
+      </div>
+
+      <!-- Signup Form (Hidden by default) -->
+      <div id="signupSection" style="display: none;">
+        <form id="signupForm" style="margin-bottom: 15px;">
+          <input id="signupName" type="text" placeholder="Full Name" required>
+          <input id="signupEmail" type="email" placeholder="Email" required>
+          <input id="signupPassword" type="password" placeholder="Password" required>
+          <button type="submit" style="background: #10b981;">Create Account</button>
+        </form>
+        <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
+          Already have an account? 
+          <button type="button" id="showLoginBtn2" style="background: none; border: none; color: #4f46e5; text-decoration: underline; padding: 0; width: auto; display: inline; cursor: pointer;">Login</button>
+        </p>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
+  <script>
+    // Modal controls
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginModal = document.getElementById('loginModal');
+      const showLoginBtn = document.getElementById('showLoginBtn');
+      const closeLoginModal = document.getElementById('closeLoginModal');
+      const showSignupBtn = document.getElementById('showSignupBtn');
+      const showLoginBtn2 = document.getElementById('showLoginBtn2');
+      const loginSection = document.getElementById('loginSection');
+      const signupSection = document.getElementById('signupSection');
+      const clearDataBtn = document.getElementById('clearGuestData');
+      
+      // Show login modal
+      showLoginBtn.addEventListener('click', () => {
+        loginModal.style.display = 'flex';
+        loginSection.style.display = 'block';
+        signupSection.style.display = 'none';
+      });
+      
+      // Close modal
+      closeLoginModal.addEventListener('click', () => {
+        loginModal.style.display = 'none';
+      });
+      
+      // Close modal when clicking outside
+      loginModal.addEventListener('click', (e) => {
+        if (e.target === loginModal) {
+          loginModal.style.display = 'none';
+        }
+      });
+      
+      // Switch to signup
+      showSignupBtn.addEventListener('click', () => {
+        loginSection.style.display = 'none';
+        signupSection.style.display = 'block';
+      });
+      
+      // Switch to login
+      showLoginBtn2.addEventListener('click', () => {
+        signupSection.style.display = 'none';
+        loginSection.style.display = 'block';
+      });
+      
+      // Clear guest data
+      clearDataBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to clear all student data? This cannot be undone.')) {
+          localStorage.removeItem('guestCalledStudents');
+          document.getElementById('guestStudentList').value = '';
+          document.getElementById('guestCalledStudents').innerHTML = '<p style="color: #888; font-style: italic;">No students called yet</p>';
+        }
+      });
+
+      // Setup signup form handler
+      const signupForm = document.getElementById('signupForm');
+      if (signupForm) {
+        signupForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const name = document.getElementById('signupName').value;
+          const email = document.getElementById('signupEmail').value;
+          const password = document.getElementById('signupPassword').value;
+          
+          console.log('Attempting signup for:', email);
+          
+          try {
+            const result = await apiFetch("/auth/signup", {
+              method: "POST",
+              body: JSON.stringify({ name, email, password }),
+            });
+            
+            console.log('Signup successful:', result);
+            go("dashboard.html");
+          } catch (err) {
+            console.error('Signup error:', err);
+            alert("Signup failed: " + err.message);
+          }
+        });
+      }
+
+      // Add hover effects with JavaScript since CSS can't target dynamic buttons
+      const pickBtn = document.getElementById('guestPickBtn');
+      if (pickBtn) {
+        pickBtn.addEventListener('mouseenter', () => {
+          pickBtn.style.background = '#059669';
+        });
+        pickBtn.addEventListener('mouseleave', () => {
+          pickBtn.style.background = '#10b981';
+        });
+      }
+    });
+  </script>
 </body>
 </html>
