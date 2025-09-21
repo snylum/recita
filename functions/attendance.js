@@ -40,11 +40,14 @@ export async function onRequestGet(context) {
     const url = new URL(context.request.url);
     console.log("GET attendance - pathname:", url.pathname, "search:", url.searchParams.toString());
 
-    if (url.pathname.endsWith("/pick")) {
+    const action = url.searchParams.get("action");
+    const recitaId = url.searchParams.get("recitaId");
+
+    // Handle both /attendance/pick?recitaId=X and /attendance?action=pick&recitaId=X
+    if (url.pathname.endsWith("/pick") || action === "pick") {
       const teacher = await getTeacherFromSession(context.request, context.env);
       if (!teacher) return new Response("Unauthorized", { status: 401 });
 
-      const recitaId = url.searchParams.get("recitaId");
       console.log("Pick request for recitaId:", recitaId);
 
       if (!recitaId) {
@@ -87,8 +90,9 @@ export async function onRequestGet(context) {
       return Response.json(random);
     }
 
-    console.log("GET request did not match /pick pattern");
-    return new Response("Not found", { status: 404 });
+    // Default response for GET /attendance (for testing)
+    console.log("GET /attendance - no action specified");
+    return Response.json({ message: "Attendance endpoint is working", availableActions: ["pick"] });
   } catch (error) {
     console.error("GET /attendance error:", error);
     return new Response("Internal server error", { status: 500 });
