@@ -282,13 +282,49 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 
 // --- Style Recita with logo ---
-document.querySelectorAll("body *").forEach(el => {
-  if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
-    if (el.textContent.includes("Recita")) {
-      el.innerHTML = el.textContent.replace(
-        /Recita/g,
-        '<img src="/logo.png" alt="Recita Logo" style="width:24px; height:24px; vertical-align:middle; margin-right:8px;"><span style="color:#fe731f; font-weight:bold;">Recita</span>'
-      );
+function addRecitaLogos() {
+  // Find all text nodes that contain "Recita"
+  const walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_TEXT,
+    null,
+    false
+  );
+
+  const textNodes = [];
+  let node;
+  while (node = walker.nextNode()) {
+    if (node.textContent.includes("Recita")) {
+      textNodes.push(node);
     }
   }
+
+  textNodes.forEach(textNode => {
+    const parent = textNode.parentNode;
+    if (parent && parent.tagName !== "SCRIPT" && parent.tagName !== "STYLE") {
+      const newHTML = textNode.textContent.replace(
+        /Recita/g,
+        '<img src="/logo.png" alt="Recita Logo" style="width:24px; height:24px; vertical-align:middle; margin-right:8px; display:inline-block;"><span style="color:#fe731f; font-weight:bold;">Recita</span>'
+      );
+      
+      // Only replace if the text actually changed
+      if (newHTML !== textNode.textContent) {
+        parent.innerHTML = parent.innerHTML.replace(textNode.textContent, newHTML);
+      }
+    }
+  });
+
+  // Also handle elements that might have "Recita" as their only content
+  document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div").forEach(el => {
+    if (el.textContent.trim() === "Recita" && el.children.length === 0) {
+      el.innerHTML = '<img src="/logo.png" alt="Recita Logo" style="width:24px; height:24px; vertical-align:middle; margin-right:8px; display:inline-block;"><span style="color:#fe731f; font-weight:bold;">Recita</span>';
+    }
+  });
+}
+
+// Run multiple times to ensure it catches everything
+document.addEventListener("DOMContentLoaded", () => {
+  addRecitaLogos();
+  setTimeout(addRecitaLogos, 100);
+  setTimeout(addRecitaLogos, 500);
 });
