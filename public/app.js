@@ -173,34 +173,62 @@ document.addEventListener("DOMContentLoaded", () => {
   const studentModal = document.getElementById("studentModal");
   const studentName = document.getElementById("selectedStudent");
 
+  // Debug logging
+  console.log("saveRecitaBtn found:", saveRecitaBtn);
+  console.log("pickStudentBtn found:", pickStudentBtn);
+  console.log("studentModal found:", studentModal);
+
   if (saveRecitaBtn) {
     const classId = localStorage.getItem("classId");
+    console.log("Class ID from localStorage:", classId);
+    
     saveRecitaBtn.addEventListener("click", async () => {
       const topic = document.getElementById("topicInput").value;
+      console.log("Saving recita with topic:", topic, "and classId:", classId);
+      
       try {
         const recita = await apiFetch("/attendance", {
           method: "POST",
           body: JSON.stringify({ classId, topic }),
         });
+        console.log("Recita saved, response:", recita);
         localStorage.setItem("recitaId", recita.id);
         pickSection.classList.remove("hidden");
       } catch (err) {
+        console.error("Save recita error:", err);
         alert("Failed to save recita: " + err.message);
       }
     });
   }
 
   if (pickStudentBtn && studentModal) {
+    console.log("Setting up pick student event listener");
+    
     pickStudentBtn.addEventListener("click", async () => {
       const recitaId = localStorage.getItem("recitaId");
+      console.log("Pick student clicked, recitaId:", recitaId);
+      
+      if (!recitaId) {
+        alert("No recita ID found. Please save a recita first.");
+        return;
+      }
+      
       try {
+        console.log("Making request to:", `/attendance/pick?recitaId=${recitaId}`);
         const student = await apiFetch(`/attendance/pick?recitaId=${recitaId}`);
-        if (!student) return alert("All students already picked!");
+        console.log("Student picked:", student);
+        
+        if (!student) {
+          alert("All students already picked!");
+          return;
+        }
+        
         studentName.textContent = student.name;
         studentModal.classList.remove("hidden");
         studentModal.classList.add("flex");
         studentModal.dataset.studentId = student.id;
       } catch (err) {
+        console.error("Pick student error:", err);
         alert("Failed to pick student: " + err.message);
       }
     });
@@ -210,18 +238,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const score = e.target.dataset.score;
         const recitaId = localStorage.getItem("recitaId");
         const studentId = studentModal.dataset.studentId;
+        
+        console.log("Recording score:", score, "for student:", studentId, "in recita:", recitaId);
+        
         try {
-          await apiFetch("/attendance/mark", {
+          await apiFetch("/attendance", {
             method: "POST",
             body: JSON.stringify({ recitaId, studentId, score }),
           });
+          console.log("Score recorded successfully");
         } catch (err) {
           console.error("Failed to record score", err);
+          alert("Failed to record score: " + err.message);
         }
+        
         studentModal.classList.add("hidden");
         studentModal.classList.remove("flex");
       }
     });
+  } else {
+    console.log("Pick student button or modal not found - event listener not attached");
   }
 
   // -------------------
@@ -231,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (exportBtn) {
     exportBtn.addEventListener("click", () => {
       const classId = localStorage.getItem("classId");
-      window.location.href = `/download-csv?classId=${classId}`;
+      window.location.href = `/export?classId=${classId}`;
     });
   }
 });
@@ -241,7 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const link = document.createElement("link");
   link.rel = "icon";
   link.type = "image/png";
-  link.href = "/logo.png"; // make sure logo.png is in your project root/public
+  link.href = "/logo.png";
   document.head.appendChild(link);
 })();
 
@@ -256,4 +292,3 @@ document.querySelectorAll("body *").forEach(el => {
     }
   }
 });
-
