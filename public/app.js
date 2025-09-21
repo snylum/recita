@@ -117,25 +117,49 @@ function showAuthenticatedStudentModal(student) {
     existingModal.remove();
   }
 
-  // Create modal with the exact same structure as working guest modals
+  // Create modal with proper overlay styling
   const modal = document.createElement("div");
-  modal.className = "modal";
   modal.id = "authenticatedStudentModal";
+  
+  // Add inline CSS for modal overlay and popup
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  `;
+  
   modal.innerHTML = `
-    <div class="modal-content">
-      <h3 style="margin-top: 0; margin-bottom: 15px;">Selected Student</h3>
+    <div style="
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      position: relative;
+    ">
+      <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 18px; font-weight: 600; text-align: center;">Selected Student</h3>
       <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
         <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${student.name}</p>
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <button class="authScoreBtn" data-score="10" data-student-id="${student.id}" style="margin: 0; background: #10b981; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">10 pts</button>
-        <button class="authScoreBtn" data-score="5" data-student-id="${student.id}" style="margin: 0; background: #10b981; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">5 pts</button>
-        <button class="authScoreBtn" data-score="custom" data-student-id="${student.id}" style="margin: 0; background: #8b5cf6; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Custom</button>
-        <button class="authScoreBtn" data-score="skip" data-student-id="${student.id}" style="margin: 0; background: #f59e0b; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Skip</button>
+        <button class="authScoreBtn" data-score="10" data-student-id="${student.id}" style="margin: 0; background: #10b981; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;">10 pts</button>
+        <button class="authScoreBtn" data-score="5" data-student-id="${student.id}" style="margin: 0; background: #10b981; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;">5 pts</button>
+        <button class="authScoreBtn" data-score="custom" data-student-id="${student.id}" style="margin: 0; background: #8b5cf6; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;">Custom</button>
+        <button class="authScoreBtn" data-score="skip" data-student-id="${student.id}" style="margin: 0; background: #f59e0b; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;">Skip</button>
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <button class="authScoreBtn" data-score="absent" data-student-id="${student.id}" style="margin: 0; background: #ef4444; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Absent</button>
-        <button id="cancelAuthScoring" style="margin: 0; background: #6b7280; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Cancel</button>
+        <button class="authScoreBtn" data-score="absent" data-student-id="${student.id}" style="margin: 0; background: #ef4444; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;">Absent</button>
+        <button id="cancelAuthScoring" style="margin: 0; background: #6b7280; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;">Cancel</button>
       </div>
     </div>
   `;
@@ -160,7 +184,10 @@ function showAuthenticatedStudentModal(student) {
       
       recordScore(studentId, score, student.name);
       modal.remove();
-    } else if (e.target.id === "cancelAuthScoring" || e.target === modal) {
+    } else if (e.target.id === "cancelAuthScoring") {
+      modal.remove();
+    } else if (e.target === modal) {
+      // Click on backdrop closes modal
       modal.remove();
     }
   });
