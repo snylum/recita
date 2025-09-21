@@ -45,6 +45,69 @@ function go(url) {
 }
 
 // -------------------
+// MODAL SYSTEM (consistent styling)
+// -------------------
+function showModal(content, title = null) {
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.innerHTML = `
+    <div class="modal-content">
+      ${title ? `<h3 style="margin-top: 0; margin-bottom: 15px;">${title}</h3>` : ''}
+      ${content}
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function showInfoModal(message, title = "Information") {
+  const existingModal = document.getElementById("infoModal");
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = showModal(`
+    <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">${message}</p>
+    <button onclick="this.closest('.modal').remove()" style="margin: 0;">OK</button>
+  `, title);
+  
+  modal.id = "infoModal";
+  
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+function showConfirmModal(message, onConfirm, onCancel = null, title = "Confirm") {
+  const modal = showModal(`
+    <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">${message}</p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <button id="confirmBtn" style="margin: 0; background: #ef4444;">Yes</button>
+      <button id="cancelBtn" style="margin: 0; background: #6b7280;">Cancel</button>
+    </div>
+  `, title);
+  
+  modal.querySelector('#confirmBtn').addEventListener('click', () => {
+    modal.remove();
+    if (onConfirm) onConfirm();
+  });
+  
+  modal.querySelector('#cancelBtn').addEventListener('click', () => {
+    modal.remove();
+    if (onCancel) onCancel();
+  });
+  
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.remove();
+      if (onCancel) onCancel();
+    }
+  });
+}
+
+// -------------------
 // AUTH FORMS
 // -------------------
 function setupLogin(apiFetch, callback) {
@@ -68,7 +131,7 @@ function setupLogin(apiFetch, callback) {
       callback("dashboard.html");
     } catch (err) {
       console.error('Login error:', err);
-      showInfoModal("Login failed: " + err.message);
+      showInfoModal("Login failed: " + err.message, "Login Error");
     }
   });
 }
@@ -95,7 +158,7 @@ function setupSignup(apiFetch, callback) {
       callback("dashboard.html");
     } catch (err) {
       console.error('Signup error:', err);
-      showInfoModal("Signup failed: " + err.message);
+      showInfoModal("Signup failed: " + err.message, "Signup Error");
     }
   });
 }
@@ -109,7 +172,7 @@ function setupLogout(apiFetch, go) {
       await apiFetch("/auth/logout", { method: "POST" });
       go("index.html");
     } catch (err) {
-      showInfoModal("Logout failed: " + err.message);
+      showInfoModal("Logout failed: " + err.message, "Logout Error");
     }
   });
 }
@@ -265,133 +328,67 @@ document.addEventListener("DOMContentLoaded", () => {
   // Clear all guest data functionality - UPDATED to include topic
   if (guestClearBtn) {
     guestClearBtn.addEventListener("click", () => {
-      const modal = document.createElement("div");
-      modal.className = "modal";
-      modal.innerHTML = `
-        <div class="modal-content">
-          <h3>Clear All Data</h3>
-          <p>This will clear your topic, student list, and all called students.</p>
-          <p>Are you sure you want to start over?</p>
-          <div style="margin-top: 20px;">
-            <button id="confirmClear" style="background: #ef4444; margin-bottom: 10px;">
-              Yes, Clear Everything
-            </button>
-            <button id="cancelClear" style="background: #6b7280;">
-              Cancel
-            </button>
-          </div>
-        </div>
-      `;
-
-      document.body.appendChild(modal);
-
-      document.getElementById("confirmClear").addEventListener("click", () => {
-        // Clear all localStorage data
-        localStorage.removeItem("guestTopic");
-        localStorage.removeItem("guestTopicDate");
-        localStorage.removeItem("guestTopicTime");
-        localStorage.removeItem("guestCalledStudents");
-        
-        // Reset UI
-        const topicInput = document.getElementById("guestTopic");
-        const topicStatus = document.getElementById("guestTopicStatus");
-        const studentListTextarea = document.getElementById("guestStudentList");
-        
-        if (topicInput) topicInput.value = "";
-        if (topicStatus) topicStatus.style.display = "none";
-        if (studentListTextarea) studentListTextarea.value = "";
-        
-        updateGuestCalledDisplay();
-        modal.remove();
-        
-        showInfoModal("All data cleared! You can start a new recitation session.");
-      });
-
-      document.getElementById("cancelClear").addEventListener("click", () => {
-        modal.remove();
-      });
-
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-          modal.remove();
-        }
-      });
+      showConfirmModal(
+        "This will clear your topic, student list, and all called students. Are you sure you want to start over?",
+        () => {
+          // Clear all localStorage data
+          localStorage.removeItem("guestTopic");
+          localStorage.removeItem("guestTopicDate");
+          localStorage.removeItem("guestTopicTime");
+          localStorage.removeItem("guestCalledStudents");
+          
+          // Reset UI
+          const topicInput = document.getElementById("guestTopic");
+          const topicStatus = document.getElementById("guestTopicStatus");
+          const studentListTextarea = document.getElementById("guestStudentList");
+          
+          if (topicInput) topicInput.value = "";
+          if (topicStatus) topicStatus.style.display = "none";
+          if (studentListTextarea) studentListTextarea.value = "";
+          
+          updateGuestCalledDisplay();
+          showInfoModal("All data cleared! You can start a new recitation session.");
+        },
+        null,
+        "Clear All Data"
+      );
     });
   }
   
   // Show export success modal after authentication
   function showExportSuccessModal() {
-    const modal = document.createElement("div");
-    modal.className = "modal";
-    modal.innerHTML = `
-      <div class="modal-content">
-        <h3>Account Created Successfully!</h3>
-        <p>You can now download your student data as a CSV file.</p>
-        <div style="margin-top: 20px;">
-          <button id="downloadCsvBtn" style="background: #22c55e; margin-bottom: 10px;">
-            Download CSV & Go to Dashboard
-          </button>
-          <button id="continueToDashboard" style="background: #3b82f6; margin-bottom: 10px;">
-            Continue to Dashboard
-          </button>
-        </div>
-      `;
-
-    document.body.appendChild(modal);
+    const modal = showModal(`
+      <p>You can now download your student data as a CSV file.</p>
+      <div style="margin-top: 20px;">
+        <button id="downloadCsvBtn" style="background: #22c55e; margin-bottom: 10px;">
+          Download CSV & Go to Dashboard
+        </button>
+        <button id="continueToDashboard" style="background: #3b82f6; margin-bottom: 10px;">
+          Continue to Dashboard
+        </button>
+      </div>
+    `, "Account Created Successfully!");
 
     // Download CSV functionality
-    document.getElementById("downloadCsvBtn").addEventListener("click", () => {
+    modal.querySelector("#downloadCsvBtn").addEventListener("click", () => {
       const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
       if (calledStudents.length === 0) {
-        // No data, just go to dashboard
         window.location.href = "dashboard.html";
         return;
       }
 
-      // Get topic information with fallbacks
-      const topic = localStorage.getItem("guestTopic") || "Demo Session";
-      const savedDate = localStorage.getItem("guestTopicDate");
-      const savedTime = localStorage.getItem("guestTopicTime");
-      
-      // Use current date/time if no saved data (e.g., in incognito mode)
-      const date = savedDate || new Date().toLocaleDateString();
-      const time = savedTime || new Date().toLocaleTimeString();
+      // Generate and download CSV
+      downloadGuestCSV();
 
-      // Generate CSV content with topic header
-      let csvContent = `Recitation Topic: "${topic}"\n`;
-      csvContent += `Date: ${date}\n`;
-      csvContent += `Time: ${time}\n\n`;
-      csvContent += "Student Name,Score,Time Called\n";
-      
-      calledStudents.forEach(student => {
-        let scoreDisplay = student.score;
-        if (student.score === 'custom' && student.customScore) {
-          scoreDisplay = student.customScore;
-        }
-        csvContent += `"${student.name}","${scoreDisplay}","${student.timestamp}"\n`;
-      });
-
-      // Create and download file
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const safeTopic = topic.replace(/[^a-zA-Z0-9]/g, '-');
-      a.download = `recita-${safeTopic}-${date.replace(/\//g, '-')}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-
-      // Go to dashboard after download
       setTimeout(() => {
         window.location.href = "dashboard.html";
       }, 1000);
     });
 
-    document.getElementById("continueToDashboard").addEventListener("click", () => {
+    modal.querySelector("#continueToDashboard").addEventListener("click", () => {
       window.location.href = "dashboard.html";
     });
 
-    // Close modal when clicking outside
     modal.addEventListener("click", (e) => {
       if (e.target === modal) {
         window.location.href = "dashboard.html";
@@ -412,32 +409,24 @@ document.addEventListener("DOMContentLoaded", () => {
       // Mark that user is trying to export
       localStorage.setItem('pendingExport', 'true');
       
-      const modal = document.createElement("div");
-      modal.className = "modal";
-      modal.innerHTML = `
-        <div class="modal-content">
-          <h3>Export Your Data</h3>
-          <p>You have <strong>${calledStudents.length} students</strong> in your list.</p>
-          <p>Create an account to download your data as a CSV file and save your progress.</p>
-          <div style="margin-top: 20px;">
-            <button id="authCreateAccount" style="background: #22c55e; margin-bottom: 10px;">
-              Create Account & Export
-            </button>
-            <button id="authLogin" style="background: #3b82f6; margin-bottom: 10px;">
-              Log In & Export
-            </button>
-            <button id="cancelAuth" style="background: #6b7280;">
-              Cancel
-            </button>
-          </div>
+      const modal = showModal(`
+        <p>You have <strong>${calledStudents.length} students</strong> in your list.</p>
+        <p>Create an account to download your data as a CSV file and save your progress.</p>
+        <div style="margin-top: 20px;">
+          <button id="authCreateAccount" style="background: #22c55e; margin-bottom: 10px;">
+            Create Account & Export
+          </button>
+          <button id="authLogin" style="background: #3b82f6; margin-bottom: 10px;">
+            Log In & Export
+          </button>
+          <button id="cancelAuth" style="background: #6b7280;">
+            Cancel
+          </button>
         </div>
-      `;
+      `, "Export Your Data");
 
-      document.body.appendChild(modal);
-
-      document.getElementById("authCreateAccount").addEventListener("click", () => {
+      modal.querySelector("#authCreateAccount").addEventListener("click", () => {
         modal.remove();
-        // Show signup modal
         const loginModal = document.getElementById('loginModal');
         const loginSection = document.getElementById('loginSection');
         const signupSection = document.getElementById('signupSection');
@@ -449,9 +438,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      document.getElementById("authLogin").addEventListener("click", () => {
+      modal.querySelector("#authLogin").addEventListener("click", () => {
         modal.remove();
-        // Show login modal
         const loginModal = document.getElementById('loginModal');
         const loginSection = document.getElementById('loginSection');
         const signupSection = document.getElementById('signupSection');
@@ -463,8 +451,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      document.getElementById("cancelAuth").addEventListener("click", () => {
-        localStorage.removeItem('pendingExport'); // Clean up pending export flag
+      modal.querySelector("#cancelAuth").addEventListener("click", () => {
+        localStorage.removeItem('pendingExport');
         modal.remove();
       });
 
@@ -477,63 +465,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   
-  // Info modal for messages (replaces alerts)
-  function showInfoModal(message) {
-    const existingModal = document.getElementById("infoModal");
-    if (existingModal) {
-      existingModal.remove();
-    }
-    
-    const modal = document.createElement("div");
-    modal.id = "infoModal";
-    modal.className = "modal";
-    modal.innerHTML = `
-      <div class="modal-content">
-        <h3 style="margin-top: 0; margin-bottom: 15px;">Information</h3>
-        <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">${message}</p>
-        <button id="closeInfoModal" style="margin: 0;">OK</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
-    
-    modal.addEventListener("click", (e) => {
-      if (e.target.id === "closeInfoModal" || e.target === modal) {
-        modal.remove();
-      }
-    });
-  }
-  
   // Guest modal functionality
   function showGuestStudentModal(studentName) {
-    // Remove any existing modal
     const existingModal = document.getElementById("guestStudentModal");
     if (existingModal) {
       existingModal.remove();
     }
 
-    // Create modal
-    const modal = document.createElement("div");
-    modal.id = "guestStudentModal";
-    modal.className = "modal";
-    modal.innerHTML = `
-      <div class="modal-content">
-        <h2 style="margin-top: 0; margin-bottom: 20px;">Selected Student</h2>
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
-          <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${studentName}</p>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-          <button class="guestScoreBtn" data-score="10" style="margin: 0; background: #10b981;">10 pts</button>
-          <button class="guestScoreBtn" data-score="5" style="margin: 0; background: #10b981;">5 pts</button>
-          <button class="guestScoreBtn" data-score="custom" style="margin: 0; background: #8b5cf6;">Custom</button>
-          <button class="guestScoreBtn" data-score="skip" style="margin: 0; background: #f59e0b;">Skip</button>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <button class="guestScoreBtn" data-score="absent" style="margin: 0; background: #ef4444;">Absent</button>
-          <button id="guestModalClose" style="margin: 0; background: #6b7280;">Cancel</button>
-        </div>
+    const modal = showModal(`
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+        <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${studentName}</p>
       </div>
-    `;
-    document.body.appendChild(modal);
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        <button class="guestScoreBtn" data-score="10" style="margin: 0; background: #10b981;">10 pts</button>
+        <button class="guestScoreBtn" data-score="5" style="margin: 0; background: #10b981;">5 pts</button>
+        <button class="guestScoreBtn" data-score="custom" style="margin: 0; background: #8b5cf6;">Custom</button>
+        <button class="guestScoreBtn" data-score="skip" style="margin: 0; background: #f59e0b;">Skip</button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button class="guestScoreBtn" data-score="absent" style="margin: 0; background: #ef4444;">Absent</button>
+        <button id="guestModalClose" style="margin: 0; background: #6b7280;">Cancel</button>
+      </div>
+    `, "Selected Student");
+    
+    modal.id = "guestStudentModal";
     
     // Add event listeners
     modal.addEventListener("click", (e) => {
@@ -541,8 +496,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let score = e.target.dataset.score;
         
         if (score === "custom") {
-          // Create custom score modal instead of prompt
-          showCustomScoreModal(studentName);
+          showCustomScoreModal(studentName, addToGuestCalledList);
           return;
         }
         
@@ -554,42 +508,36 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   
-  // Custom score modal
-  function showCustomScoreModal(studentName) {
-    const existingModal = document.getElementById("guestStudentModal");
+  // Custom score modal (reusable)
+  function showCustomScoreModal(studentName, callback) {
+    const existingModal = document.querySelector("#guestStudentModal, #customScoreModal");
     if (existingModal) {
       existingModal.remove();
     }
     
-    const modal = document.createElement("div");
-    modal.id = "customScoreModal";
-    modal.className = "modal";
-    modal.innerHTML = `
-      <div class="modal-content">
-        <h2 style="margin-top: 0; margin-bottom: 20px;">Custom Score</h2>
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
-          <p style="font-size: 20px; font-weight: bold; margin: 0; color: #2c3e50;">${studentName}</p>
-        </div>
-        <input id="customScoreInput" type="text" placeholder="Enter score (e.g., 7, Good, Excellent)" style="margin-bottom: 15px;" autofocus>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <button id="saveCustomScore" style="margin: 0; background: #8b5cf6;">Save Score</button>
-          <button id="cancelCustomScore" style="margin: 0; background: #6b7280;">Cancel</button>
-        </div>
+    const modal = showModal(`
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+        <p style="font-size: 20px; font-weight: bold; margin: 0; color: #2c3e50;">${studentName}</p>
       </div>
-    `;
-    document.body.appendChild(modal);
+      <input id="customScoreInput" type="text" placeholder="Enter score (e.g., 7, Good, Excellent)" style="margin-bottom: 15px;" autofocus>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button id="saveCustomScore" style="margin: 0; background: #8b5cf6;">Save Score</button>
+        <button id="cancelCustomScore" style="margin: 0; background: #6b7280;">Cancel</button>
+      </div>
+    `, "Custom Score");
     
-    const input = document.getElementById("customScoreInput");
+    modal.id = "customScoreModal";
+    
+    const input = modal.querySelector("#customScoreInput");
     input.focus();
     
     modal.addEventListener("click", (e) => {
       if (e.target.id === "saveCustomScore") {
         const customScore = input.value.trim();
         if (customScore) {
-          addToGuestCalledList(studentName, 'custom', customScore);
+          callback(studentName, 'custom', customScore);
           modal.remove();
         } else {
-          // Show error without alert
           input.style.borderColor = "#ef4444";
           input.placeholder = "Please enter a score";
         }
@@ -601,9 +549,44 @@ document.addEventListener("DOMContentLoaded", () => {
     // Handle Enter key
     input.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
-        document.getElementById("saveCustomScore").click();
+        modal.querySelector("#saveCustomScore").click();
       }
     });
+  }
+  
+  // CSV download function
+  function downloadGuestCSV() {
+    const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
+    if (calledStudents.length === 0) return;
+
+    const topic = localStorage.getItem("guestTopic") || "Demo Session";
+    const savedDate = localStorage.getItem("guestTopicDate");
+    const savedTime = localStorage.getItem("guestTopicTime");
+    
+    const date = savedDate || new Date().toLocaleDateString();
+    const time = savedTime || new Date().toLocaleTimeString();
+
+    let csvContent = `Recitation Topic: "${topic}"\n`;
+    csvContent += `Date: ${date}\n`;
+    csvContent += `Time: ${time}\n\n`;
+    csvContent += "Student Name,Score,Time Called\n";
+    
+    calledStudents.forEach(student => {
+      let scoreDisplay = student.score;
+      if (student.score === 'custom' && student.customScore) {
+        scoreDisplay = student.customScore;
+      }
+      csvContent += `"${student.name}","${scoreDisplay}","${student.timestamp}"\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeTopic = topic.replace(/[^a-zA-Z0-9]/g, '-');
+    a.download = `recita-${safeTopic}-${date.replace(/\//g, '-')}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
   
   // Add student to guest called list
@@ -616,7 +599,6 @@ document.addEventListener("DOMContentLoaded", () => {
       timestamp: new Date().toLocaleTimeString()
     };
     
-    // Add custom score if provided
     if (customScore) {
       studentEntry.customScore = customScore;
     }
@@ -632,9 +614,39 @@ document.addEventListener("DOMContentLoaded", () => {
     
     localStorage.setItem("guestCalledStudents", JSON.stringify(calledStudents));
     updateGuestCalledDisplay();
+    
+    // Check if all students called
+    checkIfAllStudentsCalled();
   }
   
-  // Update guest called students display
+  // Check if all students have been called (for export option)
+  function checkIfAllStudentsCalled() {
+    const studentListTextarea = document.getElementById("guestStudentList");
+    if (!studentListTextarea) return;
+    
+    const allStudents = studentListTextarea.value.trim().split('\n')
+      .map(name => name.trim())
+      .filter(name => name.length > 0);
+    
+    const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
+    const finalAnsweredStudents = calledStudents.filter(s => s.score !== 'skip');
+    
+    if (allStudents.length > 0 && finalAnsweredStudents.length >= allStudents.length) {
+      // All students have been called, show export option
+      setTimeout(() => {
+        showConfirmModal(
+          "All students have been called! Would you like to export your data as CSV?",
+          () => {
+            downloadGuestCSV();
+          },
+          null,
+          "Export Complete Session"
+        );
+      }, 500);
+    }
+  }
+  
+  // Update guest called students display - TABLE FORMAT
   function updateGuestCalledDisplay() {
     const container = document.getElementById("guestCalledStudents");
     if (!container) return;
@@ -646,15 +658,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     
-    // Create table
+    // Create table with requested order: name - score - time
     let tableHTML = `
       <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <thead>
           <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-            <th style="padding: 12px; text-align: left; font-weight: bold; color: #495057; width: 40px;">#</th>
             <th style="padding: 12px; text-align: left; font-weight: bold; color: #495057;">Student Name</th>
-            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 100px;">Score</th>
-            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 80px;">Time</th>
+            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 120px;">Score</th>
+            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 100px;">Time</th>
           </tr>
         </thead>
         <tbody>
@@ -682,7 +693,6 @@ document.addEventListener("DOMContentLoaded", () => {
       
       tableHTML += `
         <tr style="${rowStyle} border-bottom: 1px solid #dee2e6;">
-          <td style="padding: 10px 12px; color: #6c757d; font-weight: 500;">${index + 1}</td>
           <td style="padding: 10px 12px; font-weight: 500; color: #212529;">${student.name}</td>
           <td style="padding: 10px 12px; text-align: center;">
             <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${scoreBadgeStyle}">
@@ -719,7 +729,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         location.reload();
       } catch (err) {
-        showInfoModal("Failed to create class: " + err.message);
+        showInfoModal("Failed to create class: " + err.message, "Error");
       }
     });
 
@@ -745,11 +755,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------
-  // CLASS PAGE: ADD STUDENTS + LIST
+  // CLASS PAGE: ADD STUDENTS + LIST + RECITA HISTORY
   // -------------------
   const addStudentsBtn = document.getElementById("addStudentsBtn");
   const studentInput = document.getElementById("studentInput");
   const studentList = document.getElementById("studentList");
+  const recitaHistoryContainer = document.getElementById("recitaHistory");
 
   if (addStudentsBtn) {
     const classId = localStorage.getItem("classId");
@@ -769,7 +780,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         location.reload();
       } catch (err) {
-        showInfoModal("Failed to add students: " + err.message);
+        showInfoModal("Failed to add students: " + err.message, "Error");
       }
     });
 
@@ -787,15 +798,160 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Failed to load students", err);
       }
     })();
+
+    // Load recita history for this class
+    loadRecitaHistory(classId);
   }
 
+  // Function to load recita history
+  async function loadRecitaHistory(classId) {
+    if (!recitaHistoryContainer) return;
+    
+    try {
+      // This would need a new API endpoint - for now using mock data structure
+      // You'll need to create /functions/recitas.js to handle this
+      const recitas = await apiFetch(`/recitas?classId=${classId}`);
+      
+      if (recitas.length === 0) {
+        recitaHistoryContainer.innerHTML = `
+          <div style="text-align: center; padding: 20px; color: #666;">
+            <p>No recitation sessions yet.</p>
+            <p style="font-size: 14px;">Create a new recitation to get started!</p>
+          </div>
+        `;
+        return;
+      }
+
+      let historyHTML = '<div class="space-y-4">';
+      
+      recitas.forEach(recita => {
+        const attendanceCount = recita.attendance ? recita.attendance.length : 0;
+        const date = new Date(recita.created_at).toLocaleDateString();
+        const time = new Date(recita.created_at).toLocaleTimeString();
+        
+        historyHTML += `
+          <div class="bg-white p-4 rounded-lg shadow border">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <h4 class="font-semibold text-lg">${recita.topic}</h4>
+                <p class="text-sm text-gray-600">${date} at ${time}</p>
+                <p class="text-sm text-gray-500">${attendanceCount} students called</p>
+              </div>
+              <div class="flex flex-col gap-2">
+                <button onclick="exportRecitaCSV(${recita.id}, '${recita.topic}')" 
+                        class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                  Export CSV
+                </button>
+                <button onclick="viewRecitaDetails(${recita.id})" 
+                        class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                  View Details
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      
+      historyHTML += '</div>';
+      recitaHistoryContainer.innerHTML = historyHTML;
+      
+    } catch (err) {
+      console.error("Failed to load recita history", err);
+      recitaHistoryContainer.innerHTML = `
+        <div style="text-align: center; padding: 20px; color: #666;">
+          <p>Unable to load recitation history.</p>
+        </div>
+      `;
+    }
+  }
+
+  // Global functions for recita history buttons
+  window.exportRecitaCSV = async function(recitaId, topic) {
+    try {
+      window.location.href = `/export?recitaId=${recitaId}`;
+    } catch (err) {
+      showInfoModal("Failed to export recita: " + err.message, "Export Error");
+    }
+  };
+
+  window.viewRecitaDetails = async function(recitaId) {
+    try {
+      const details = await apiFetch(`/recitas/${recitaId}/details`);
+      
+      let detailsHTML = `
+        <h4 style="margin-bottom: 15px; font-size: 18px;">${details.topic}</h4>
+        <p style="margin-bottom: 10px; color: #666;">
+          ${new Date(details.created_at).toLocaleDateString()} at ${new Date(details.created_at).toLocaleTimeString()}
+        </p>
+      `;
+      
+      if (details.attendance && details.attendance.length > 0) {
+        detailsHTML += `
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <thead>
+              <tr style="background: #f8f9fa;">
+                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Student</th>
+                <th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">Score</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        
+        details.attendance
+          .sort((a, b) => a.student_name.localeCompare(b.student_name))
+          .forEach((record, index) => {
+            const rowStyle = index % 2 === 0 ? "background: #fff;" : "background: #f8f9fa;";
+            let scoreDisplay = record.score || 'No score';
+            let scoreStyle = 'color: #666;';
+            
+            if (record.score === 'absent') {
+              scoreDisplay = 'Absent';
+              scoreStyle = 'color: #dc3545; font-weight: bold;';
+            } else if (record.score === 'skip') {
+              scoreDisplay = 'Skip';
+              scoreStyle = 'color: #ffc107; font-weight: bold;';
+            } else if (parseInt(record.score)) {
+              scoreDisplay = record.score + ' pts';
+              scoreStyle = 'color: #28a745; font-weight: bold;';
+            }
+            
+            detailsHTML += `
+              <tr style="${rowStyle}">
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">${record.student_name}</td>
+                <td style="padding: 8px; text-align: center; border-bottom: 1px solid #eee; ${scoreStyle}">
+                  ${scoreDisplay}
+                </td>
+              </tr>
+            `;
+          });
+        
+        detailsHTML += `
+            </tbody>
+          </table>
+        `;
+      } else {
+        detailsHTML += '<p style="color: #666; margin-top: 15px;">No students were called in this session.</p>';
+      }
+      
+      detailsHTML += `
+        <div style="margin-top: 20px; text-align: center;">
+          <button onclick="this.closest('.modal').remove()" style="margin: 0;">Close</button>
+        </div>
+      `;
+      
+      showModal(detailsHTML, "Recitation Details");
+      
+    } catch (err) {
+      showInfoModal("Failed to load recita details: " + err.message, "Error");
+    }
+  };
+
   // -------------------
-  // RECITA PAGE - FIXED VERSION
+  // RECITA PAGE - ENHANCED VERSION
   // -------------------
   const saveRecitaBtn = document.getElementById("saveRecitaBtn");
   const pickSection = document.getElementById("pickSection");
 
-  // Debug logging
   console.log("saveRecitaBtn found:", !!saveRecitaBtn);
   console.log("pickSection found:", !!pickSection);
 
@@ -810,14 +966,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (pickSection) {
         pickSection.classList.remove("hidden");
       }
-      // Show current recita info
       displayRecitaStatus();
     }
     
     saveRecitaBtn.addEventListener("click", async () => {
       const topicInput = document.getElementById("topicInput");
       if (!topicInput) {
-        showInfoModal("Topic input not found!");
+        showInfoModal("Topic input not found!", "Error");
         return;
       }
       
@@ -830,46 +985,35 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       try {
-        // Convert classId to integer (your server expects this)
         const numericClassId = parseInt(classId, 10);
-        
         console.log("Sending to server:", { topic, classId: numericClassId });
         
-        // Send only the fields your server expects
         const response = await apiFetch("/attendance", {
           method: "POST",
           body: JSON.stringify({ 
             topic: topic,
-            classId: numericClassId  // Only send what server expects
+            classId: numericClassId
           }),
         });
         
         console.log("Server response:", response);
-        console.log("Response keys:", Object.keys(response || {}));
-        
-        // Your server returns { id: lastRowId, topic: body.topic }
         const recitaId = response.id;
         
         if (!recitaId) {
           console.error("No ID in server response:", response);
-          showInfoModal("Recita saved but ID not found. Please refresh and try again.");
+          showInfoModal("Recita saved but ID not found. Please refresh and try again.", "Error");
           return;
         }
         
         console.log("Got recita ID:", recitaId);
         
-        // Store recita info in localStorage
         localStorage.setItem("recitaId", recitaId.toString());
         localStorage.setItem("recitaTopic", topic);
         localStorage.setItem("recitaDate", new Date().toLocaleDateString());
         localStorage.setItem("recitaTime", new Date().toLocaleTimeString());
         
-        console.log("Stored in localStorage - ID:", localStorage.getItem("recitaId"));
-        
-        // Clear any previous called students for this new recita
         localStorage.removeItem("calledStudents");
         
-        // Clear existing called students display if it exists
         const existingContainer = document.getElementById("calledStudentsContainer");
         if (existingContainer) {
           existingContainer.remove();
@@ -879,15 +1023,12 @@ document.addEventListener("DOMContentLoaded", () => {
           pickSection.classList.remove("hidden");
         }
         
-        // Update the display
         displayRecitaStatus();
-        
-        showInfoModal(`Recita "${topic}" saved successfully!`);
+        showInfoModal(`Recita "${topic}" saved successfully!`, "Success");
         
       } catch (err) {
         console.error("Save recita error:", err);
-        console.error("Error details:", err.message, err.stack);
-        showInfoModal("Failed to save recita: " + err.message);
+        showInfoModal("Failed to save recita: " + err.message, "Error");
       }
     });
   }
@@ -900,15 +1041,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const recitaId = localStorage.getItem("recitaId");
     
     if (topic && date && time && recitaId) {
-      // Try to find or create a status display element
       let statusElement = document.getElementById("recitaStatus");
       if (!statusElement) {
-        // Create status element if it doesn't exist
         statusElement = document.createElement("div");
         statusElement.id = "recitaStatus";
         statusElement.className = "bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4";
         
-        // Insert after the save button or at the top of pick section
         const saveBtn = document.getElementById("saveRecitaBtn");
         const pickSectionEl = document.getElementById("pickSection");
         
@@ -925,9 +1063,14 @@ document.addEventListener("DOMContentLoaded", () => {
             <strong>Current Recita:</strong> ${topic}<br>
             <small class="text-green-600">${date} at ${time}</small>
           </div>
-          <button id="editRecitaBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-sm">
-            ✏️ Edit
-          </button>
+          <div class="flex gap-2">
+            <button id="editRecitaBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-sm">
+              Edit
+            </button>
+            <button id="exportCurrentRecitaBtn" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm">
+              Export CSV
+            </button>
+          </div>
         </div>
       `;
       
@@ -942,10 +1085,18 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       }
+
+      // Add export functionality for current recita
+      const exportBtn = document.getElementById("exportCurrentRecitaBtn");
+      if (exportBtn) {
+        exportBtn.addEventListener("click", () => {
+          window.location.href = `/export?recitaId=${recitaId}`;
+        });
+      }
     }
   }
 
-  // Set up pick student event listener using event delegation
+  // Pick student event listener
   console.log("Setting up pick student event listener");
   
   document.addEventListener("click", async (e) => {
@@ -955,15 +1106,9 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const recitaId = localStorage.getItem("recitaId");
       console.log("Pick student clicked, recitaId from localStorage:", recitaId);
-      console.log("All localStorage keys:", Object.keys(localStorage));
-      console.log("localStorage recitaId type:", typeof recitaId);
       
       if (!recitaId || recitaId === 'null' || recitaId === 'undefined') {
-        console.error("No valid recita ID found. localStorage contents:", {
-          recitaId: localStorage.getItem("recitaId"),
-          recitaTopic: localStorage.getItem("recitaTopic"),
-          allKeys: Object.keys(localStorage)
-        });
+        console.error("No valid recita ID found");
         showInfoModal("No recita ID found. Please save a recita first.");
         return;
       }
@@ -975,83 +1120,102 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Student picked:", student);
         
         if (!student) {
-          showInfoModal("All students already picked!");
+          // All students called - offer export
+          showConfirmModal(
+            "All students have been called! Would you like to export this recitation as CSV?",
+            () => {
+              window.location.href = `/export?recitaId=${recitaId}`;
+            },
+            null,
+            "All Students Called"
+          );
           return;
         }
         
-        const studentName = document.getElementById("selectedStudent");
-        const studentModal = document.getElementById("studentModal");
-        
-        if (studentName && studentModal) {
-          studentName.textContent = student.name;
-          studentModal.classList.remove("hidden");
-          studentModal.classList.add("flex");
-          studentModal.dataset.studentId = student.id;
-        } else {
-          console.error("Student modal elements not found");
-          showInfoModal(`Selected student: ${student.name}`);
-        }
+        showStudentModal(student);
       } catch (err) {
         console.error("Pick student error:", err);
-        showInfoModal("Failed to pick student: " + err.message);
+        showInfoModal("Failed to pick student: " + err.message, "Error");
       }
     }
   });
 
-  // Handle score recording
-  document.addEventListener("click", async (e) => {
-    if (e.target.classList.contains("scoreBtn")) {
-      const score = e.target.dataset.score;
-      const recitaId = localStorage.getItem("recitaId");
-      const studentModal = document.getElementById("studentModal");
-      const studentId = studentModal ? studentModal.dataset.studentId : null;
-      const studentName = studentModal ? document.getElementById("selectedStudent").textContent : null;
-      
-      console.log("Recording score:", score, "for student:", studentId, "in recita:", recitaId);
-      
-      if (!recitaId || !studentId) {
-        showInfoModal("Missing recita or student ID");
-        return;
-      }
-      
-      try {
-        await apiFetch("/attendance", {
-          method: "POST",
-          body: JSON.stringify({ recitaId, studentId, score }),
-        });
-        console.log("Score recorded successfully");
+  // Show student modal with enhanced scoring options
+  function showStudentModal(student) {
+    const modal = showModal(`
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+        <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${student.name}</p>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        <button class="scoreBtn" data-score="10" data-student-id="${student.id}" style="margin: 0; background: #10b981;">10 pts</button>
+        <button class="scoreBtn" data-score="5" data-student-id="${student.id}" style="margin: 0; background: #10b981;">5 pts</button>
+        <button class="scoreBtn" data-score="custom" data-student-id="${student.id}" style="margin: 0; background: #8b5cf6;">Custom</button>
+        <button class="scoreBtn" data-score="skip" data-student-id="${student.id}" style="margin: 0; background: #f59e0b;">Skip</button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button class="scoreBtn" data-score="absent" data-student-id="${student.id}" style="margin: 0; background: #ef4444;">Absent</button>
+        <button id="cancelScoring" style="margin: 0; background: #6b7280;">Cancel</button>
+      </div>
+    `, "Selected Student");
+    
+    modal.addEventListener("click", (e) => {
+      if (e.target.classList.contains("scoreBtn")) {
+        const score = e.target.dataset.score;
+        const studentId = e.target.dataset.studentId;
         
-        // Add to called students list
-        addToCalledStudentsList(studentName, score);
-        
-        if (studentModal) {
-          studentModal.classList.add("hidden");
-          studentModal.classList.remove("flex");
+        if (score === "custom") {
+          showCustomScoreModal(student.name, (name, scoreType, customScore) => {
+            recordScore(studentId, scoreType, student.name, customScore);
+          });
+          return;
         }
-      } catch (err) {
-        console.error("Failed to record score", err);
-        showInfoModal("Failed to record score: " + err.message);
+        
+        recordScore(studentId, score, student.name);
+        modal.remove();
+      } else if (e.target.id === "cancelScoring" || e.target === modal) {
+        modal.remove();
       }
-    }
-  });
+    });
+  }
 
-  // Function to add student to the called list
-  function addToCalledStudentsList(studentName, score) {
+  // Record score function
+  async function recordScore(studentId, score, studentName, customScore = null) {
+    const recitaId = localStorage.getItem("recitaId");
+    
+    if (!recitaId || !studentId) {
+      showInfoModal("Missing recita or student ID", "Error");
+      return;
+    }
+    
+    try {
+      await apiFetch("/attendance", {
+        method: "POST",
+        body: JSON.stringify({ recitaId, studentId, score }),
+      });
+      
+      console.log("Score recorded successfully");
+      addToCalledStudentsList(studentName, score, customScore);
+      
+    } catch (err) {
+      console.error("Failed to record score", err);
+      showInfoModal("Failed to record score: " + err.message, "Error");
+    }
+  }
+
+  // Add student to called list - ENHANCED TABLE FORMAT
+  function addToCalledStudentsList(studentName, score, customScore = null) {
     if (!studentName) return;
     
-    // Get or create the called students container
     let calledContainer = document.getElementById("calledStudentsContainer");
     if (!calledContainer) {
-      // Create the container
       calledContainer = document.createElement("div");
       calledContainer.id = "calledStudentsContainer";
       calledContainer.className = "mt-6";
       calledContainer.innerHTML = `
         <h3 class="text-lg font-semibold mb-3">Called Students</h3>
-        <div id="calledStudentsList" class="space-y-2"></div>
+        <div id="calledStudentsList"></div>
       `;
       
-      // Insert after pick section or at the end of the page
       const pickSection = document.getElementById("pickSection");
       if (pickSection && pickSection.parentNode) {
         pickSection.parentNode.insertBefore(calledContainer, pickSection.nextSibling);
@@ -1060,18 +1224,17 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
     
-    const calledList = document.getElementById("calledStudentsList");
-    if (!calledList) return;
-    
-    // Get existing called students from localStorage
     const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
     
-    // Add new student
     const studentEntry = {
       name: studentName,
       score: score,
       timestamp: new Date().toLocaleTimeString()
     };
+    
+    if (customScore) {
+      studentEntry.customScore = customScore;
+    }
     
     calledStudents.push(studentEntry);
     
@@ -1082,14 +1245,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return lastNameA.localeCompare(lastNameB);
     });
     
-    // Save back to localStorage
     localStorage.setItem("calledStudents", JSON.stringify(calledStudents));
-    
-    // Update the display
     updateCalledStudentsDisplay();
   }
   
-  // Function to update the called students display
+  // Update called students display - TABLE FORMAT (name - score - time)
   function updateCalledStudentsDisplay() {
     const calledList = document.getElementById("calledStudentsList");
     if (!calledList) return;
@@ -1097,59 +1257,76 @@ document.addEventListener("DOMContentLoaded", () => {
     const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
     
     if (calledStudents.length === 0) {
-      calledList.innerHTML = '<p class="text-gray-500 italic">No students called yet</p>';
+      calledList.innerHTML = '<p style="color: #666; font-style: italic; text-align: center;">No students called yet</p>';
       return;
     }
     
-    calledList.innerHTML = calledStudents.map((student, index) => {
+    let tableHTML = `
+      <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <thead>
+          <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+            <th style="padding: 12px; text-align: left; font-weight: bold; color: #495057;">Student Name</th>
+            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 120px;">Score</th>
+            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 100px;">Time</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    calledStudents.forEach((student, index) => {
       let scoreDisplay = student.score;
-      let scoreClass = "bg-gray-100";
+      let scoreBadgeStyle = "background: #e9ecef; color: #495057;";
       
-      // Style different score types
       if (student.score === 'absent') {
-        scoreClass = "bg-red-100 text-red-800";
+        scoreBadgeStyle = "background: #f8d7da; color: #721c24;";
         scoreDisplay = "Absent";
       } else if (student.score === 'skip') {
-        scoreClass = "bg-yellow-100 text-yellow-800";
+        scoreBadgeStyle = "background: #fff3cd; color: #856404;";
         scoreDisplay = "Skip";
       } else if (student.score === 'custom') {
-        scoreClass = "bg-purple-100 text-purple-800";
-        scoreDisplay = "Custom";
+        scoreBadgeStyle = "background: #e2e3ff; color: #5a67d8;";
+        scoreDisplay = student.customScore || "Custom";
       } else if (parseInt(student.score)) {
-        scoreClass = "bg-green-100 text-green-800";
+        scoreBadgeStyle = "background: #d1f2eb; color: #155724;";
         scoreDisplay = student.score + " pts";
       }
       
-      return `
-        <div class="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm border">
-          <div class="flex items-center space-x-3">
-            <span class="text-sm text-gray-500 w-6">${index + 1}.</span>
-            <span class="font-medium">${student.name}</span>
-            <span class="text-xs text-gray-400">${student.timestamp}</span>
-          </div>
-          <span class="px-2 py-1 rounded text-sm ${scoreClass}">
-            ${scoreDisplay}
-          </span>
-        </div>
+      const rowStyle = index % 2 === 0 ? "background: #ffffff;" : "background: #f8f9fa;";
+      
+      tableHTML += `
+        <tr style="${rowStyle} border-bottom: 1px solid #dee2e6;">
+          <td style="padding: 10px 12px; font-weight: 500; color: #212529;">${student.name}</td>
+          <td style="padding: 10px 12px; text-align: center;">
+            <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${scoreBadgeStyle}">
+              ${scoreDisplay}
+            </span>
+          </td>
+          <td style="padding: 10px 12px; text-align: center; font-size: 12px; color: #6c757d;">${student.timestamp}</td>
+        </tr>
       `;
-    }).join('');
+    });
+    
+    tableHTML += `
+        </tbody>
+      </table>
+    `;
+    
+    calledList.innerHTML = tableHTML;
   }
   
   // Initialize called students display on page load
   if (document.getElementById("pickSection")) {
-    // Small delay to ensure DOM is ready
     setTimeout(() => {
       const existingCalledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
       if (existingCalledStudents.length > 0) {
-        // Create container if students exist
-        addToCalledStudentsList("", ""); // This will create the container
+        addToCalledStudentsList("", "", ""); // Creates container
         updateCalledStudentsDisplay();
       }
     }, 500);
   }
 
   // -------------------
-  // EXPORT CSV
+  // EXPORT CSV - ENHANCED
   // -------------------
   const exportBtn = document.getElementById("exportCsvBtn");
   if (exportBtn) {
@@ -1159,6 +1336,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showInfoModal("No class selected");
         return;
       }
+      // Export all recitas for this class
       window.location.href = `/export?classId=${classId}`;
     });
   }
@@ -1175,21 +1353,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // --- Style Recita with logo ---
 function addRecitaLogos() {
-  // Skip if already processed
   if (document.body.dataset.recitaLogosProcessed === 'true') {
     return;
   }
 
-  // Process each element that contains "Recita" only once
   document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button").forEach(el => {
-    // Skip if already processed or contains images
     if (el.dataset.recitaProcessed === 'true' || el.querySelector('img[alt="Recita Logo"]')) {
       return;
     }
 
-    // Only process if the element directly contains "Recita" text
     if (el.textContent.includes("Recita") && el.children.length === 0) {
-      // Get computed font size for this element
       const fontSize = window.getComputedStyle(el).fontSize;
       
       el.innerHTML = el.textContent.replace(
@@ -1197,16 +1370,13 @@ function addRecitaLogos() {
         `<img src="/logo.png" alt="Recita Logo" style="height:${fontSize}; width:auto; vertical-align:middle; margin-right:0.3em; display:inline-block;"><span style="color:#fe731f; font-weight:bold;">Recita</span>`
       );
       
-      // Mark as processed
       el.dataset.recitaProcessed = 'true';
     }
   });
 
-  // Mark body as processed
   document.body.dataset.recitaLogosProcessed = 'true';
 }
 
-// Run multiple times to ensure it catches everything
 document.addEventListener("DOMContentLoaded", () => {
   addRecitaLogos();
   setTimeout(addRecitaLogos, 100);
