@@ -1,18 +1,42 @@
-console.log("Making request to:", `/attendance/pick?recitaId=${recitaId}`);
-        const student = await apiFetch(`/attendance/pick?recitaId=${recitaId}`);// -------------------
+// -------------------
 // Base helpers
 // -------------------
 async function apiFetch(url, options = {}) {
+  console.log('Making API request to:', url);
+  
   const res = await fetch(url, {
     credentials: "include", // keep session cookies
     headers: { "Content-Type": "application/json" },
     ...options,
   });
-  if (!res.ok) throw new Error(await res.text());
+  
+  console.log('Response status:', res.status);
+  console.log('Response URL:', res.url);
+  
+  // Check if we got redirected to login (common sign of auth failure)
+  if (res.url.includes('login') || res.url.includes('index.html')) {
+    throw new Error('Authentication required - please log in');
+  }
+  
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error('API Error:', errorText);
+    throw new Error(errorText);
+  }
+  
+  // Make sure we're getting JSON back
+  const contentType = res.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    const responseText = await res.text();
+    console.error('Expected JSON but got:', responseText.substring(0, 200));
+    throw new Error('Server returned HTML instead of JSON - likely an authentication issue');
+  }
+  
   return res.json();
 }
 
 function go(url) {
+  console.log('Navigating to:', url);
   window.location.href = url;
 }
 
@@ -22,17 +46,24 @@ function go(url) {
 function setupLogin(apiFetch, go) {
   const form = document.getElementById("loginForm");
   if (!form) return;
+  
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    
+    console.log('Attempting login for:', email);
+    
     try {
-      await apiFetch("/auth/login", {
+      const result = await apiFetch("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
+      
+      console.log('Login successful:', result);
       go("dashboard.html");
     } catch (err) {
+      console.error('Login error:', err);
       alert("Login failed: " + err.message);
     }
   });
@@ -41,18 +72,25 @@ function setupLogin(apiFetch, go) {
 function setupSignup(apiFetch, go) {
   const form = document.getElementById("signupForm");
   if (!form) return;
+  
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = document.getElementById("name").value;
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    
+    console.log('Attempting signup for:', email);
+    
     try {
-      await apiFetch("/auth/signup", {
+      const result = await apiFetch("/auth/signup", {
         method: "POST",
         body: JSON.stringify({ name, email, password }),
       });
+      
+      console.log('Signup successful:', result);
       go("dashboard.html");
     } catch (err) {
+      console.error('Signup error:', err);
       alert("Signup failed: " + err.message);
     }
   });
@@ -61,6 +99,7 @@ function setupSignup(apiFetch, go) {
 function setupLogout(apiFetch, go) {
   const btn = document.getElementById("logoutBtn");
   if (!btn) return;
+  
   btn.addEventListener("click", async () => {
     try {
       await apiFetch("/auth/logout", { method: "POST" });
@@ -75,6 +114,8 @@ function setupLogout(apiFetch, go) {
 // INIT APP
 // -------------------
 document.addEventListener("DOMContentLoaded", () => {
+  console.log('DOM loaded, initializing app...');
+  
   // Setup authentication
   setupLogin(apiFetch, go);
   setupSignup(apiFetch, go);
@@ -101,6 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+    // Load classes
     (async () => {
       try {
         const classes = await apiFetch("/classes");
@@ -150,6 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+    // Load students
     (async () => {
       try {
         const students = await apiFetch(`/students?classId=${classId}`);
@@ -170,23 +213,29 @@ document.addEventListener("DOMContentLoaded", () => {
   // -------------------
   const saveRecitaBtn = document.getElementById("saveRecitaBtn");
   const pickSection = document.getElementById("pickSection");
-  const pickStudentBtn = document.getElementById("pickStudentBtn");
-  const studentModal = document.getElementById("studentModal");
-  const studentName = document.getElementById("selectedStudent");
 
   // Debug logging
-  console.log("saveRecitaBtn found:", saveRecitaBtn);
-  console.log("pickStudentBtn found:", pickStudentBtn);
-  console.log("studentModal found:", studentModal);
-  console.log("pickSection found:", pickSection);
+  console.log("saveRecitaBtn found:", !!saveRecitaBtn);
+  console.log("pickSection found:", !!pickSection);
 
   if (saveRecitaBtn) {
     const classId = localStorage.getItem("classId");
     console.log("Class ID from localStorage:", classId);
     
     saveRecitaBtn.addEventListener("click", async () => {
-      const topic = document.getElementById("topicInput").value;
+      const topicInput = document.getElementById("topicInput");
+      if (!topicInput) {
+        alert("Topic input not found!");
+        return;
+      }
+      
+      const topic = topicInput.value;
       console.log("Saving recita with topic:", topic, "and classId:", classId);
+      
+      if (!topic.trim()) {
+        alert("Please enter a topic for the recita");
+        return;
+      }
       
       try {
         const recita = await apiFetch("/attendance", {
@@ -195,7 +244,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         console.log("Recita saved, response:", recita);
         localStorage.setItem("recitaId", recita.id);
-        pickSection.classList.remove("hidden");
+        if (pickSection) {
+          pickSection.classList.remove("hidden");
+        }
       } catch (err) {
         console.error("Save recita error:", err);
         alert("Failed to save recita: " + err.message);
@@ -203,10 +254,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Set up pick student event listener regardless of initial state
+  // Set up pick student event listener using event delegation
   console.log("Setting up pick student event listener");
   
-  // Use a more robust way to attach the event listener
   document.addEventListener("click", async (e) => {
     if (e.target && e.target.id === "pickStudentBtn") {
       e.preventDefault();
@@ -215,7 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const recitaId = localStorage.getItem("recitaId");
       console.log("Pick student clicked, recitaId:", recitaId);
       
-      if (!recitaId) {
+      if (!recitaId || recitaId === 'null' || recitaId === 'undefined') {
         alert("No recita ID found. Please save a recita first.");
         return;
       }
@@ -238,6 +288,9 @@ document.addEventListener("DOMContentLoaded", () => {
           studentModal.classList.remove("hidden");
           studentModal.classList.add("flex");
           studentModal.dataset.studentId = student.id;
+        } else {
+          console.error("Student modal elements not found");
+          alert(`Selected student: ${student.name}`);
         }
       } catch (err) {
         console.error("Pick student error:", err);
@@ -246,64 +299,38 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  if (pickStudentBtn && studentModal) {
-    console.log("Traditional event listener setup (backup)");
-    
-    pickStudentBtn.addEventListener("click", async () => {
+  // Handle score recording
+  document.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("scoreBtn")) {
+      const score = e.target.dataset.score;
       const recitaId = localStorage.getItem("recitaId");
-      console.log("Traditional listener - Pick student clicked, recitaId:", recitaId);
+      const studentModal = document.getElementById("studentModal");
+      const studentId = studentModal ? studentModal.dataset.studentId : null;
       
-      if (!recitaId) {
-        alert("No recita ID found. Please save a recita first.");
+      console.log("Recording score:", score, "for student:", studentId, "in recita:", recitaId);
+      
+      if (!recitaId || !studentId) {
+        alert("Missing recita or student ID");
         return;
       }
       
       try {
-        console.log("Making request to:", `/attendance?action=pick&recitaId=${recitaId}`);
-        const student = await apiFetch(`/attendance?action=pick&recitaId=${recitaId}`);
-        console.log("Student picked:", student);
+        await apiFetch("/attendance", {
+          method: "POST",
+          body: JSON.stringify({ recitaId, studentId, score }),
+        });
+        console.log("Score recorded successfully");
         
-        if (!student) {
-          alert("All students already picked!");
-          return;
+        if (studentModal) {
+          studentModal.classList.add("hidden");
+          studentModal.classList.remove("flex");
         }
-        
-        studentName.textContent = student.name;
-        studentModal.classList.remove("hidden");
-        studentModal.classList.add("flex");
-        studentModal.dataset.studentId = student.id;
       } catch (err) {
-        console.error("Pick student error:", err);
-        alert("Failed to pick student: " + err.message);
+        console.error("Failed to record score", err);
+        alert("Failed to record score: " + err.message);
       }
-    });
-
-    studentModal.addEventListener("click", async (e) => {
-      if (e.target.classList.contains("scoreBtn")) {
-        const score = e.target.dataset.score;
-        const recitaId = localStorage.getItem("recitaId");
-        const studentId = studentModal.dataset.studentId;
-        
-        console.log("Recording score:", score, "for student:", studentId, "in recita:", recitaId);
-        
-        try {
-          await apiFetch("/attendance", {
-            method: "POST",
-            body: JSON.stringify({ recitaId, studentId, score }),
-          });
-          console.log("Score recorded successfully");
-        } catch (err) {
-          console.error("Failed to record score", err);
-          alert("Failed to record score: " + err.message);
-        }
-        
-        studentModal.classList.add("hidden");
-        studentModal.classList.remove("flex");
-      }
-    });
-  } else {
-    console.log("Pick student button or modal not found - traditional event listener not attached");
-  }
+    }
+  });
 
   // -------------------
   // EXPORT CSV
@@ -312,6 +339,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (exportBtn) {
     exportBtn.addEventListener("click", () => {
       const classId = localStorage.getItem("classId");
+      if (!classId) {
+        alert("No class selected");
+        return;
+      }
       window.location.href = `/export?classId=${classId}`;
     });
   }
