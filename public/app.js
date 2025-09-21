@@ -236,11 +236,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// --- Insert favicon dynamically ---
+(function() {
+  const link = document.createElement("link");
+  link.rel = "icon";
+  link.type = "image/png";
+  link.href = "/logo.png"; // make sure logo.png is in your project root/public
+  document.head.appendChild(link);
+})();
+
+// --- Highlight "Recita" dynamically ---
 document.querySelectorAll("body *").forEach(el => {
   if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
     if (el.textContent.includes("Recita")) {
-      el.innerHTML = el.textContent.replace(/Recita/g, '<span class="brand">Recita</span>');
+      el.innerHTML = el.textContent.replace(
+        /Recita/g,
+        '<span style="color:#fe731f; font-weight:bold;">Recita</span>'
+      );
     }
   }
 });
+
 
