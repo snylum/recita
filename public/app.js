@@ -235,3 +235,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+document.querySelectorAll("body *").forEach(el => {
+  if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
+    if (el.textContent.includes("Recita")) {
+      el.innerHTML = el.textContent.replace(/Recita/g, '<span class="brand">Recita</span>');
+    }
+  }
+});
+
