@@ -325,41 +325,64 @@ document.addEventListener("DOMContentLoaded", () => {
     const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
     
     if (calledStudents.length === 0) {
-      container.innerHTML = '<p class="text-gray-500 italic">No students called yet</p>';
+      container.innerHTML = '<p style="color: #888; font-style: italic; margin: 0; text-align: center;">No students called yet</p>';
       return;
     }
     
-    container.innerHTML = calledStudents.map((student, index) => {
+    // Create table
+    let tableHTML = `
+      <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <thead>
+          <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+            <th style="padding: 12px; text-align: left; font-weight: bold; color: #495057; width: 40px;">#</th>
+            <th style="padding: 12px; text-align: left; font-weight: bold; color: #495057;">Student Name</th>
+            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 100px;">Score</th>
+            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 80px;">Time</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    calledStudents.forEach((student, index) => {
       let scoreDisplay = student.score;
-      let scoreClass = "bg-gray-100";
+      let scoreBadgeStyle = "background: #e9ecef; color: #495057;";
       
       if (student.score === 'absent') {
-        scoreClass = "bg-red-100 text-red-800";
+        scoreBadgeStyle = "background: #f8d7da; color: #721c24;";
         scoreDisplay = "Absent";
       } else if (student.score === 'skip') {
-        scoreClass = "bg-yellow-100 text-yellow-800";
+        scoreBadgeStyle = "background: #fff3cd; color: #856404;";
         scoreDisplay = "Skip";
       } else if (student.score === 'custom') {
-        scoreClass = "bg-purple-100 text-purple-800";
+        scoreBadgeStyle = "background: #e2e3ff; color: #5a67d8;";
         scoreDisplay = "Custom";
       } else if (parseInt(student.score)) {
-        scoreClass = "bg-green-100 text-green-800";
+        scoreBadgeStyle = "background: #d1f2eb; color: #155724;";
         scoreDisplay = student.score + " pts";
       }
       
-      return `
-        <div class="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm border mb-2">
-          <div class="flex items-center space-x-3">
-            <span class="text-sm text-gray-500 w-6">${index + 1}.</span>
-            <span class="font-medium">${student.name}</span>
-            <span class="text-xs text-gray-400">${student.timestamp}</span>
-          </div>
-          <span class="px-2 py-1 rounded text-sm ${scoreClass}">
-            ${scoreDisplay}
-          </span>
-        </div>
+      const rowStyle = index % 2 === 0 ? "background: #ffffff;" : "background: #f8f9fa;";
+      
+      tableHTML += `
+        <tr style="${rowStyle} border-bottom: 1px solid #dee2e6;">
+          <td style="padding: 10px 12px; color: #6c757d; font-weight: 500;">${index + 1}</td>
+          <td style="padding: 10px 12px; font-weight: 500; color: #212529;">${student.name}</td>
+          <td style="padding: 10px 12px; text-align: center;">
+            <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${scoreBadgeStyle}">
+              ${scoreDisplay}
+            </span>
+          </td>
+          <td style="padding: 10px 12px; text-align: center; font-size: 12px; color: #6c757d;">${student.timestamp}</td>
+        </tr>
       `;
-    }).join('');
+    });
+    
+    tableHTML += `
+        </tbody>
+      </table>
+    `;
+    
+    container.innerHTML = tableHTML;
   }
   
   // Initialize guest mode display
@@ -367,52 +390,86 @@ document.addEventListener("DOMContentLoaded", () => {
     updateGuestCalledDisplay();
   }
   
-  // Guest export/save buttons - prompt for login
+  // Guest export/save buttons - show custom auth modal
   document.addEventListener("click", (e) => {
     if (e.target.classList.contains("guestSaveBtn")) {
       const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
       if (calledStudents.length === 0) {
-        alert("No student data to save. Call some students first!");
+        showInfoModal("No Data to Save", "Call some students first to create data that can be saved and exported.");
         return;
       }
       
-      if (confirm("To save your data and export to CSV, you need to create an account or log in. Would you like to continue?")) {
-        // Show login/signup options
-        showAuthModal();
-      }
+      showAuthModal();
     }
   });
   
-  // Show authentication modal
+  // Show authentication modal (custom card-style)
   function showAuthModal() {
-    let authModal = document.getElementById("authModal");
-    if (!authModal) {
-      authModal = document.createElement("div");
-      authModal.id = "authModal";
-      authModal.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
-      authModal.innerHTML = `
-        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-          <h3 class="text-xl font-bold mb-4 text-center">Save Your Data</h3>
-          <p class="text-gray-600 mb-6 text-center">Create an account or log in to save your recita data and export to CSV</p>
-          <div class="space-y-3">
-            <button id="goToSignup" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-medium">Create Account</button>
-            <button id="goToLogin" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-medium">Log In</button>
-            <button id="authModalClose" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-medium">Cancel</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(authModal);
-      
-      authModal.addEventListener("click", (e) => {
-        if (e.target.id === "goToSignup") {
-          go("signup.html");
-        } else if (e.target.id === "goToLogin") {
-          go("index.html");
-        } else if (e.target.id === "authModalClose" || e.target === authModal) {
-          authModal.remove();
-        }
-      });
+    const existingModal = document.getElementById("customAuthModal");
+    if (existingModal) {
+      existingModal.remove();
     }
+    
+    const modal = document.createElement("div");
+    modal.id = "customAuthModal";
+    modal.className = "modal";
+    modal.innerHTML = `
+      <div class="modal-content" style="width: 400px;">
+        <h2 style="margin-top: 0; margin-bottom: 15px; text-align: center;">Save Your Data</h2>
+        <p style="color: #666; margin-bottom: 25px; text-align: center; line-height: 1.4;">
+          Create an account or log in to save your recita data and export to CSV
+        </p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button id="goToSignup" style="margin: 0; background: #10b981; padding: 14px;">
+            Create New Account
+          </button>
+          <button id="goToLogin" style="margin: 0; background: #4f46e5; padding: 14px;">
+            Log In to Existing Account
+          </button>
+          <button id="authModalClose" style="margin: 0; background: #6b7280; padding: 12px;">
+            Cancel
+          </button>
+        </div>
+        
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
+          <p style="color: #666; font-size: 14px; margin: 0; line-height: 1.4;">
+            After signing up or logging in, you'll get instant access to download your data as CSV
+          </p>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    modal.addEventListener("click", (e) => {
+      if (e.target.id === "goToSignup") {
+        // Show signup in the existing login modal
+        modal.remove();
+        const loginModal = document.getElementById('loginModal');
+        const loginSection = document.getElementById('loginSection');
+        const signupSection = document.getElementById('signupSection');
+        
+        if (loginModal && loginSection && signupSection) {
+          loginModal.style.display = 'flex';
+          loginSection.style.display = 'none';
+          signupSection.style.display = 'block';
+        }
+      } else if (e.target.id === "goToLogin") {
+        // Show login in the existing login modal
+        modal.remove();
+        const loginModal = document.getElementById('loginModal');
+        const loginSection = document.getElementById('loginSection');
+        const signupSection = document.getElementById('signupSection');
+        
+        if (loginModal && loginSection && signupSection) {
+          loginModal.style.display = 'flex';
+          loginSection.style.display = 'block';
+          signupSection.style.display = 'none';
+        }
+      } else if (e.target.id === "authModalClose" || e.target === modal) {
+        modal.remove();
+      }
+    });
   }
 
   // -------------------
