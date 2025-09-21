@@ -108,6 +108,67 @@ function showConfirmModal(message, onConfirm, onCancel = null, title = "Confirm"
 }
 
 // -------------------
+// SEPARATE AUTHENTICATED STUDENT MODAL
+// -------------------
+function showAuthenticatedStudentModal(student) {
+  // Remove any existing authenticated student modal
+  const existingModal = document.getElementById("authenticatedStudentModal");
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  // Create modal with the exact same structure as working guest modals
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.id = "authenticatedStudentModal";
+  modal.innerHTML = `
+    <div class="modal-content">
+      <h3 style="margin-top: 0; margin-bottom: 15px;">Selected Student</h3>
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+        <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${student.name}</p>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        <button class="authScoreBtn" data-score="10" data-student-id="${student.id}" style="margin: 0; background: #10b981; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">10 pts</button>
+        <button class="authScoreBtn" data-score="5" data-student-id="${student.id}" style="margin: 0; background: #10b981; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">5 pts</button>
+        <button class="authScoreBtn" data-score="custom" data-student-id="${student.id}" style="margin: 0; background: #8b5cf6; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Custom</button>
+        <button class="authScoreBtn" data-score="skip" data-student-id="${student.id}" style="margin: 0; background: #f59e0b; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Skip</button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button class="authScoreBtn" data-score="absent" data-student-id="${student.id}" style="margin: 0; background: #ef4444; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Absent</button>
+        <button id="cancelAuthScoring" style="margin: 0; background: #6b7280; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">Cancel</button>
+      </div>
+    </div>
+  `;
+  
+  // Append to body
+  document.body.appendChild(modal);
+  
+  // Add event listeners
+  modal.addEventListener("click", (e) => {
+    if (e.target.classList.contains("authScoreBtn")) {
+      const score = e.target.dataset.score;
+      const studentId = e.target.dataset.studentId;
+      
+      if (score === "custom") {
+        // Close this modal first
+        modal.remove();
+        showCustomScoreModal(student.name, (name, scoreType, customScore) => {
+          recordScore(studentId, scoreType, student.name, customScore);
+        });
+        return;
+      }
+      
+      recordScore(studentId, score, student.name);
+      modal.remove();
+    } else if (e.target.id === "cancelAuthScoring" || e.target === modal) {
+      modal.remove();
+    }
+  });
+
+  return modal;
+}
+
+// -------------------
 // AUTH FORMS
 // -------------------
 function setupLogin(apiFetch, callback) {
@@ -465,7 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   
-  // Guest modal functionality
+  // Guest modal functionality (UNCHANGED - keeps working as expected)
   function showGuestStudentModal(studentName) {
     const existingModal = document.getElementById("guestStudentModal");
     if (existingModal) {
@@ -510,7 +571,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Custom score modal (reusable)
   function showCustomScoreModal(studentName, callback) {
-    const existingModal = document.querySelector("#guestStudentModal, #customScoreModal");
+    const existingModal = document.querySelector("#guestStudentModal, #customScoreModal, #authenticatedStudentModal");
     if (existingModal) {
       existingModal.remove();
     }
@@ -1132,60 +1193,14 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
         
-        showStudentModal(student);
+        // USE THE NEW AUTHENTICATED MODAL FUNCTION
+        showAuthenticatedStudentModal(student);
       } catch (err) {
         console.error("Pick student error:", err);
         showInfoModal("Failed to pick student: " + err.message, "Error");
       }
     }
   });
-
-// Show student modal with enhanced scoring options - FIXED VERSION
-function showStudentModal(student) {
-  // Remove any existing student modal
-  const existingModal = document.getElementById("studentModal");
-  if (existingModal) {
-    existingModal.remove();
-  }
-
-  const modal = showModal(`
-    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
-      <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${student.name}</p>
-    </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-      <button class="scoreBtn" data-score="10" data-student-id="${student.id}" style="margin: 0; background: #10b981;">10 pts</button>
-      <button class="scoreBtn" data-score="5" data-student-id="${student.id}" style="margin: 0; background: #10b981;">5 pts</button>
-      <button class="scoreBtn" data-score="custom" data-student-id="${student.id}" style="margin: 0; background: #8b5cf6;">Custom</button>
-      <button class="scoreBtn" data-score="skip" data-student-id="${student.id}" style="margin: 0; background: #f59e0b;">Skip</button>
-    </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-      <button class="scoreBtn" data-score="absent" data-student-id="${student.id}" style="margin: 0; background: #ef4444;">Absent</button>
-      <button id="cancelScoring" style="margin: 0; background: #6b7280;">Cancel</button>
-    </div>
-  `, "Selected Student");
-  
-  // Add ID to modal for easy removal
-  modal.id = "studentModal";
-  
-  modal.addEventListener("click", (e) => {
-    if (e.target.classList.contains("scoreBtn")) {
-      const score = e.target.dataset.score;
-      const studentId = e.target.dataset.studentId;
-      
-      if (score === "custom") {
-        showCustomScoreModal(student.name, (name, scoreType, customScore) => {
-          recordScore(studentId, scoreType, student.name, customScore);
-        });
-        return;
-      }
-      
-      recordScore(studentId, score, student.name);
-      modal.remove();
-    } else if (e.target.id === "cancelScoring" || e.target === modal) {
-      modal.remove();
-    }
-  });
-}
 
   // Record score function
   async function recordScore(studentId, score, studentName, customScore = null) {
