@@ -1,4 +1,4 @@
-import { hashPassword } from "../../utils/hash.js";
+import { hashPassword } from "../utils/hash.js";
 
 export async function onRequestPost({ request, env }) {
   try {
