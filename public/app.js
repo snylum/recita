@@ -241,9 +241,21 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // Pick random student from available ones
-        const randomIndex = Math.floor(Math.random() * availableStudents.length);
-        const pickedStudent = availableStudents[randomIndex];
+        // If a student was just skipped, don't pick them again immediately
+        const lastCalled = calledStudents[calledStudents.length - 1];
+        let eligibleStudents = availableStudents;
+        
+        if (lastCalled && lastCalled.score === 'skip' && availableStudents.length > 1) {
+          eligibleStudents = availableStudents.filter(name => name !== lastCalled.name);
+          // If after filtering we have no students, use all available
+          if (eligibleStudents.length === 0) {
+            eligibleStudents = availableStudents;
+          }
+        }
+
+        // Pick random student from eligible ones
+        const randomIndex = Math.floor(Math.random() * eligibleStudents.length);
+        const pickedStudent = eligibleStudents[randomIndex];
 
         showGuestStudentModal(pickedStudent);
       });
@@ -317,10 +329,10 @@ document.addEventListener("DOMContentLoaded", () => {
         <p>You can now download your student data as a CSV file.</p>
         <div style="margin-top: 20px;">
           <button id="downloadCsvBtn" style="background: #22c55e; margin-bottom: 10px;">
-            📊 Download CSV
+            📊 Download CSV & Go to Dashboard
           </button>
-          <button id="closeSuccessModal" style="background: #6b7280;">
-            Continue Using Recita
+          <button id="continueToDashboard" style="background: #3b82f6; margin-bottom: 10px;">
+            Continue to Dashboard
           </button>
         </div>
       </div>
@@ -328,18 +340,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.body.appendChild(modal);
 
-    // Download CSV functionality - UPDATED to include topic info
+    // Download CSV functionality
     document.getElementById("downloadCsvBtn").addEventListener("click", () => {
       const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
       if (calledStudents.length === 0) {
-        alert("No student data to export.");
+        // No data, just go to dashboard
+        window.location.href = "dashboard.html";
         return;
       }
 
-      // Get topic information
-      const topic = localStorage.getItem("guestTopic") || "No Topic Set";
-      const date = localStorage.getItem("guestTopicDate") || "Unknown Date";
-      const time = localStorage.getItem("guestTopicTime") || "Unknown Time";
+      // Get topic information with fallbacks
+      const topic = localStorage.getItem("guestTopic") || "Demo Session";
+      const savedDate = localStorage.getItem("guestTopicDate");
+      const savedTime = localStorage.getItem("guestTopicTime");
+      
+      // Use current date/time if no saved data (e.g., in incognito mode)
+      const date = savedDate || new Date().toLocaleDateString();
+      const time = savedTime || new Date().toLocaleTimeString();
 
       // Generate CSV content with topic header
       let csvContent = `Recitation Topic: "${topic}"\n`;
@@ -348,8 +365,11 @@ document.addEventListener("DOMContentLoaded", () => {
       csvContent += "Student Name,Score,Time Called\n";
       
       calledStudents.forEach(student => {
-        const score = student.score === 'custom' ? `${student.customScore} pts` : student.score;
-        csvContent += `"${student.name}","${score}","${student.timestamp}"\n`;
+        let scoreDisplay = student.score;
+        if (student.score === 'custom' && student.customScore) {
+          scoreDisplay = student.customScore;
+        }
+        csvContent += `"${student.name}","${scoreDisplay}","${student.timestamp}"\n`;
       });
 
       // Create and download file
@@ -357,22 +377,25 @@ document.addEventListener("DOMContentLoaded", () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `recita-${topic.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
+      const safeTopic = topic.replace(/[^a-zA-Z0-9]/g, '-');
+      a.download = `recita-${safeTopic}-${date.replace(/\//g, '-')}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
 
-      // Close modal after download
-      modal.remove();
+      // Go to dashboard after download
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 1000);
     });
 
-    document.getElementById("closeSuccessModal").addEventListener("click", () => {
-      modal.remove();
+    document.getElementById("continueToDashboard").addEventListener("click", () => {
+      window.location.href = "dashboard.html";
     });
 
     // Close modal when clicking outside
     modal.addEventListener("click", (e) => {
       if (e.target === modal) {
-        modal.remove();
+        window.location.href = "dashboard.html";
       }
     });
   }
@@ -825,11 +848,26 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         console.log("Recita saved, response:", recita);
         
-        // Store the recita ID
-        localStorage.setItem("recitaId", recita.id);
+        // Store the recita ID - handle different response formats
+        let recitaId = recita.id || recita.recitaId || recita.insertId;
+        if (!recitaId && recita.meta && recita.meta.last_row_id) {
+          recitaId = recita.meta.last_row_id;
+        }
+        
+        console.log("Extracted recita ID:", recitaId);
+        
+        if (!recitaId) {
+          console.error("No recita ID found in response:", recita);
+          alert("Recita saved but ID not found. Please refresh and try again.");
+          return;
+        }
+        
+        localStorage.setItem("recitaId", recitaId.toString());
         localStorage.setItem("recitaTopic", topic);
         localStorage.setItem("recitaDate", dateStr);
         localStorage.setItem("recitaTime", timeStr);
+        
+        console.log("Stored recita ID in localStorage:", localStorage.getItem("recitaId"));
         
         // Clear any previous called students for this new recita
         localStorage.removeItem("calledStudents");
@@ -916,16 +954,24 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Pick student button clicked!");
       
       const recitaId = localStorage.getItem("recitaId");
-      console.log("Pick student clicked, recitaId:", recitaId);
+      console.log("Pick student clicked, recitaId from localStorage:", recitaId);
+      console.log("All localStorage keys:", Object.keys(localStorage));
+      console.log("localStorage recitaId type:", typeof recitaId);
       
       if (!recitaId || recitaId === 'null' || recitaId === 'undefined') {
+        console.error("No valid recita ID found. localStorage contents:", {
+          recitaId: localStorage.getItem("recitaId"),
+          recitaTopic: localStorage.getItem("recitaTopic"),
+          allKeys: Object.keys(localStorage)
+        });
         alert("No recita ID found. Please save a recita first.");
         return;
       }
       
       try {
-        console.log("Making request to:", `/attendance/pick?recitaId=${recitaId}`);
-        const student = await apiFetch(`/attendance/pick?recitaId=${recitaId}`);
+        const requestUrl = `/attendance/pick?recitaId=${recitaId}`;
+        console.log("Making request to:", requestUrl);
+        const student = await apiFetch(requestUrl);
         console.log("Student picked:", student);
         
         if (!student) {
