@@ -34,6 +34,7 @@ export async function onRequestPost(context) {
   return Response.json(inserted);
 }
 
+// Helpers
 async function ensureClassOwnership(context, teacherId, classId) {
   const { results } = await context.env.DB.prepare(
     "SELECT id FROM classes WHERE id = ? AND teacher_id = ?"
