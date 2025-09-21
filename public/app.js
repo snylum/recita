@@ -614,14 +614,12 @@ function setupAuthenticatedMode() {
     const classId = localStorage.getItem("classId");
     console.log("Class ID from localStorage:", classId);
     
-    // Check if we already have a saved recita
+    // Check if we already have a saved recita and validate it
     const currentRecitaId = localStorage.getItem("currentRecitaId");
     if (currentRecitaId) {
       console.log("Found existing recita ID:", currentRecitaId);
-      if (pickSection) {
-        pickSection.style.display = "block";
-        loadRecitaStudents(currentRecitaId);
-      }
+      // Validate the recita still exists
+      validateAndLoadRecita(currentRecitaId);
     }
 
     saveRecitaBtn.addEventListener("click", async () => {
@@ -638,8 +636,41 @@ function setupAuthenticatedMode() {
         return;
       }
 
+      // Check if we already have an active recita
+      const currentRecitaId = localStorage.getItem("currentRecitaId");
+      
+      if (currentRecitaId) {
+        // Update existing recita topic instead of creating new one
+        try {
+          console.log("Updating existing recita topic:", currentRecitaId, "to:", topic);
+          
+          const response = await apiFetch("/attendance", {
+            method: "PATCH",
+            body: JSON.stringify({
+              recitaId: parseInt(currentRecitaId),
+              topic: topic
+            })
+          });
+
+          if (response.success) {
+            showSuccessModal(`Recita topic updated to "${topic}" successfully!`);
+            
+            // Refresh the display to show updated topic
+            loadRecitaStudents(currentRecitaId);
+          } else {
+            showInfoModal("Failed to update recita topic.");
+          }
+
+        } catch (err) {
+          console.error("Error updating recita topic:", err);
+          showInfoModal(`Failed to update topic: ${err.message}`);
+        }
+        return;
+      }
+
+      // Create new recita only if none exists
       try {
-        console.log("Saving recita with topic:", topic, "and classId:", classId);
+        console.log("Creating new recita with topic:", topic, "and classId:", classId);
         
         // Ensure classId is an integer
         const numericClassId = parseInt(classId, 10);
@@ -694,6 +725,21 @@ function setupAuthenticatedMode() {
   setupPickStudent();
 }
 
+// Validate existing recita
+async function validateAndLoadRecita(recitaId) {
+  try {
+    await loadRecitaStudents(recitaId);
+    const pickSection = document.getElementById("pickSection");
+    if (pickSection) {
+      pickSection.style.display = "block";
+    }
+  } catch (err) {
+    console.warn("Stored recita ID is invalid, clearing it:", err);
+    localStorage.removeItem("currentRecitaId");
+    localStorage.removeItem("currentPickedStudent");
+  }
+}
+
 function setupPickStudent() {
   console.log("Setting up pick student event listener");
   
@@ -703,8 +749,6 @@ function setupPickStudent() {
       
       const recitaId = localStorage.getItem("currentRecitaId");
       console.log("Pick student clicked, recitaId from localStorage:", recitaId);
-      console.log("All localStorage keys:", Object.keys(localStorage));
-      console.log("localStorage recitaId type:", typeof recitaId);
       
       if (!recitaId) {
         showInfoModal("No active recitation. Please save a recita first.");
@@ -719,13 +763,18 @@ function setupPickStudent() {
         const response = await apiFetch(requestUrl);
         console.log("Pick student response:", response);
 
-        if (response.student) {
+        if (response.student && response.student.id && response.student.name) {
           const studentName = response.student.name;
           document.getElementById("selectedStudent").textContent = studentName;
           document.getElementById("studentPicked").style.display = "block";
           
-          // Store current picked student
-          localStorage.setItem("currentPickedStudent", JSON.stringify(response.student));
+          // Store current picked student with validation
+          const studentData = {
+            id: response.student.id,
+            name: response.student.name
+          };
+          localStorage.setItem("currentPickedStudent", JSON.stringify(studentData));
+          console.log("Stored picked student:", studentData);
           
         } else if (response.message) {
           showInfoModal(response.message);
@@ -744,8 +793,8 @@ function setupPickStudent() {
       const score = e.target.dataset.score;
       const currentStudent = JSON.parse(localStorage.getItem("currentPickedStudent") || "null");
       
-      if (!currentStudent) {
-        showInfoModal("No student currently selected.");
+      if (!currentStudent || !currentStudent.id) {
+        showInfoModal("No student currently selected or invalid student data.");
         return;
       }
 
@@ -760,8 +809,8 @@ function setupPickStudent() {
     if (e.target.id === "skipStudentBtn") {
       const currentStudent = JSON.parse(localStorage.getItem("currentPickedStudent") || "null");
       
-      if (!currentStudent) {
-        showInfoModal("No student currently selected.");
+      if (!currentStudent || !currentStudent.id) {
+        showInfoModal("No student currently selected or invalid student data.");
         return;
       }
 
@@ -794,8 +843,10 @@ window.submitAuthenticatedCustomScore = async function() {
   const score = input.value.trim();
   const currentStudent = JSON.parse(localStorage.getItem("currentPickedStudent") || "null");
   
-  if (score && currentStudent) {
+  if (score && currentStudent && currentStudent.id) {
     await recordAuthenticatedScore(currentStudent, score);
+  } else {
+    showInfoModal("Invalid score or student data.");
   }
   
   closeCustomScoreModal();
@@ -804,7 +855,7 @@ window.submitAuthenticatedCustomScore = async function() {
 async function recordAuthenticatedScore(student, score, isSkipped = false) {
   const recitaId = localStorage.getItem("currentRecitaId");
   
-  if (!recitaId || !student) {
+  if (!recitaId || !student || !student.id) {
     showInfoModal("Missing recitation or student data.");
     return;
   }
@@ -816,6 +867,8 @@ async function recordAuthenticatedScore(student, score, isSkipped = false) {
       score: isSkipped ? null : score,
       status: isSkipped ? 'skipped' : 'called'
     };
+
+    console.log("Recording score with payload:", payload);
 
     const response = await apiFetch("/attendance", {
       method: "PUT",
@@ -849,10 +902,13 @@ async function loadRecitaStudents(recitaId) {
     
     if (response.students) {
       updateAuthenticatedStudentDisplay(response.students, response.recita);
+    } else {
+      throw new Error("Invalid response format");
     }
     
   } catch (err) {
     console.error("Error loading recita students:", err);
+    throw err; // Re-throw for validation in validateAndLoadRecita
   }
 }
 
@@ -874,8 +930,10 @@ function updateAuthenticatedStudentDisplay(students, recita) {
             <p class="text-sm text-gray-500">${recita?.date || new Date().toLocaleDateString()} • Called: ${calledStudents.length} • Remaining: ${remainingCount}</p>
           </div>
           <div class="flex gap-2">
-            <button onclick="exportRecitaCSV(${recita?.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
-              Export CSV
+            <button onclick="exportRecitaCSV(${recita?.id})" 
+                    class="export-recita-btn bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm" 
+                    ${remainingCount > 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+              ${remainingCount > 0 ? `Export (${remainingCount} left)` : 'Export CSV'}
             </button>
             ${remainingCount === 0 ? '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">Complete!</span>' : ''}
           </div>
@@ -1060,27 +1118,67 @@ window.exportRecitaCSV = async function(recitaId) {
   }
 
   try {
-    const response = await fetch(`/export?recitaId=${recitaId}`, {
-      credentials: "include"
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    // First, check if all students have been called
+    const response = await apiFetch(`/attendance?recitaId=${recitaId}`);
+    
+    if (!response.students || !response.recita) {
+      showInfoModal("Failed to load recitation data for export.");
+      return;
     }
 
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `recita-${recitaId}-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    const students = response.students;
+    const calledStudents = students.filter(s => s.status === 'called' || s.status === 'skipped');
+    const totalStudents = students.length;
+    const remainingStudents = totalStudents - calledStudents.length;
 
-    showSuccessModal("Recitation exported successfully!");
+    console.log(`Export check - Total: ${totalStudents}, Called: ${calledStudents.length}, Remaining: ${remainingStudents}`);
+
+    // Prevent export if not all students are called
+    if (remainingStudents > 0) {
+      showInfoModal(
+        `Cannot export yet! ${remainingStudents} student${remainingStudents > 1 ? 's' : ''} still need${remainingStudents === 1 ? 's' : ''} to be called.\n\nComplete the recitation first, then you can export the results.`
+      );
+      return;
+    }
+
+    // Show confirmation modal before export
+    showConfirmModal(
+      `Export "${response.recita.topic}" recitation?\n\nThis will include ${calledStudents.length} student records.`,
+      async () => {
+        try {
+          const exportResponse = await fetch(`/export?recitaId=${recitaId}`, {
+            credentials: "include"
+          });
+
+          if (!exportResponse.ok) {
+            throw new Error(`HTTP ${exportResponse.status}: ${exportResponse.statusText}`);
+          }
+
+          const blob = await exportResponse.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          
+          // Create filename with topic and date
+          const topicSafe = response.recita.topic.replace(/[^a-zA-Z0-9]/g, '_');
+          const dateSafe = new Date().toISOString().slice(0, 10);
+          a.download = `recita-${topicSafe}-${dateSafe}.csv`;
+          
+          a.click();
+          window.URL.revokeObjectURL(url);
+
+          showSuccessModal("Recitation exported successfully!");
+
+        } catch (err) {
+          console.error("Export error:", err);
+          showInfoModal(`Failed to export recitation: ${err.message}`);
+        }
+      }
+    );
 
   } catch (err) {
-    console.error("Export error:", err);
-    showInfoModal(`Failed to export recitation: ${err.message}`);
+    console.error("Export validation error:", err);
+    showInfoModal(`Failed to validate export: ${err.message}`);
   }
 };
 
