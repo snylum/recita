@@ -100,6 +100,136 @@ export async function onRequestPost(context) {
   }
 }
 
+export async function onRequestPatch(context) {
+  try {
+    const teacher = await getTeacherFromSession(context.request, context.env);
+    if (!teacher) return new Response("Unauthorized", { status: 401 });
+
+    const body = await context.request.json();
+    console.log("PATCH /attendance received body:", body);
+    
+    if (body.recitaId && body.topic) {
+      // First verify the teacher owns this recita session
+      const { results: recitaRows } = await context.env.DB.prepare(
+        "SELECT class_id FROM recita_sessions WHERE id = ?"
+      ).bind(body.recitaId).all();
+
+      if (!recitaRows.length) {
+        return new Response("Recita session not found", { status: 404 });
+      }
+
+      const classId = recitaRows[0].class_id;
+      const ownership = await ensureClassOwnership(context, teacher.id, classId);
+      if (ownership !== true) return ownership;
+
+      // Update recita topic
+      console.log("Updating recita topic:", body.recitaId, "to:", body.topic);
+      
+      const result = await context.env.DB.prepare(
+        "UPDATE recita_sessions SET topic = ? WHERE id = ?"
+      ).bind(body.topic, body.recitaId).run();
+
+      console.log("Update result:", result);
+
+      if (result.success) {
+        return Response.json({ 
+          success: true, 
+          message: "Topic updated successfully",
+          topic: body.topic
+        });
+      } else {
+        return Response.json({ 
+          success: false, 
+          error: "Failed to update topic" 
+        }, { status: 500 });
+      }
+    }
+
+    return Response.json({ 
+      success: false, 
+      error: "Missing recitaId or topic" 
+    }, { status: 400 });
+
+  } catch (err) {
+    console.error("PATCH attendance error:", err);
+    return Response.json({ 
+      success: false, 
+      error: err.message 
+    }, { status: 500 });
+  }
+}
+
+export async function onRequestPut(context) {
+  try {
+    const teacher = await getTeacherFromSession(context.request, context.env);
+    if (!teacher) return new Response("Unauthorized", { status: 401 });
+
+    const body = await context.request.json();
+    console.log("PUT /attendance received body:", body);
+
+    if (body.studentId && body.recitaId) {
+      // Verify the teacher owns this recita session
+      const { results: recitaRows } = await context.env.DB.prepare(
+        "SELECT class_id FROM recita_sessions WHERE id = ?"
+      ).bind(body.recitaId).all();
+
+      if (!recitaRows.length) {
+        return new Response("Recita session not found", { status: 404 });
+      }
+
+      const classId = recitaRows[0].class_id;
+      const ownership = await ensureClassOwnership(context, teacher.id, classId);
+      if (ownership !== true) return ownership;
+
+      console.log("Recording attendance:", { 
+        recitaId: body.recitaId, 
+        studentId: body.studentId, 
+        score: body.score, 
+        status: body.status 
+      });
+      
+      // Insert or update attendance record
+      const result = await context.env.DB.prepare(`
+        INSERT INTO attendance (recita_id, student_id, score, status, picked_at) 
+        VALUES (?, ?, ?, ?, datetime('now'))
+        ON CONFLICT(recita_id, student_id) 
+        DO UPDATE SET score = ?, status = ?, picked_at = datetime('now')
+      `).bind(
+        body.recitaId, 
+        body.studentId, 
+        body.score, 
+        body.status || 'called',
+        body.score,
+        body.status || 'called'
+      ).run();
+
+      if (result.success) {
+        return Response.json({ 
+          success: true,
+          message: "Attendance recorded successfully"
+        });
+      } else {
+        return Response.json({ 
+          success: false, 
+          error: "Failed to record attendance" 
+        }, { status: 500 });
+      }
+    }
+
+    return Response.json({ 
+      success: false, 
+      error: "Missing studentId or recitaId" 
+    }, { status: 400 });
+
+  } catch (err) {
+    console.error("PUT attendance error:", err);
+    return Response.json({ 
+      success: false, 
+      error: err.message 
+    }, { status: 500 });
+  }
+}
+
 export async function onRequestGet(context) {
   try {
     const url = new URL(context.request.url);
@@ -147,12 +277,57 @@ export async function onRequestGet(context) {
 
       if (!results.length) {
         console.log("All students already marked");
-        return Response.json(null);
+        return Response.json({ 
+          student: null, 
+          message: "All students have been called!" 
+        });
       }
 
       const random = results[Math.floor(Math.random() * results.length)];
       console.log("Picked random student:", random);
-      return Response.json(random);
+      return Response.json({ student: random });
+    }
+
+    // Get recita details and students for display
+    if (recitaId) {
+      const teacher = await getTeacherFromSession(context.request, context.env);
+      if (!teacher) return new Response("Unauthorized", { status: 401 });
+
+      // Get recita info
+      const { results: recitaRows } = await context.env.DB.prepare(
+        "SELECT * FROM recita_sessions WHERE id = ?"
+      ).bind(recitaId).all();
+
+      if (!recitaRows.length) {
+        return Response.json({ error: "Recita not found" }, { status: 404 });
+      }
+
+      const recita = recitaRows[0];
+      const ownership = await ensureClassOwnership(context, teacher.id, recita.class_id);
+      if (ownership !== true) return ownership;
+
+      // Get all students for this class with their attendance status
+      const { results: students } = await context.env.DB.prepare(`
+        SELECT 
+          s.id,
+          s.name,
+          a.score,
+          a.status,
+          a.picked_at
+        FROM students s
+        LEFT JOIN attendance a ON s.id = a.student_id AND a.recita_id = ?
+        WHERE s.class_id = ?
+        ORDER BY a.picked_at ASC, s.name ASC
+      `).bind(recitaId, recita.class_id).all();
+
+      return Response.json({
+        recita: {
+          id: recita.id,
+          topic: recita.topic,
+          date: recita.created_at
+        },
+        students: students
+      });
     }
 
     // Default response for GET /attendance (for testing)
