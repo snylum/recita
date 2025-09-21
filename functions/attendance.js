@@ -6,21 +6,77 @@ export async function onRequestPost(context) {
     if (!teacher) return new Response("Unauthorized", { status: 401 });
 
     const body = await context.request.json();
+    console.log("POST /attendance received body:", body);
 
     // Case 1: Create recita session
     if (body.topic && body.classId) {
       const ownership = await ensureClassOwnership(context, teacher.id, body.classId);
       if (ownership !== true) return ownership; // Return the error response
 
-      const { lastRowId } = await context.env.DB.prepare(
+      console.log("Creating recita session for:", { classId: body.classId, topic: body.topic, teacherId: teacher.id });
+
+      const result = await context.env.DB.prepare(
         "INSERT INTO recita_sessions (class_id, topic, created_at) VALUES (?, ?, datetime('now'))"
       ).bind(body.classId, body.topic).run();
 
-      return Response.json({ id: lastRowId, topic: body.topic });
+      console.log("D1 insert result:", result);
+      console.log("D1 result structure:", Object.keys(result || {}));
+
+      // D1 returns the insert ID in different ways depending on the version
+      // Try multiple approaches to get the ID
+      let insertId = null;
+
+      // Method 1: Check result.meta.last_row_id (most common)
+      if (result && result.meta && result.meta.last_row_id) {
+        insertId = result.meta.last_row_id;
+        console.log("Found ID in result.meta.last_row_id:", insertId);
+      }
+      // Method 2: Check result.meta.lastRowId
+      else if (result && result.meta && result.meta.lastRowId) {
+        insertId = result.meta.lastRowId;
+        console.log("Found ID in result.meta.lastRowId:", insertId);
+      }
+      // Method 3: Check direct result.lastRowId (your original code)
+      else if (result && result.lastRowId) {
+        insertId = result.lastRowId;
+        console.log("Found ID in result.lastRowId:", insertId);
+      }
+      // Method 4: Check result.changes.last_insert_rowid
+      else if (result && result.changes && result.changes.last_insert_rowid) {
+        insertId = result.changes.last_insert_rowid;
+        console.log("Found ID in result.changes.last_insert_rowid:", insertId);
+      }
+
+      console.log("Final insertId:", insertId);
+
+      if (!insertId) {
+        console.error("No insert ID found in D1 result:", JSON.stringify(result, null, 2));
+        return new Response(JSON.stringify({ 
+          error: "Failed to get insert ID",
+          debug: result,
+          message: "Database insert succeeded but ID not returned"
+        }), { 
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+
+      const response = {
+        id: insertId,
+        topic: body.topic,
+        classId: body.classId,
+        teacherId: teacher.id,
+        created_at: new Date().toISOString()
+      };
+
+      console.log("Returning response:", response);
+      return Response.json(response);
     }
 
     // Case 2: Mark attendance/score
     if (body.recitaId && body.studentId) {
+      console.log("Recording attendance:", { recitaId: body.recitaId, studentId: body.studentId, score: body.score });
+      
       await context.env.DB.prepare(
         "INSERT INTO attendance (recita_id, student_id, score) VALUES (?, ?, ?)"
       ).bind(body.recitaId, body.studentId, body.score).run();
@@ -28,10 +84,19 @@ export async function onRequestPost(context) {
       return Response.json({ ok: true });
     }
 
+    console.log("Invalid request body:", body);
     return new Response("Bad request", { status: 400 });
   } catch (error) {
     console.error("POST /attendance error:", error);
-    return new Response("Internal server error", { status: 500 });
+    console.error("Error stack:", error.stack);
+    return new Response(JSON.stringify({
+      error: "Internal server error",
+      message: error.message,
+      stack: error.stack
+    }), { 
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
 }
 
