@@ -907,8 +907,10 @@ function updateAuthenticatedStudentDisplay(students, recita) {
             <p class="text-sm text-gray-500">${recita?.date || new Date().toLocaleDateString()} • Called: ${calledStudents.length} • Remaining: ${remainingCount}</p>
           </div>
           <div class="flex gap-2">
-            <button onclick="exportRecitaCSV(${recita?.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
-              Export CSV
+            <button onclick="exportRecitaCSV(${recita?.id})" 
+                    class="export-recita-btn bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm" 
+                    ${remainingCount > 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+              ${remainingCount > 0 ? `Export (${remainingCount} left)` : 'Export CSV'}
             </button>
             ${remainingCount === 0 ? '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">Complete!</span>' : ''}
           </div>
@@ -1093,27 +1095,67 @@ window.exportRecitaCSV = async function(recitaId) {
   }
 
   try {
-    const response = await fetch(`/export?recitaId=${recitaId}`, {
-      credentials: "include"
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    // First, check if all students have been called
+    const response = await apiFetch(`/attendance?recitaId=${recitaId}`);
+    
+    if (!response.students || !response.recita) {
+      showInfoModal("Failed to load recitation data for export.");
+      return;
     }
 
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `recita-${recitaId}-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    const students = response.students;
+    const calledStudents = students.filter(s => s.status === 'called' || s.status === 'skipped');
+    const totalStudents = students.length;
+    const remainingStudents = totalStudents - calledStudents.length;
 
-    showSuccessModal("Recitation exported successfully!");
+    console.log(`Export check - Total: ${totalStudents}, Called: ${calledStudents.length}, Remaining: ${remainingStudents}`);
+
+    // Prevent export if not all students are called
+    if (remainingStudents > 0) {
+      showInfoModal(
+        `Cannot export yet! ${remainingStudents} student${remainingStudents > 1 ? 's' : ''} still need${remainingStudents === 1 ? 's' : ''} to be called.\n\nComplete the recitation first, then you can export the results.`
+      );
+      return;
+    }
+
+    // Show confirmation modal before export
+    showConfirmModal(
+      `Export "${response.recita.topic}" recitation?\n\nThis will include ${calledStudents.length} student records.`,
+      async () => {
+        try {
+          const exportResponse = await fetch(`/export?recitaId=${recitaId}`, {
+            credentials: "include"
+          });
+
+          if (!exportResponse.ok) {
+            throw new Error(`HTTP ${exportResponse.status}: ${exportResponse.statusText}`);
+          }
+
+          const blob = await exportResponse.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          
+          // Create filename with topic and date
+          const topicSafe = response.recita.topic.replace(/[^a-zA-Z0-9]/g, '_');
+          const dateSafe = new Date().toISOString().slice(0, 10);
+          a.download = `recita-${topicSafe}-${dateSafe}.csv`;
+          
+          a.click();
+          window.URL.revokeObjectURL(url);
+
+          showSuccessModal("Recitation exported successfully!");
+
+        } catch (err) {
+          console.error("Export error:", err);
+          showInfoModal(`Failed to export recitation: ${err.message}`);
+        }
+      }
+    );
 
   } catch (err) {
-    console.error("Export error:", err);
-    showInfoModal(`Failed to export recitation: ${err.message}`);
+    console.error("Export validation error:", err);
+    showInfoModal(`Failed to validate export: ${err.message}`);
   }
 };
 
