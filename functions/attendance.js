@@ -1,75 +1,115 @@
 import { getTeacherFromSession } from "./utils/session.js";
 
 export async function onRequestPost(context) {
-  const teacher = await getTeacherFromSession(context.request, context.env);
-  if (!teacher) return new Response("Unauthorized", { status: 401 });
-
-  const body = await context.request.json();
-
-  // Case 1: Create recita session
-  if (body.topic && body.classId) {
-    await ensureClassOwnership(context, teacher.id, body.classId);
-
-    const { lastRowId } = await context.env.DB.prepare(
-      "INSERT INTO recita_sessions (class_id, topic, created_at) VALUES (?, ?, datetime('now'))"
-    ).bind(body.classId, body.topic).run();
-
-    return Response.json({ id: lastRowId, topic: body.topic });
-  }
-
-  // Case 2: Mark attendance/score
-  if (body.recitaId && body.studentId) {
-    await context.env.DB.prepare(
-      "INSERT INTO attendance (recita_id, student_id, score) VALUES (?, ?, ?)"
-    ).bind(body.recitaId, body.studentId, body.score).run();
-
-    return Response.json({ ok: true });
-  }
-
-  return new Response("Bad request", { status: 400 });
-}
-
-export async function onRequestGet(context) {
-  const url = new URL(context.request.url);
-
-  if (url.pathname.endsWith("/pick")) {
+  try {
     const teacher = await getTeacherFromSession(context.request, context.env);
     if (!teacher) return new Response("Unauthorized", { status: 401 });
 
-    const recitaId = url.searchParams.get("recitaId");
+    const body = await context.request.json();
 
-    // Find class for this recita session
-    const { results: recitaRows } = await context.env.DB.prepare(
-      "SELECT class_id FROM recita_sessions WHERE id = ?"
-    ).bind(recitaId).all();
+    // Case 1: Create recita session
+    if (body.topic && body.classId) {
+      const ownership = await ensureClassOwnership(context, teacher.id, body.classId);
+      if (ownership !== true) return ownership; // Return the error response
 
-    if (!recitaRows.length) return new Response("Not found", { status: 404 });
-    const classId = recitaRows[0].class_id;
+      const { lastRowId } = await context.env.DB.prepare(
+        "INSERT INTO recita_sessions (class_id, topic, created_at) VALUES (?, ?, datetime('now'))"
+      ).bind(body.classId, body.topic).run();
 
-    await ensureClassOwnership(context, teacher.id, classId);
+      return Response.json({ id: lastRowId, topic: body.topic });
+    }
 
-    // Students not yet marked
-    const { results } = await context.env.DB.prepare(`
-      SELECT s.id, s.name 
-      FROM students s
-      WHERE s.class_id = ?
-      AND s.id NOT IN (SELECT student_id FROM attendance WHERE recita_id = ?)
-    `).bind(classId, recitaId).all();
+    // Case 2: Mark attendance/score
+    if (body.recitaId && body.studentId) {
+      await context.env.DB.prepare(
+        "INSERT INTO attendance (recita_id, student_id, score) VALUES (?, ?, ?)"
+      ).bind(body.recitaId, body.studentId, body.score).run();
 
-    if (!results.length) return Response.json(null);
+      return Response.json({ ok: true });
+    }
 
-    const random = results[Math.floor(Math.random() * results.length)];
-    return Response.json(random);
+    return new Response("Bad request", { status: 400 });
+  } catch (error) {
+    console.error("POST /attendance error:", error);
+    return new Response("Internal server error", { status: 500 });
   }
+}
 
-  return new Response("Not found", { status: 404 });
+export async function onRequestGet(context) {
+  try {
+    const url = new URL(context.request.url);
+    console.log("GET attendance - pathname:", url.pathname, "search:", url.searchParams.toString());
+
+    if (url.pathname.endsWith("/pick")) {
+      const teacher = await getTeacherFromSession(context.request, context.env);
+      if (!teacher) return new Response("Unauthorized", { status: 401 });
+
+      const recitaId = url.searchParams.get("recitaId");
+      console.log("Pick request for recitaId:", recitaId);
+
+      if (!recitaId) {
+        return new Response("Missing recitaId parameter", { status: 400 });
+      }
+
+      // Find class for this recita session
+      const { results: recitaRows } = await context.env.DB.prepare(
+        "SELECT class_id FROM recita_sessions WHERE id = ?"
+      ).bind(recitaId).all();
+
+      if (!recitaRows.length) {
+        console.log("No recita found with id:", recitaId);
+        return new Response("Recita session not found", { status: 404 });
+      }
+
+      const classId = recitaRows[0].class_id;
+      console.log("Found classId:", classId, "for recita:", recitaId);
+
+      const ownership = await ensureClassOwnership(context, teacher.id, classId);
+      if (ownership !== true) return ownership; // Return the error response
+
+      // Students not yet marked
+      const { results } = await context.env.DB.prepare(`
+        SELECT s.id, s.name 
+        FROM students s
+        WHERE s.class_id = ?
+        AND s.id NOT IN (SELECT student_id FROM attendance WHERE recita_id = ?)
+      `).bind(classId, recitaId).all();
+
+      console.log("Found", results.length, "unmarked students");
+
+      if (!results.length) {
+        console.log("All students already marked");
+        return Response.json(null);
+      }
+
+      const random = results[Math.floor(Math.random() * results.length)];
+      console.log("Picked random student:", random);
+      return Response.json(random);
+    }
+
+    console.log("GET request did not match /pick pattern");
+    return new Response("Not found", { status: 404 });
+  } catch (error) {
+    console.error("GET /attendance error:", error);
+    return new Response("Internal server error", { status: 500 });
+  }
 }
 
 // Helpers
 async function ensureClassOwnership(context, teacherId, classId) {
-  const { results } = await context.env.DB.prepare(
-    "SELECT id FROM classes WHERE id = ? AND teacher_id = ?"
-  ).bind(classId, teacherId).all();
+  try {
+    const { results } = await context.env.DB.prepare(
+      "SELECT id FROM classes WHERE id = ? AND teacher_id = ?"
+    ).bind(classId, teacherId).all();
 
-  if (!results.length) throw new Response("Forbidden", { status: 403 });
+    if (!results.length) {
+      console.log("Class ownership check failed - teacherId:", teacherId, "classId:", classId);
+      return new Response("Forbidden - You don't own this class", { status: 403 });
+    }
+
+    return true; // Success
+  } catch (error) {
+    console.error("ensureClassOwnership error:", error);
+    return new Response("Database error", { status: 500 });
+  }
 }
