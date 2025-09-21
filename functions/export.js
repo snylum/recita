@@ -1,4 +1,4 @@
-import { getTeacherFromSession } from "../utils/session.js";
+import { getTeacherFromSession } from "./utils/session.js";
 
 export async function onRequestGet({ request, env }) {
   const teacher = await getTeacherFromSession(request, env);
