@@ -1140,43 +1140,52 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Show student modal with enhanced scoring options
-  function showStudentModal(student) {
-    const modal = showModal(`
-      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
-        <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${student.name}</p>
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <button class="scoreBtn" data-score="10" data-student-id="${student.id}" style="margin: 0; background: #10b981;">10 pts</button>
-        <button class="scoreBtn" data-score="5" data-student-id="${student.id}" style="margin: 0; background: #10b981;">5 pts</button>
-        <button class="scoreBtn" data-score="custom" data-student-id="${student.id}" style="margin: 0; background: #8b5cf6;">Custom</button>
-        <button class="scoreBtn" data-score="skip" data-student-id="${student.id}" style="margin: 0; background: #f59e0b;">Skip</button>
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <button class="scoreBtn" data-score="absent" data-student-id="${student.id}" style="margin: 0; background: #ef4444;">Absent</button>
-        <button id="cancelScoring" style="margin: 0; background: #6b7280;">Cancel</button>
-      </div>
-    `, "Selected Student");
-    
-    modal.addEventListener("click", (e) => {
-      if (e.target.classList.contains("scoreBtn")) {
-        const score = e.target.dataset.score;
-        const studentId = e.target.dataset.studentId;
-        
-        if (score === "custom") {
-          showCustomScoreModal(student.name, (name, scoreType, customScore) => {
-            recordScore(studentId, scoreType, student.name, customScore);
-          });
-          return;
-        }
-        
-        recordScore(studentId, score, student.name);
-        modal.remove();
-      } else if (e.target.id === "cancelScoring" || e.target === modal) {
-        modal.remove();
-      }
-    });
+// Show student modal with enhanced scoring options - FIXED VERSION
+function showStudentModal(student) {
+  // Remove any existing student modal
+  const existingModal = document.getElementById("studentModal");
+  if (existingModal) {
+    existingModal.remove();
   }
+
+  const modal = showModal(`
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+      <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${student.name}</p>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+      <button class="scoreBtn" data-score="10" data-student-id="${student.id}" style="margin: 0; background: #10b981;">10 pts</button>
+      <button class="scoreBtn" data-score="5" data-student-id="${student.id}" style="margin: 0; background: #10b981;">5 pts</button>
+      <button class="scoreBtn" data-score="custom" data-student-id="${student.id}" style="margin: 0; background: #8b5cf6;">Custom</button>
+      <button class="scoreBtn" data-score="skip" data-student-id="${student.id}" style="margin: 0; background: #f59e0b;">Skip</button>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <button class="scoreBtn" data-score="absent" data-student-id="${student.id}" style="margin: 0; background: #ef4444;">Absent</button>
+      <button id="cancelScoring" style="margin: 0; background: #6b7280;">Cancel</button>
+    </div>
+  `, "Selected Student");
+  
+  // Add ID to modal for easy removal
+  modal.id = "studentModal";
+  
+  modal.addEventListener("click", (e) => {
+    if (e.target.classList.contains("scoreBtn")) {
+      const score = e.target.dataset.score;
+      const studentId = e.target.dataset.studentId;
+      
+      if (score === "custom") {
+        showCustomScoreModal(student.name, (name, scoreType, customScore) => {
+          recordScore(studentId, scoreType, student.name, customScore);
+        });
+        return;
+      }
+      
+      recordScore(studentId, score, student.name);
+      modal.remove();
+    } else if (e.target.id === "cancelScoring" || e.target === modal) {
+      modal.remove();
+    }
+  });
+}
 
   // Record score function
   async function recordScore(studentId, score, studentName, customScore = null) {
