@@ -98,12 +98,25 @@ async function handleLogout() {
 }
 
 // ===============================
+// LOGO THEME SWITCH
+// ===============================
+function updateLogoForTheme() {
+  const logo = document.getElementById("logoImg");
+  if (!logo) return;
+
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  logo.src = prefersDark ? "/assets/logo-dark.png" : "/assets/logo-light.png";
+}
+
+// ===============================
 // EVENT BINDINGS
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
+  // login form
   const loginForm = document.getElementById("loginForm");
   if (loginForm) loginForm.addEventListener("submit", handleLogin);
 
+  // logout button
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
     logoutBtn.type = "button";
@@ -117,4 +130,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.target === modal) closeModal();
     });
   }
+
+  // theme-based logo
+  updateLogoForTheme();
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateLogoForTheme);
 });
