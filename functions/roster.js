@@ -12,7 +12,7 @@ export async function onRequest(context) {
     const { name } = await request.json();
     await env.DB.prepare("INSERT INTO classes (teacher_id, name) VALUES (?, ?)")
       .bind(teacher.id, name).run();
-    return new Response(JSON.stringify({ success: true }));
+    return Response.json({ success: true });
   }
 
   // Add a student
@@ -20,7 +20,7 @@ export async function onRequest(context) {
     const { classId, name } = await request.json();
     await env.DB.prepare("INSERT INTO students (class_id, name) VALUES (?, ?)")
       .bind(classId, name).run();
-    return new Response(JSON.stringify({ success: true }));
+    return Response.json({ success: true });
   }
 
   // Get all classes + students
@@ -32,7 +32,10 @@ export async function onRequest(context) {
       "SELECT * FROM students WHERE class_id IN (SELECT id FROM classes WHERE teacher_id = ?)"
     ).bind(teacher.id).all();
 
-    return new Response(JSON.stringify({ classes: classes.results, students: students.results }));
+    return Response.json({
+      classes: classes.results,
+      students: students.results
+    });
   }
 
   return new Response("Not found", { status: 404 });
