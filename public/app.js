@@ -128,13 +128,13 @@ function showAuthenticatedStudentModal(student) {
         <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${student.name}</p>
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <button class="authScoreBtn" data-score="10" data-student-id="${student.id}" style="margin: 0; background: #10b981;">10 pts</button>
-        <button class="authScoreBtn" data-score="5" data-student-id="${student.id}" style="margin: 0; background: #10b981;">5 pts</button>
-        <button class="authScoreBtn" data-score="custom" data-student-id="${student.id}" style="margin: 0; background: #8b5cf6;">Custom</button>
-        <button class="authScoreBtn" data-score="skip" data-student-id="${student.id}" style="margin: 0; background: #f59e0b;">Skip</button>
+        <button data-score="10" data-student-id="${student.id}" style="margin: 0; background: #10b981;">10 pts</button>
+        <button data-score="5" data-student-id="${student.id}" style="margin: 0; background: #10b981;">5 pts</button>
+        <button data-score="custom" data-student-id="${student.id}" style="margin: 0; background: #8b5cf6;">Custom</button>
+        <button data-score="skip" data-student-id="${student.id}" style="margin: 0; background: #f59e0b;">Skip</button>
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <button class="authScoreBtn" data-score="absent" data-student-id="${student.id}" style="margin: 0; background: #ef4444;">Absent</button>
+        <button data-score="absent" data-student-id="${student.id}" style="margin: 0; background: #ef4444;">Absent</button>
         <button id="cancelAuthScoring" style="margin: 0; background: #6b7280;">Cancel</button>
       </div>
     </div>
@@ -143,16 +143,17 @@ function showAuthenticatedStudentModal(student) {
   // Append to body
   document.body.appendChild(modal);
   
-  // Add event listeners with proper event delegation
-  modal.addEventListener("click", (e) => {
-    e.stopPropagation();
-    
-    if (e.target.classList.contains("authScoreBtn")) {
-      const score = e.target.dataset.score;
-      const studentId = e.target.dataset.studentId;
+  // Add click handlers to each button individually
+  const buttons = modal.querySelectorAll('button[data-score]');
+  buttons.forEach(button => {
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const score = this.getAttribute('data-score');
+      const studentId = this.getAttribute('data-student-id');
       
       if (score === "custom") {
-        // Close this modal first
         modal.remove();
         showCustomScoreModal(student.name, (name, scoreType, customScore) => {
           recordScore(studentId, scoreType, student.name, customScore);
@@ -162,10 +163,22 @@ function showAuthenticatedStudentModal(student) {
       
       recordScore(studentId, score, student.name);
       modal.remove();
-    } else if (e.target.id === "cancelAuthScoring") {
+    });
+  });
+  
+  // Cancel button
+  const cancelBtn = modal.querySelector('#cancelAuthScoring');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       modal.remove();
-    } else if (e.target === modal) {
-      // Click on backdrop closes modal
+    });
+  }
+  
+  // Click backdrop to close
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
       modal.remove();
     }
   });
