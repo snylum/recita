@@ -177,6 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("saveRecitaBtn found:", saveRecitaBtn);
   console.log("pickStudentBtn found:", pickStudentBtn);
   console.log("studentModal found:", studentModal);
+  console.log("pickSection found:", pickSection);
 
   if (saveRecitaBtn) {
     const classId = localStorage.getItem("classId");
@@ -201,12 +202,55 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Set up pick student event listener regardless of initial state
+  console.log("Setting up pick student event listener");
+  
+  // Use a more robust way to attach the event listener
+  document.addEventListener("click", async (e) => {
+    if (e.target && e.target.id === "pickStudentBtn") {
+      e.preventDefault();
+      console.log("Pick student button clicked!");
+      
+      const recitaId = localStorage.getItem("recitaId");
+      console.log("Pick student clicked, recitaId:", recitaId);
+      
+      if (!recitaId) {
+        alert("No recita ID found. Please save a recita first.");
+        return;
+      }
+      
+      try {
+        console.log("Making request to:", `/attendance/pick?recitaId=${recitaId}`);
+        const student = await apiFetch(`/attendance/pick?recitaId=${recitaId}`);
+        console.log("Student picked:", student);
+        
+        if (!student) {
+          alert("All students already picked!");
+          return;
+        }
+        
+        const studentName = document.getElementById("selectedStudent");
+        const studentModal = document.getElementById("studentModal");
+        
+        if (studentName && studentModal) {
+          studentName.textContent = student.name;
+          studentModal.classList.remove("hidden");
+          studentModal.classList.add("flex");
+          studentModal.dataset.studentId = student.id;
+        }
+      } catch (err) {
+        console.error("Pick student error:", err);
+        alert("Failed to pick student: " + err.message);
+      }
+    }
+  });
+
   if (pickStudentBtn && studentModal) {
-    console.log("Setting up pick student event listener");
+    console.log("Traditional event listener setup (backup)");
     
     pickStudentBtn.addEventListener("click", async () => {
       const recitaId = localStorage.getItem("recitaId");
-      console.log("Pick student clicked, recitaId:", recitaId);
+      console.log("Traditional listener - Pick student clicked, recitaId:", recitaId);
       
       if (!recitaId) {
         alert("No recita ID found. Please save a recita first.");
@@ -257,7 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   } else {
-    console.log("Pick student button or modal not found - event listener not attached");
+    console.log("Pick student button or modal not found - traditional event listener not attached");
   }
 
   // -------------------
