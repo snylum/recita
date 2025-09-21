@@ -13,8 +13,12 @@ async function apiFetch(url, options = {}) {
   console.log('Response status:', res.status);
   console.log('Response URL:', res.url);
   
-  // Check if we got redirected to login (common sign of auth failure)
-  if (res.url.includes('login') || res.url.includes('index.html')) {
+  // Check if we got redirected away from our intended endpoint
+  // Only check for redirects if the URL changed to a different path
+  const originalPath = new URL(url, window.location.origin).pathname;
+  const responsePath = new URL(res.url).pathname;
+  
+  if (originalPath !== responsePath && (res.url.includes('index.html') || responsePath === '/')) {
     throw new Error('Authentication required - please log in');
   }
   
@@ -359,7 +363,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // --- Style Recita with logo ---
 function addRecitaLogos() {
-  // Find all text nodes that contain "Recita"
+  // Skip if already processed
+  if (document.body.dataset.recitaLogosProcessed === 'true') {
+    return;
+  }
+
+  // Find all text nodes that contain "Recita" but haven't been processed
   const walker = document.createTreeWalker(
     document.body,
     NodeFilter.SHOW_TEXT,
@@ -370,7 +379,9 @@ function addRecitaLogos() {
   const textNodes = [];
   let node;
   while (node = walker.nextNode()) {
-    if (node.textContent.includes("Recita")) {
+    // Only process if it contains "Recita" and parent doesn't already have logo
+    if (node.textContent.includes("Recita") && 
+        !node.parentNode.querySelector('img[alt="Recita Logo"]')) {
       textNodes.push(node);
     }
   }
@@ -392,10 +403,15 @@ function addRecitaLogos() {
 
   // Also handle elements that might have "Recita" as their only content
   document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div").forEach(el => {
-    if (el.textContent.trim() === "Recita" && el.children.length === 0) {
+    if (el.textContent.trim() === "Recita" && 
+        el.children.length === 0 && 
+        !el.querySelector('img[alt="Recita Logo"]')) {
       el.innerHTML = '<img src="/logo.png" alt="Recita Logo" style="width:24px; height:24px; vertical-align:middle; margin-right:8px; display:inline-block;"><span style="color:#fe731f; font-weight:bold;">Recita</span>';
     }
   });
+
+  // Mark as processed
+  document.body.dataset.recitaLogosProcessed = 'true';
 }
 
 // Run multiple times to ensure it catches everything
