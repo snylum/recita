@@ -1,4 +1,5 @@
-// -------------------
+console.log("Making request to:", `/attendance/pick?recitaId=${recitaId}`);
+        const student = await apiFetch(`/attendance/pick?recitaId=${recitaId}`);// -------------------
 // Base helpers
 // -------------------
 async function apiFetch(url, options = {}) {
@@ -258,8 +259,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       try {
-        console.log("Making request to:", `/attendance/pick?recitaId=${recitaId}`);
-        const student = await apiFetch(`/attendance/pick?recitaId=${recitaId}`);
+        console.log("Making request to:", `/attendance?action=pick&recitaId=${recitaId}`);
+        const student = await apiFetch(`/attendance?action=pick&recitaId=${recitaId}`);
         console.log("Student picked:", student);
         
         if (!student) {
