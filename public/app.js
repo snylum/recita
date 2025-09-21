@@ -68,7 +68,7 @@ function setupLogin(apiFetch, callback) {
       callback("dashboard.html");
     } catch (err) {
       console.error('Login error:', err);
-      alert("Login failed: " + err.message);
+      showInfoModal("Login failed: " + err.message);
     }
   });
 }
@@ -95,7 +95,7 @@ function setupSignup(apiFetch, callback) {
       callback("dashboard.html");
     } catch (err) {
       console.error('Signup error:', err);
-      alert("Signup failed: " + err.message);
+      showInfoModal("Signup failed: " + err.message);
     }
   });
 }
@@ -109,7 +109,7 @@ function setupLogout(apiFetch, go) {
       await apiFetch("/auth/logout", { method: "POST" });
       go("index.html");
     } catch (err) {
-      alert("Logout failed: " + err.message);
+      showInfoModal("Logout failed: " + err.message);
     }
   });
 }
@@ -329,14 +329,13 @@ document.addEventListener("DOMContentLoaded", () => {
         <p>You can now download your student data as a CSV file.</p>
         <div style="margin-top: 20px;">
           <button id="downloadCsvBtn" style="background: #22c55e; margin-bottom: 10px;">
-            📊 Download CSV & Go to Dashboard
+            Download CSV & Go to Dashboard
           </button>
           <button id="continueToDashboard" style="background: #3b82f6; margin-bottom: 10px;">
             Continue to Dashboard
           </button>
         </div>
-      </div>
-    `;
+      `;
 
     document.body.appendChild(modal);
 
@@ -720,7 +719,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         location.reload();
       } catch (err) {
-        alert("Failed to create class: " + err.message);
+        showInfoModal("Failed to create class: " + err.message);
       }
     });
 
@@ -770,7 +769,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         location.reload();
       } catch (err) {
-        alert("Failed to add students: " + err.message);
+        showInfoModal("Failed to add students: " + err.message);
       }
     });
 
@@ -791,11 +790,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------
-  // RECITA PAGE
+  // RECITA PAGE - FIXED VERSION
   // -------------------
   const saveRecitaBtn = document.getElementById("saveRecitaBtn");
   const pickSection = document.getElementById("pickSection");
-  const recitaStatus = document.getElementById("recitaStatus");
 
   // Debug logging
   console.log("saveRecitaBtn found:", !!saveRecitaBtn);
@@ -819,58 +817,54 @@ document.addEventListener("DOMContentLoaded", () => {
     saveRecitaBtn.addEventListener("click", async () => {
       const topicInput = document.getElementById("topicInput");
       if (!topicInput) {
-        alert("Topic input not found!");
+        showInfoModal("Topic input not found!");
         return;
       }
       
-      const topic = topicInput.value;
+      const topic = topicInput.value.trim();
       console.log("Saving recita with topic:", topic, "and classId:", classId);
       
-      if (!topic.trim()) {
-        alert("Please enter a topic for the recita");
+      if (!topic) {
+        showInfoModal("Please enter a topic for the recita");
         return;
       }
       
       try {
-        // Get current date and time in user's timezone
-        const now = new Date();
-        const dateStr = now.toLocaleDateString();
-        const timeStr = now.toLocaleTimeString();
+        // Convert classId to integer (your server expects this)
+        const numericClassId = parseInt(classId, 10);
         
-        const recita = await apiFetch("/attendance", {
+        console.log("Sending to server:", { topic, classId: numericClassId });
+        
+        // Send only the fields your server expects
+        const response = await apiFetch("/attendance", {
           method: "POST",
           body: JSON.stringify({ 
-            classId, 
-            topic,
-            date: dateStr,
-            time: timeStr
+            topic: topic,
+            classId: numericClassId  // Only send what server expects
           }),
         });
-        console.log("Recita saved, response:", recita);
         
-        // Store the recita ID - handle different response formats
-        let recitaId = recita.id || recita.recitaId || recita.insertId;
-        if (!recitaId && recita.meta && recita.meta.last_row_id) {
-          recitaId = recita.meta.last_row_id;
-        }
-        if (!recitaId && recita.changes && recita.changes.last_insert_rowid) {
-          recitaId = recita.changes.last_insert_rowid;
-        }
+        console.log("Server response:", response);
+        console.log("Response keys:", Object.keys(response || {}));
         
-        console.log("Extracted recita ID:", recitaId);
+        // Your server returns { id: lastRowId, topic: body.topic }
+        const recitaId = response.id;
         
         if (!recitaId) {
-          console.error("No recita ID found in response:", recita);
-          alert("Recita saved but ID not found. Please refresh and try again.");
+          console.error("No ID in server response:", response);
+          showInfoModal("Recita saved but ID not found. Please refresh and try again.");
           return;
         }
         
+        console.log("Got recita ID:", recitaId);
+        
+        // Store recita info in localStorage
         localStorage.setItem("recitaId", recitaId.toString());
         localStorage.setItem("recitaTopic", topic);
-        localStorage.setItem("recitaDate", dateStr);
-        localStorage.setItem("recitaTime", timeStr);
+        localStorage.setItem("recitaDate", new Date().toLocaleDateString());
+        localStorage.setItem("recitaTime", new Date().toLocaleTimeString());
         
-        console.log("Stored recita ID in localStorage:", localStorage.getItem("recitaId"));
+        console.log("Stored in localStorage - ID:", localStorage.getItem("recitaId"));
         
         // Clear any previous called students for this new recita
         localStorage.removeItem("calledStudents");
@@ -888,10 +882,12 @@ document.addEventListener("DOMContentLoaded", () => {
         // Update the display
         displayRecitaStatus();
         
+        showInfoModal(`Recita "${topic}" saved successfully!`);
+        
       } catch (err) {
         console.error("Save recita error:", err);
         console.error("Error details:", err.message, err.stack);
-        alert("Failed to save recita: " + err.message);
+        showInfoModal("Failed to save recita: " + err.message);
       }
     });
   }
@@ -968,7 +964,7 @@ document.addEventListener("DOMContentLoaded", () => {
           recitaTopic: localStorage.getItem("recitaTopic"),
           allKeys: Object.keys(localStorage)
         });
-        alert("No recita ID found. Please save a recita first.");
+        showInfoModal("No recita ID found. Please save a recita first.");
         return;
       }
       
@@ -979,7 +975,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Student picked:", student);
         
         if (!student) {
-          alert("All students already picked!");
+          showInfoModal("All students already picked!");
           return;
         }
         
@@ -993,11 +989,11 @@ document.addEventListener("DOMContentLoaded", () => {
           studentModal.dataset.studentId = student.id;
         } else {
           console.error("Student modal elements not found");
-          alert(`Selected student: ${student.name}`);
+          showInfoModal(`Selected student: ${student.name}`);
         }
       } catch (err) {
         console.error("Pick student error:", err);
-        alert("Failed to pick student: " + err.message);
+        showInfoModal("Failed to pick student: " + err.message);
       }
     }
   });
@@ -1014,7 +1010,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Recording score:", score, "for student:", studentId, "in recita:", recitaId);
       
       if (!recitaId || !studentId) {
-        alert("Missing recita or student ID");
+        showInfoModal("Missing recita or student ID");
         return;
       }
       
@@ -1034,7 +1030,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } catch (err) {
         console.error("Failed to record score", err);
-        alert("Failed to record score: " + err.message);
+        showInfoModal("Failed to record score: " + err.message);
       }
     }
   });
@@ -1160,7 +1156,7 @@ document.addEventListener("DOMContentLoaded", () => {
     exportBtn.addEventListener("click", () => {
       const classId = localStorage.getItem("classId");
       if (!classId) {
-        alert("No class selected");
+        showInfoModal("No class selected");
         return;
       }
       window.location.href = `/export?classId=${classId}`;
