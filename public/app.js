@@ -18,14 +18,13 @@ async function apiFetch(url, options = {}) {
 }
 
 // -------------------
-// SAFE Modal System - Only for Recita Features (Won't interfere with login/signup)
+// Modal System - Safe and Complete
 // -------------------
-function showRecitaModal(title, content, buttons = []) {
-  // Remove any existing recita modal first
-  closeRecitaModal();
+function showModal(title, content, buttons = []) {
+  closeModal();
   
   const modalHtml = `
-    <div id="recitaCustomModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50" onclick="closeRecitaModal()">
+    <div id="appModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal()">
       <div class="relative top-20 mx-auto border w-96 shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
         <div class="mt-3 text-center">
           <h3 class="text-lg font-medium text-gray-900 p-4">${title}</h3>
@@ -43,114 +42,50 @@ function showRecitaModal(title, content, buttons = []) {
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-function showRecitaSuccessModal(message) {
-  showRecitaModal("Success", message, [{
+function showSuccessModal(message) {
+  showModal("Success", message, [{
     text: "OK",
     class: "bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-md",
-    onclick: "closeRecitaModal()"
+    onclick: "closeModal()"
   }]);
 }
 
-function showRecitaInfoModal(message) {
-  showRecitaModal("Information", message, [{
+function showInfoModal(message) {
+  showModal("Information", message, [{
     text: "OK", 
     class: "bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-md",
-    onclick: "closeRecitaModal()"
+    onclick: "closeModal()"
   }]);
 }
 
-function showRecitaConfirmModal(message, onConfirm) {
-  showRecitaModal("Confirm", message, [
+function showConfirmModal(message, onConfirm) {
+  showModal("Confirm", message, [
     {
       text: "Cancel",
       class: "bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md",
-      onclick: "closeRecitaModal()"
+      onclick: "closeModal()"
     },
     {
       text: "Confirm",
       class: "bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-md",
-      onclick: `${onConfirm}; closeRecitaModal()`
+      onclick: `${onConfirm}(); closeModal()`
     }
   ]);
 }
 
-function closeRecitaModal() {
-  const modal = document.getElementById('recitaCustomModal');
+function closeModal() {
+  const modal = document.getElementById('appModal');
   if (modal) {
     modal.remove();
   }
 }
 
 // -------------------
-// Custom Score Modal System
-// -------------------
-function showCustomScoreModal() {
-  closeCustomScoreModal(); // Remove any existing modal
-  
-  const modalHtml = `
-    <div id="customScoreModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-      <div class="relative top-20 mx-auto border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3 text-center">
-          <h3 class="text-lg font-medium text-gray-900 p-4">Custom Score</h3>
-          <div class="mt-2 px-7 py-3">
-            <p class="text-sm text-gray-500 mb-3">Enter a custom score for this student:</p>
-            <input type="text" id="customScoreInput" placeholder="e.g., 95, Excellent, Good job!" 
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div class="flex gap-3 justify-center px-4 py-3">
-            <button onclick="closeCustomScoreModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md">Cancel</button>
-            <button onclick="submitCustomScore()" class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-md">Submit</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-  
-  // Focus on input and allow Enter key
-  setTimeout(() => {
-    const input = document.getElementById('customScoreInput');
-    if (input) {
-      input.focus();
-      input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          submitCustomScore();
-        }
-      });
-    }
-  }, 100);
-}
-
-function submitCustomScore() {
-  const input = document.getElementById('customScoreInput');
-  const customScore = input?.value?.trim();
-  
-  if (!customScore) {
-    showRecitaInfoModal("Please enter a score");
-    return;
-  }
-  
-  closeCustomScoreModal();
-  
-  // Call the authenticated pick student function with custom score
-  window.currentCustomScore = customScore;
-  pickStudentAuthenticated();
-}
-
-function closeCustomScoreModal() {
-  const modal = document.getElementById('customScoreModal');
-  if (modal) {
-    modal.remove();
-  }
-}
-
-// -------------------
-// Export Functions with Validation
+// Export Functions with Complete Validation
 // -------------------
 window.exportRecitaCSV = async function(recitaId) {
   if (!recitaId) {
-    showRecitaInfoModal("No recitation ID provided for export.");
+    showInfoModal("No recitation ID provided for export.");
     return;
   }
 
@@ -158,7 +93,7 @@ window.exportRecitaCSV = async function(recitaId) {
     // First, check if all students are called
     const checkRes = await apiFetch(`/attendance?recitaId=${recitaId}`);
     if (!checkRes.ok) {
-      showRecitaInfoModal("Failed to check recitation status.");
+      showInfoModal("Failed to check recitation status.");
       return;
     }
 
@@ -168,19 +103,19 @@ window.exportRecitaCSV = async function(recitaId) {
     const remainingCount = totalStudents - calledStudents;
 
     if (remainingCount > 0) {
-      showRecitaInfoModal(`Cannot export yet! ${remainingCount} students still need to be called. Please finish the recitation first.`);
+      showInfoModal(`Cannot export yet! ${remainingCount} students still need to be called. Please finish the recitation first.`);
       return;
     }
 
     // All students called, proceed with export confirmation
-    showRecitaConfirmModal(
+    showConfirmModal(
       `Export "${data.topic}" recitation? This will include ${calledStudents} student records.`,
-      `proceedWithRecitaExport(${recitaId})`
+      () => proceedWithRecitaExport(recitaId)
     );
 
   } catch (err) {
     console.error("Export check error:", err);
-    showRecitaInfoModal("Failed to validate recitation completion.");
+    showInfoModal("Failed to validate recitation completion.");
   }
 };
 
@@ -189,7 +124,7 @@ window.proceedWithRecitaExport = async function(recitaId) {
     const res = await apiFetch(`/export?recitaId=${recitaId}`);
     if (!res.ok) {
       const error = await res.text();
-      showRecitaInfoModal(`Export failed: ${error}`);
+      showInfoModal(`Export failed: ${error}`);
       return;
     }
 
@@ -207,6 +142,10 @@ window.proceedWithRecitaExport = async function(recitaId) {
       if (matches != null && matches[1]) {
         filename = matches[1].replace(/['"]/g, '');
       }
+    } else {
+      // Create filename with date
+      const dateSafe = new Date().toISOString().slice(0, 10);
+      filename = `recita-${recitaId}-${dateSafe}.csv`;
     }
     
     a.download = filename;
@@ -215,35 +154,30 @@ window.proceedWithRecitaExport = async function(recitaId) {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
     
-    showRecitaSuccessModal("Recitation exported successfully!");
+    showSuccessModal("Recitation exported successfully!");
   } catch (err) {
     console.error("Export error:", err);
-    showRecitaInfoModal("Export failed. Please try again.");
+    showInfoModal("Export failed. Please try again.");
   }
 };
 
 window.exportClassCSV = async function(classId) {
   if (!classId) {
-    showRecitaInfoModal("No class ID provided for export.");
+    showInfoModal("No class ID provided for export.");
     return;
   }
 
-  try {
-    showRecitaConfirmModal(
-      "Export all recitations for this class? This will include all historical data.",
-      `proceedWithClassExport(${classId})`
-    );
-  } catch (err) {
-    console.error("Class export error:", err);
-    showRecitaInfoModal("Export failed. Please try again.");
-  }
+  showConfirmModal(
+    "Export all recitations for this class? This will include all historical data.",
+    () => proceedWithClassExport(classId)
+  );
 };
 
 window.proceedWithClassExport = async function(classId) {
   try {
     const res = await apiFetch(`/export?classId=${classId}`);
     if (!res.ok) {
-      showRecitaInfoModal("Export failed");
+      showInfoModal("Export failed");
       return;
     }
 
@@ -258,10 +192,10 @@ window.proceedWithClassExport = async function(classId) {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
     
-    showRecitaSuccessModal("All recitations exported successfully!");
+    showSuccessModal("All recitations exported successfully!");
   } catch (err) {
     console.error("Class export error:", err);
-    showRecitaInfoModal("Export failed. Please try again.");
+    showInfoModal("Export failed. Please try again.");
   }
 };
 
@@ -285,7 +219,7 @@ function updateStudentTable(students) {
     return;
   }
 
-  // Sort by pick order (assuming there's an order field, or use index)
+  // Sort by pick order
   calledStudents.sort((a, b) => (a.picked_at || '').localeCompare(b.picked_at || ''));
 
   let tableHtml = `
@@ -504,7 +438,7 @@ function setupAuthenticatedMode() {
       const topic = topicInput?.value?.trim();
       
       if (!topic) {
-        showRecitaInfoModal("Please enter a topic for this recitation.");
+        showInfoModal("Please enter a topic for this recitation.");
         return;
       }
 
@@ -520,13 +454,13 @@ function setupAuthenticatedMode() {
           });
 
           if (res.ok) {
-            showRecitaSuccessModal(`Recita topic updated to "${topic}"!`);
+            showSuccessModal(`Recita topic updated to "${topic}"!`);
             // Reload recita history to show updated topic
             loadRecitaHistory(classId);
             return;
           } else {
             const error = await res.text();
-            showRecitaInfoModal(`Failed to update topic: ${error}`);
+            showInfoModal(`Failed to update topic: ${error}`);
             return;
           }
         }
@@ -549,7 +483,7 @@ function setupAuthenticatedMode() {
           document.getElementById("pickSection").style.display = "block";
           
           // Show success and enable pick section
-          showRecitaSuccessModal(`Recita "${topic}" saved successfully! You can now start picking students.`);
+          showSuccessModal(`Recita "${topic}" saved successfully! You can now start picking students.`);
           
           // Load students for this recita
           await loadRecitaStudents(data.id);
@@ -558,11 +492,11 @@ function setupAuthenticatedMode() {
           loadRecitaHistory(classId);
         } else {
           const error = await res.text();
-          showRecitaInfoModal(`Failed to save recita: ${error}`);
+          showInfoModal(`Failed to save recita: ${error}`);
         }
       } catch (err) {
         console.error("Save recita error:", err);
-        showRecitaInfoModal("Failed to save recita. Please try again.");
+        showInfoModal("Failed to save recita. Please try again.");
       }
     });
   }
@@ -574,7 +508,7 @@ function setupAuthenticatedMode() {
       const namesText = document.getElementById("studentNamesAuth")?.value?.trim();
       
       if (!namesText) {
-        showRecitaInfoModal("Please enter student names.");
+        showInfoModal("Please enter student names.");
         return;
       }
 
@@ -583,7 +517,7 @@ function setupAuthenticatedMode() {
         .filter(name => name);
 
       if (names.length === 0) {
-        showRecitaInfoModal("Please enter valid student names.");
+        showInfoModal("Please enter valid student names.");
         return;
       }
 
@@ -594,15 +528,15 @@ function setupAuthenticatedMode() {
         });
 
         if (res.ok) {
-          showRecitaSuccessModal(`Successfully added ${names.length} students!`);
+          showSuccessModal(`Successfully added ${names.length} students!`);
           document.getElementById("studentNamesAuth").value = "";
         } else {
           const error = await res.text();
-          showRecitaInfoModal(`Failed to add students: ${error}`);
+          showInfoModal(`Failed to add students: ${error}`);
         }
       } catch (err) {
         console.error("Add students error:", err);
-        showRecitaInfoModal("Failed to add students. Please try again.");
+        showInfoModal("Failed to add students. Please try again.");
       }
     });
   }
@@ -633,7 +567,7 @@ function setupAuthenticatedMode() {
       if (recitaId) {
         exportRecitaCSV(parseInt(recitaId));
       } else {
-        showRecitaInfoModal("No active recitation to export.");
+        showInfoModal("No active recitation to export.");
       }
     });
   }
@@ -647,10 +581,74 @@ function setupAuthenticatedMode() {
   }
 }
 
+// -------------------
+// Custom Score Modal System
+// -------------------
+function showCustomScoreModal() {
+  closeCustomScoreModal();
+  
+  const modalHtml = `
+    <div id="customScoreModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div class="relative top-20 mx-auto border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+          <h3 class="text-lg font-medium text-gray-900 p-4">Custom Score</h3>
+          <div class="mt-2 px-7 py-3">
+            <p class="text-sm text-gray-500 mb-3">Enter a custom score for this student:</p>
+            <input type="text" id="customScoreInput" placeholder="e.g., 95, Excellent, Good job!" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="flex gap-3 justify-center px-4 py-3">
+            <button onclick="closeCustomScoreModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md">Cancel</button>
+            <button onclick="submitCustomScore()" class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-md">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  
+  // Focus on input and allow Enter key
+  setTimeout(() => {
+    const input = document.getElementById('customScoreInput');
+    if (input) {
+      input.focus();
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          submitCustomScore();
+        }
+      });
+    }
+  }, 100);
+}
+
+function submitCustomScore() {
+  const input = document.getElementById('customScoreInput');
+  const customScore = input?.value?.trim();
+  
+  if (!customScore) {
+    showInfoModal("Please enter a score");
+    return;
+  }
+  
+  closeCustomScoreModal();
+  
+  // Call the authenticated pick student function with custom score
+  window.currentCustomScore = customScore;
+  pickStudentAuthenticated();
+}
+
+function closeCustomScoreModal() {
+  const modal = document.getElementById('customScoreModal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
 async function pickStudentAuthenticated() {
   const currentRecitaId = localStorage.getItem('currentRecitaId');
   if (!currentRecitaId) {
-    showRecitaInfoModal("Please save a recita topic first.");
+    showInfoModal("Please save a recita topic first.");
     return;
   }
 
@@ -661,7 +659,7 @@ async function pickStudentAuthenticated() {
       const data = await res.json();
       
       if (!data.student) {
-        showRecitaInfoModal("No more students to pick! All students have been called.");
+        showInfoModal("No more students to pick! All students have been called.");
         return;
       }
 
@@ -679,18 +677,18 @@ async function pickStudentAuthenticated() {
       
     } else {
       const error = await res.text();
-      showRecitaInfoModal(`Failed to pick student: ${error}`);
+      showInfoModal(`Failed to pick student: ${error}`);
     }
   } catch (err) {
     console.error("Pick student error:", err);
-    showRecitaInfoModal("Failed to pick student. Please try again.");
+    showInfoModal("Failed to pick student. Please try again.");
   }
 }
 
 async function skipStudentAuthenticated() {
   const currentRecitaId = localStorage.getItem('currentRecitaId');
   if (!currentRecitaId) {
-    showRecitaInfoModal("Please save a recita topic first.");
+    showInfoModal("Please save a recita topic first.");
     return;
   }
 
@@ -701,7 +699,7 @@ async function skipStudentAuthenticated() {
       const data = await res.json();
       
       if (!data.student) {
-        showRecitaInfoModal("No more students to pick! All students have been called.");
+        showInfoModal("No more students to pick! All students have been called.");
         return;
       }
 
@@ -710,11 +708,11 @@ async function skipStudentAuthenticated() {
       
     } else {
       const error = await res.text();
-      showRecitaInfoModal(`Failed to skip student: ${error}`);
+      showInfoModal(`Failed to skip student: ${error}`);
     }
   } catch (err) {
     console.error("Skip student error:", err);
-    showRecitaInfoModal("Failed to skip student. Please try again.");
+    showInfoModal("Failed to skip student. Please try again.");
   }
 }
 
@@ -814,7 +812,7 @@ window.submitCustomScoreCurrent = async function() {
   const customScore = input?.value?.trim();
   
   if (!customScore) {
-    showRecitaInfoModal("Please enter a score");
+    showInfoModal("Please enter a score");
     return;
   }
   
@@ -848,18 +846,18 @@ async function recordStudentScore(studentId, recitaId, score, status) {
       const student = window.currentPickedStudent;
       const isSkipped = status === 'skipped';
       const statusText = isSkipped ? 'skipped' : `called with score: ${score}`;
-      showRecitaSuccessModal(`${student.name} ${statusText}`);
+      showSuccessModal(`${student.name} ${statusText}`);
       
       // Reload the student list to show updated table
       await loadRecitaStudents(recitaId);
       
     } else {
       const error = await res.text();
-      showRecitaInfoModal(`Failed to record score: ${error}`);
+      showInfoModal(`Failed to record score: ${error}`);
     }
   } catch (err) {
     console.error("Record score error:", err);
-    showRecitaInfoModal("Failed to record score. Please try again.");
+    showInfoModal("Failed to record score. Please try again.");
   }
 }
 
@@ -1049,11 +1047,11 @@ window.viewRecitaDetails = async function(recitaId) {
       const data = await res.json();
       showRecitaDetailsModal(data);
     } else {
-      showRecitaInfoModal("Failed to load recitation details.");
+      showInfoModal("Failed to load recitation details.");
     }
   } catch (err) {
     console.error("View details error:", err);
-    showRecitaInfoModal("Failed to load recitation details.");
+    showInfoModal("Failed to load recitation details.");
   }
 };
 
@@ -1090,7 +1088,7 @@ function showRecitaDetailsModal(data) {
     studentsHtml = '<p class="text-gray-500 text-center py-4">No students called in this recitation.</p>';
   }
   
-  showRecitaModal(
+  showModal(
     `${topic} - Details`,
     `
       <div class="text-left">
@@ -1102,7 +1100,7 @@ function showRecitaDetailsModal(data) {
     [{
       text: "Close",
       class: "bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-md",
-      onclick: "closeRecitaModal()"
+      onclick: "closeModal()"
     }]
   );
 }
