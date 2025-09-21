@@ -112,16 +112,18 @@ function showConfirmModal(message, onConfirm, onCancel = null) {
 }
 
 function closeModal() {
-  const modal = document.getElementById('customModal');
-  if (modal) {
-    modal.remove();
+  // Only close our specific modals, don't interfere with other systems
+  const customModal = document.getElementById('customModal');
+  if (customModal) {
+    customModal.remove();
   }
   
-  // Also close any other modal types that might exist
   const customScoreModal = document.getElementById('customScoreModal');
   if (customScoreModal) {
     customScoreModal.remove();
   }
+  
+  // Don't interfere with other modal systems that might exist
 }
 
 // -------------------
