@@ -28,6 +28,24 @@
         
         <!-- Left Column: Main Functionality -->
         <div>
+          <!-- Topic Input -->
+          <div style="margin-bottom: 25px;">
+            <label for="guestTopic" style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">
+              Topic for today's recitation:
+            </label>
+            <input 
+              type="text" 
+              id="guestTopic" 
+              placeholder="e.g., Chapter 5: Photosynthesis"
+              style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
+            
+            <div id="guestTopicStatus" style="display: none; background: #e8f5e8; padding: 10px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #22c55e;">
+              <div style="font-weight: bold; color: #2c3e50;">Current Topic:</div>
+              <div id="guestTopicDisplay" style="color: #2c3e50;"></div>
+              <div id="guestDateDisplay" style="font-size: 0.9em; color: #666; margin-top: 5px;"></div>
+            </div>
+          </div>
+
           <!-- Student Input -->
           <div style="margin-bottom: 25px;">
             <label for="guestStudentList" style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
@@ -42,7 +60,7 @@
           
           <!-- Pick Button -->
           <button id="guestPickBtn" style="background: #10b981; font-size: 16px; padding: 12px; margin-bottom: 30px;">
-            Pick Random Student
+            🎲 Pick Random Student
           </button>
 
           <!-- Called Students Section -->
@@ -52,7 +70,7 @@
               <button 
                 class="guestSaveBtn" 
                 style="width: auto; display: inline-block; margin: 0; padding: 10px 16px; background: #8b5cf6; font-size: 14px;">
-                Save Data / Export CSV
+                💾 Save Data / Export CSV
               </button>
             </div>
             <div id="guestCalledStudents" style="min-height: 60px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
@@ -63,9 +81,9 @@
           <!-- Action Buttons -->
           <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
             <button 
-              id="clearGuestData" 
+              id="guestClearBtn" 
               style="width: auto; display: inline-block; margin: 0; padding: 10px 20px; background: #ef4444; font-size: 14px;">
-              Clear All Data
+              🗑️ Clear All Data
             </button>
           </div>
         </div>
@@ -82,7 +100,7 @@
           </ul>
           <div style="text-align: center; margin-top: 20px;">
             <button class="guestSaveBtn" style="width: auto; display: inline-block; margin: 0; padding: 12px 24px; background: #2563eb; font-size: 15px;">
-              Get Started Free
+              🚀 Get Started Free
             </button>
           </div>
         </div>
@@ -138,7 +156,6 @@
       const showLoginBtn2 = document.getElementById('showLoginBtn2');
       const loginSection = document.getElementById('loginSection');
       const signupSection = document.getElementById('signupSection');
-      const clearDataBtn = document.getElementById('clearGuestData');
       
       // Show login modal
       showLoginBtn.addEventListener('click', () => {
@@ -170,17 +187,8 @@
         signupSection.style.display = 'none';
         loginSection.style.display = 'block';
       });
-      
-      // Clear guest data
-      clearDataBtn.addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear all student data? This cannot be undone.')) {
-          localStorage.removeItem('guestCalledStudents');
-          document.getElementById('guestStudentList').value = '';
-          document.getElementById('guestCalledStudents').innerHTML = '<p style="color: #888; font-style: italic;">No students called yet</p>';
-        }
-      });
 
-      // Setup signup form handler
+      // Setup signup form handler with proper field names
       const signupForm = document.getElementById('signupForm');
       if (signupForm) {
         signupForm.addEventListener('submit', async (e) => {
@@ -198,7 +206,16 @@
             });
             
             console.log('Signup successful:', result);
-            go("dashboard.html");
+            
+            // Check if user came from export flow
+            const fromExport = localStorage.getItem('pendingExport');
+            if (fromExport === 'true') {
+              localStorage.removeItem('pendingExport');
+              loginModal.style.display = 'none';
+              // The app.js will handle showing the export modal
+            } else {
+              window.location.href = "dashboard.html";
+            }
           } catch (err) {
             console.error('Signup error:', err);
             alert("Signup failed: " + err.message);
