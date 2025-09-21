@@ -75,3 +75,19 @@ button:hover {
 .modal-content button:hover {
   background: #4338ca;
 }
+
+.modal-content input {
+        width: 100%;
+        max-width: 100%;
+        margin: 10px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+      }
+      
+.modal-content form input {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
