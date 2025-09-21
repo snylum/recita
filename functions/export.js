@@ -43,11 +43,13 @@ async function exportRecitaCSV(env, teacher, recitaId) {
 
   const recita = recitaResult.results[0];
 
-  // Check if all students have been called
+  // Check if all students have been called or skipped
   const completionQuery = `
     SELECT 
       COUNT(s.id) as total_students,
-      COUNT(a.id) as called_students
+      COUNT(CASE WHEN a.status = 'called' THEN 1 END) as called_students,
+      COUNT(CASE WHEN a.status = 'skipped' THEN 1 END) as skipped_students,
+      COUNT(a.id) as processed_students
     FROM students s
     LEFT JOIN attendance a ON s.id = a.student_id AND a.recita_id = ?
     WHERE s.class_id = ?
@@ -58,15 +60,17 @@ async function exportRecitaCSV(env, teacher, recitaId) {
   
   console.log("Completion check:", completion);
 
-  if (completion.total_students > completion.called_students) {
-    const remaining = completion.total_students - completion.called_students;
+  // Fixed logic: Check if all students have been processed (called OR skipped)
+  const totalProcessed = completion.processed_students || 0;
+  if (completion.total_students > totalProcessed) {
+    const remaining = completion.total_students - totalProcessed;
     return new Response(
       `Cannot export: ${remaining} student(s) still need to be called. Complete the recitation first.`,
       { status: 400 }
     );
   }
 
-  // Get attendance data
+  // Get attendance data - only students who were actually processed
   const dataQuery = `
     SELECT 
       s.name as student_name,
@@ -92,7 +96,8 @@ async function exportRecitaCSV(env, teacher, recitaId) {
   csv += `Class: ${recita.class_name}\n`;
   csv += `Date: ${new Date(recita.created_at).toLocaleDateString()}\n`;
   csv += `Time: ${new Date(recita.created_at).toLocaleTimeString()}\n`;
-  csv += `Total Students: ${completion.total_students}\n\n`;
+  csv += `Total Students: ${completion.total_students}\n`;
+  csv += `Students Processed: ${totalProcessed}\n\n`;
   
   // CSV headers
   csv += "Order,Student Name,Score,Status,Time Called\n";
@@ -115,16 +120,16 @@ async function exportRecitaCSV(env, teacher, recitaId) {
   csv += `\nSummary:\n`;
   csv += `Called: ${calledCount}\n`;
   csv += `Skipped: ${skippedCount}\n`;
-  csv += `Total: ${dataResult.results.length}\n`;
+  csv += `Total Processed: ${dataResult.results.length}\n`;
 
-  // Generate filename
-  const safeTopic = recita.topic ? recita.topic.replace(/[^a-zA-Z0-9]/g, '_') : 'recitation';
+  // Generate filename - handle edge cases
+  const safeTopic = recita.topic ? recita.topic.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_') : 'recitation';
   const dateStr = new Date().toISOString().slice(0, 10);
   const filename = `recita-${safeTopic}-${dateStr}.csv`;
 
   return new Response(csv, {
     headers: {
-      "Content-Type": "text/csv",
+      "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${filename}"`
     }
   });
@@ -147,6 +152,7 @@ async function exportClassCSV(env, teacher, classId) {
   // Get all recitations for this class with attendance data
   const query = `
     SELECT 
+      rs.id as recita_id,
       rs.topic,
       rs.created_at,
       s.name as student_name,
@@ -177,8 +183,10 @@ async function exportClassCSV(env, teacher, classId) {
   result.results.forEach(row => {
     if (!row.topic) return; // Skip rows without topics (shouldn't happen)
     
-    if (!recitaGroups[row.topic]) {
-      recitaGroups[row.topic] = {
+    const recitaKey = `${row.recita_id}_${row.topic}`;
+    if (!recitaGroups[recitaKey]) {
+      recitaGroups[recitaKey] = {
+        id: row.recita_id,
         topic: row.topic,
         created_at: row.created_at,
         students: []
@@ -186,7 +194,7 @@ async function exportClassCSV(env, teacher, classId) {
     }
     
     if (row.student_name) { // Only add if there's student data
-      recitaGroups[row.topic].students.push(row);
+      recitaGroups[recitaKey].students.push(row);
     }
   });
 
@@ -216,14 +224,14 @@ async function exportClassCSV(env, teacher, classId) {
     csv += "\n";
   });
 
-  // Generate filename
-  const safeClassName = className.replace(/[^a-zA-Z0-9]/g, '_');
+  // Generate filename - handle edge cases
+  const safeClassName = className ? className.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_') : 'class';
   const dateStr = new Date().toISOString().slice(0, 10);
   const filename = `class-${safeClassName}-all-recitations-${dateStr}.csv`;
 
   return new Response(csv, {
     headers: {
-      "Content-Type": "text/csv",
+      "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${filename}"`
     }
   });
@@ -280,7 +288,7 @@ async function exportAllDataCSV(env, teacher) {
 
   return new Response(csv, {
     headers: {
-      "Content-Type": "text/csv",
+      "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${filename}"`
     }
   });
