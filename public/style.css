@@ -91,3 +91,18 @@ button:hover {
         max-width: 100%;
         box-sizing: border-box;
       }
+
+.modal {
+  z-index: 9999 !important;
+}
+
+.modal-content {
+  z-index: 10000 !important;
+  position: relative;
+}
+
+.modal-content button {
+  position: relative;
+  z-index: 10001 !important;
+  pointer-events: auto !important;
+}
