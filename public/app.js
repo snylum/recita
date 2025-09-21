@@ -245,16 +245,15 @@ document.addEventListener("DOMContentLoaded", () => {
   document.head.appendChild(link);
 })();
 
-// --- Highlight "Recita" dynamically ---
+// --- Style Recita with logo ---
 document.querySelectorAll("body *").forEach(el => {
   if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
     if (el.textContent.includes("Recita")) {
       el.innerHTML = el.textContent.replace(
         /Recita/g,
-        '<span style="color:#fe731f; font-weight:bold;">Recita</span>'
+        '<img src="/logo.png" alt="Recita Logo" style="width:24px; height:24px; vertical-align:middle; margin-right:8px;"><span style="color:#fe731f; font-weight:bold;">Recita</span>'
       );
     }
   }
 });
-
 
