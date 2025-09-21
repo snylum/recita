@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
       guestPickBtn.addEventListener("click", () => {
         const studentText = studentListTextarea ? studentListTextarea.value.trim() : '';
         if (!studentText) {
-          alert("Please paste student names first (one per line)");
+          showInfoModal("Please paste student names first", "Add student names (one per line) in the text box above, then try again.");
           return;
         }
         
@@ -153,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const availableStudents = allStudents.filter(name => !calledNames.includes(name));
         
         if (availableStudents.length === 0) {
-          alert("All students have been called!");
+          showInfoModal("All students called!", "Every student in your list has been called. You can clear the data to start over or add more students.");
           return;
         }
         
@@ -167,51 +167,133 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   
+  // Info modal for messages (replaces alerts)
+  function showInfoModal(title, message) {
+    const existingModal = document.getElementById("infoModal");
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    const modal = document.createElement("div");
+    modal.id = "infoModal";
+    modal.className = "modal";
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h2 style="margin-top: 0; margin-bottom: 15px;">${title}</h2>
+        <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">${message}</p>
+        <button id="closeInfoModal" style="margin: 0;">OK</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    modal.addEventListener("click", (e) => {
+      if (e.target.id === "closeInfoModal" || e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+  
   // Guest modal functionality
   function showGuestStudentModal(studentName) {
-    // Create or update guest modal
-    let modal = document.getElementById("guestStudentModal");
-    if (!modal) {
-      modal = document.createElement("div");
-      modal.id = "guestStudentModal";
-      modal.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
-      modal.innerHTML = `
-        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-          <h3 class="text-xl font-bold mb-4 text-center">Selected Student</h3>
-          <p class="text-2xl font-semibold text-center mb-6" id="guestSelectedStudentName">${studentName}</p>
-          <div class="grid grid-cols-2 gap-3">
-            <button class="guestScoreBtn bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-medium" data-score="10">10 pts</button>
-            <button class="guestScoreBtn bg-green-400 hover:bg-green-500 text-white py-3 px-4 rounded-lg font-medium" data-score="5">5 pts</button>
-            <button class="guestScoreBtn bg-purple-500 hover:bg-purple-600 text-white py-3 px-4 rounded-lg font-medium" data-score="custom">Custom</button>
-            <button class="guestScoreBtn bg-yellow-500 hover:bg-yellow-600 text-white py-3 px-4 rounded-lg font-medium" data-score="skip">Skip</button>
-            <button class="guestScoreBtn bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded-lg font-medium" data-score="absent">Absent</button>
-            <button id="guestModalClose" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-medium">Cancel</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      
-      // Add event listeners
-      modal.addEventListener("click", (e) => {
-        if (e.target.classList.contains("guestScoreBtn")) {
-          let score = e.target.dataset.score;
-          
-          if (score === "custom") {
-            const customScore = prompt("Enter custom score:");
-            if (customScore === null) return; // User cancelled
-            score = customScore || "custom";
-          }
-          
-          addToGuestCalledList(studentName, score);
-          modal.remove();
-        } else if (e.target.id === "guestModalClose" || e.target === modal) {
-          modal.remove();
-        }
-      });
-    } else {
-      document.getElementById("guestSelectedStudentName").textContent = studentName;
-      modal.style.display = "flex";
+    // Remove any existing modal
+    const existingModal = document.getElementById("guestStudentModal");
+    if (existingModal) {
+      existingModal.remove();
     }
+
+    // Create modal
+    const modal = document.createElement("div");
+    modal.id = "guestStudentModal";
+    modal.className = "modal";
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h2 style="margin-top: 0; margin-bottom: 20px;">Selected Student</h2>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+          <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${studentName}</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+          <button class="guestScoreBtn" data-score="10" style="margin: 0; background: #10b981;">10 pts</button>
+          <button class="guestScoreBtn" data-score="5" style="margin: 0; background: #10b981;">5 pts</button>
+          <button class="guestScoreBtn" data-score="custom" style="margin: 0; background: #8b5cf6;">Custom</button>
+          <button class="guestScoreBtn" data-score="skip" style="margin: 0; background: #f59e0b;">Skip</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <button class="guestScoreBtn" data-score="absent" style="margin: 0; background: #ef4444;">Absent</button>
+          <button id="guestModalClose" style="margin: 0; background: #6b7280;">Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Add event listeners
+    modal.addEventListener("click", (e) => {
+      if (e.target.classList.contains("guestScoreBtn")) {
+        let score = e.target.dataset.score;
+        
+        if (score === "custom") {
+          // Create custom score modal instead of prompt
+          showCustomScoreModal(studentName);
+          return;
+        }
+        
+        addToGuestCalledList(studentName, score);
+        modal.remove();
+      } else if (e.target.id === "guestModalClose" || e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+  
+  // Custom score modal
+  function showCustomScoreModal(studentName) {
+    const existingModal = document.getElementById("guestStudentModal");
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    const modal = document.createElement("div");
+    modal.id = "customScoreModal";
+    modal.className = "modal";
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h2 style="margin-top: 0; margin-bottom: 20px;">Custom Score</h2>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+          <p style="font-size: 20px; font-weight: bold; margin: 0; color: #2c3e50;">${studentName}</p>
+        </div>
+        <input id="customScoreInput" type="text" placeholder="Enter score (e.g., 7, Good, Excellent)" style="margin-bottom: 15px;" autofocus>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <button id="saveCustomScore" style="margin: 0; background: #8b5cf6;">Save Score</button>
+          <button id="cancelCustomScore" style="margin: 0; background: #6b7280;">Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    const input = document.getElementById("customScoreInput");
+    input.focus();
+    
+    modal.addEventListener("click", (e) => {
+      if (e.target.id === "saveCustomScore") {
+        const customScore = input.value.trim();
+        if (customScore) {
+          addToGuestCalledList(studentName, customScore);
+          modal.remove();
+        } else {
+          // Show error without alert
+          input.style.borderColor = "#ef4444";
+          input.placeholder = "Please enter a score";
+        }
+      } else if (e.target.id === "cancelCustomScore" || e.target === modal) {
+        modal.remove();
+      }
+    });
+    
+    // Handle Enter key
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("saveCustomScore").click();
+      }
+    });
   }
   
   // Add student to guest called list
