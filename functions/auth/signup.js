@@ -19,11 +19,12 @@ export async function onRequestPost({ request, env }) {
     // Hash password
     const hashed = await hashPassword(password);
 
-    // Insert new teacher (match schema: password_hash, not password)
+    // Insert new teacher
     await env.DB.prepare(
       "INSERT INTO teachers (name, email, password_hash) VALUES (?, ?, ?)"
     ).bind(name, email, hashed).run();
 
+    // Create session immediately
     return await createSession(email, env);
   } catch (err) {
     console.error("❌ Signup error:", err);
@@ -39,10 +40,13 @@ async function createSession(email, env) {
     "SELECT id FROM teachers WHERE email = ?"
   ).bind(email).first();
 
+  if (!teacher) {
+    throw new Error("Teacher not found after signup");
+  }
+
   const sessionId = crypto.randomUUID();
   const expires = new Date(Date.now() + 7 * 86400e3).toISOString();
 
-  // Match schema: sessions.id is TEXT PRIMARY KEY
   await env.DB.prepare(
     "INSERT INTO sessions (id, teacher_id, expires_at) VALUES (?, ?, ?)"
   ).bind(sessionId, teacher.id, expires).run();
