@@ -825,6 +825,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const topic = topicInput.value;
       console.log("Saving recita with topic:", topic, "and classId:", classId);
+      console.log("Full recita response structure:", Object.keys(recita), recita);
       
       if (!topic.trim()) {
         alert("Please enter a topic for the recita");
