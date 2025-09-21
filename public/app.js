@@ -969,7 +969,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       try {
-        const requestUrl = `/attendance/pick?recitaId=${recitaId}`;
+        const requestUrl = `/attendance?action=pick&recitaId=${recitaId}`;
         console.log("Making request to:", requestUrl);
         const student = await apiFetch(requestUrl);
         console.log("Student picked:", student);
