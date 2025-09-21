@@ -1,3 +1,4 @@
+// utils/session.js
 export async function getTeacherFromSession(request, env) {
   const cookie = request.headers.get("Cookie");
   if (!cookie) return null;
@@ -16,5 +17,5 @@ export async function getTeacherFromSession(request, env) {
      WHERE s.id = ? AND s.expires_at > ?`
   ).bind(sessionId, new Date().toISOString()).first();
 
-  return row || null;
+  return row || null; // { id, username }
 }
