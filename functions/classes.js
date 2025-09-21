@@ -1,47 +1,25 @@
+import { getTeacherFromSession } from "../utils/session.js";
+
 export async function onRequestGet(context) {
-  const teacherId = await getTeacherId(context);
-  if (!teacherId) {
-    return new Response("Unauthorized", { status: 401 });
-  }
+  const teacher = await getTeacherFromSession(context.request, context.env);
+  if (!teacher) return new Response("Unauthorized", { status: 401 });
 
   const { results } = await context.env.DB.prepare(
     "SELECT id, name FROM classes WHERE teacher_id = ?"
-  ).bind(teacherId).all();
+  ).bind(teacher.id).all();
 
   return Response.json(results);
 }
 
 export async function onRequestPost(context) {
-  const teacherId = await getTeacherId(context);
-  if (!teacherId) {
-    return new Response("Unauthorized", { status: 401 });
-  }
+  const teacher = await getTeacherFromSession(context.request, context.env);
+  if (!teacher) return new Response("Unauthorized", { status: 401 });
 
   const { name } = await context.request.json();
 
   const { lastRowId } = await context.env.DB.prepare(
     "INSERT INTO classes (teacher_id, name) VALUES (?, ?)"
-  ).bind(teacherId, name).run();
+  ).bind(teacher.id, name).run();
 
   return Response.json({ id: lastRowId, name });
-}
-
-// Helper: extract teacherId from session
-async function getTeacherId(context) {
-  const cookie = context.request.headers.get("Cookie") || "";
-  
-  // Look for either "session=" or "session_id="
-  const sessionId =
-    cookie
-      .split("; ")
-      .find((c) => c.startsWith("session=") || c.startsWith("session_id="))
-      ?.split("=")[1];
-
-  if (!sessionId) return null;
-
-  const { results } = await context.env.DB.prepare(
-    "SELECT teacher_id FROM sessions WHERE id = ?"
-  ).bind(sessionId).all();
-
-  return results.length ? results[0].teacher_id : null;
 }
