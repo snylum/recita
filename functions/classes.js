@@ -1,6 +1,6 @@
 export async function onRequestGet(context) {
   const teacherId = await getTeacherId(context);
-  const { results } = await context.env["recita-users"].prepare(
+  const { results } = await context.env.DB.prepare(
     "SELECT id, name FROM classes WHERE teacher_id = ?"
   ).bind(teacherId).all();
 
@@ -11,7 +11,7 @@ export async function onRequestPost(context) {
   const teacherId = await getTeacherId(context);
   const { name } = await context.request.json();
 
-  const { lastRowId } = await context.env["recita-users"].prepare(
+  const { lastRowId } = await context.env.DB.prepare(
     "INSERT INTO classes (teacher_id, name) VALUES (?, ?)"
   ).bind(teacherId, name).run();
 
@@ -25,7 +25,7 @@ async function getTeacherId(context) {
   if (!match) throw new Response("Unauthorized", { status: 401 });
 
   const sessionId = match[1];
-  const { results } = await context.env["recita-users"].prepare(
+  const { results } = await context.env.DB.prepare(
     "SELECT teacher_id FROM sessions WHERE id = ?"
   ).bind(sessionId).all();
 
