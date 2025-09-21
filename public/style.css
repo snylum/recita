@@ -92,17 +92,25 @@ button:hover {
         box-sizing: border-box;
       }
 
-.modal {
+/* Specific styling only for authenticated student modal */
+#authenticatedStudentModal {
   z-index: 9999 !important;
 }
 
-.modal-content {
+#authenticatedStudentModal .modal-content {
   z-index: 10000 !important;
   position: relative;
 }
 
-.modal-content button {
+#authenticatedStudentModal .modal-content button {
   position: relative;
   z-index: 10001 !important;
   pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+#authenticatedStudentModal button[data-score],
+#authenticatedStudentModal #cancelAuthScoring {
+  pointer-events: auto !important;
+  z-index: 10002 !important;
 }
