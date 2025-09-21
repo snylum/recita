@@ -825,7 +825,6 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const topic = topicInput.value;
       console.log("Saving recita with topic:", topic, "and classId:", classId);
-      console.log("Full recita response structure:", Object.keys(recita), recita);
       
       if (!topic.trim()) {
         alert("Please enter a topic for the recita");
@@ -853,6 +852,9 @@ document.addEventListener("DOMContentLoaded", () => {
         let recitaId = recita.id || recita.recitaId || recita.insertId;
         if (!recitaId && recita.meta && recita.meta.last_row_id) {
           recitaId = recita.meta.last_row_id;
+        }
+        if (!recitaId && recita.changes && recita.changes.last_insert_rowid) {
+          recitaId = recita.changes.last_insert_rowid;
         }
         
         console.log("Extracted recita ID:", recitaId);
@@ -888,6 +890,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
       } catch (err) {
         console.error("Save recita error:", err);
+        console.error("Error details:", err.message, err.stack);
         alert("Failed to save recita: " + err.message);
       }
     });
