@@ -73,17 +73,6 @@ export async function onRequestPost(context) {
       return Response.json(response);
     }
 
-    // Case 2: Mark attendance/score
-    if (body.recitaId && body.studentId) {
-      console.log("Recording attendance:", { recitaId: body.recitaId, studentId: body.studentId, score: body.score });
-      
-      await context.env.DB.prepare(
-        "INSERT INTO attendance (recita_id, student_id, score) VALUES (?, ?, ?)"
-      ).bind(body.recitaId, body.studentId, body.score).run();
-
-      return Response.json({ ok: true });
-    }
-
     console.log("Invalid request body:", body);
     return new Response("Bad request", { status: 400 });
   } catch (error) {
@@ -188,20 +177,37 @@ export async function onRequestPut(context) {
         status: body.status 
       });
       
-      // Insert or update attendance record
-      const result = await context.env.DB.prepare(`
-        INSERT INTO attendance (recita_id, student_id, score, status, picked_at) 
-        VALUES (?, ?, ?, ?, datetime('now'))
-        ON CONFLICT(recita_id, student_id) 
-        DO UPDATE SET score = ?, status = ?, picked_at = datetime('now')
-      `).bind(
-        body.recitaId, 
-        body.studentId, 
-        body.score, 
-        body.status || 'called',
-        body.score,
-        body.status || 'called'
-      ).run();
+      // Check if attendance record already exists
+      const { results: existingRecords } = await context.env.DB.prepare(
+        "SELECT id FROM attendance WHERE recita_id = ? AND student_id = ?"
+      ).bind(body.recitaId, body.studentId).all();
+
+      let result;
+      
+      if (existingRecords.length > 0) {
+        // Update existing record
+        result = await context.env.DB.prepare(`
+          UPDATE attendance 
+          SET score = ?, status = ?, picked_at = datetime('now')
+          WHERE recita_id = ? AND student_id = ?
+        `).bind(
+          body.score, 
+          body.status || 'called',
+          body.recitaId, 
+          body.studentId
+        ).run();
+      } else {
+        // Insert new record
+        result = await context.env.DB.prepare(`
+          INSERT INTO attendance (recita_id, student_id, score, status, picked_at) 
+          VALUES (?, ?, ?, ?, datetime('now'))
+        `).bind(
+          body.recitaId, 
+          body.studentId, 
+          body.score, 
+          body.status || 'called'
+        ).run();
+      }
 
       if (result.success) {
         return Response.json({ 
@@ -265,12 +271,13 @@ export async function onRequestGet(context) {
       const ownership = await ensureClassOwnership(context, teacher.id, classId);
       if (ownership !== true) return ownership; // Return the error response
 
-      // Students not yet marked
+      // Students not yet marked - ensure we return student with ID
       const { results } = await context.env.DB.prepare(`
         SELECT s.id, s.name 
         FROM students s
         WHERE s.class_id = ?
         AND s.id NOT IN (SELECT student_id FROM attendance WHERE recita_id = ?)
+        ORDER BY s.name
       `).bind(classId, recitaId).all();
 
       console.log("Found", results.length, "unmarked students");
@@ -285,6 +292,16 @@ export async function onRequestGet(context) {
 
       const random = results[Math.floor(Math.random() * results.length)];
       console.log("Picked random student:", random);
+      
+      // Ensure the student object has both id and name
+      if (!random.id || !random.name) {
+        console.error("Invalid student data:", random);
+        return Response.json({ 
+          error: "Invalid student data retrieved",
+          debug: random 
+        }, { status: 500 });
+      }
+      
       return Response.json({ student: random });
     }
 
@@ -335,7 +352,14 @@ export async function onRequestGet(context) {
     return Response.json({ message: "Attendance endpoint is working", availableActions: ["pick"] });
   } catch (error) {
     console.error("GET /attendance error:", error);
-    return new Response("Internal server error", { status: 500 });
+    return new Response(JSON.stringify({
+      error: "Internal server error",
+      message: error.message,
+      stack: error.stack
+    }), { 
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
 }
 
