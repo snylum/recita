@@ -1,5 +1,9 @@
 export async function onRequestGet(context) {
   const teacherId = await getTeacherId(context);
+  if (!teacherId) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   const { results } = await context.env.DB.prepare(
     "SELECT id, name FROM classes WHERE teacher_id = ?"
   ).bind(teacherId).all();
@@ -9,6 +13,10 @@ export async function onRequestGet(context) {
 
 export async function onRequestPost(context) {
   const teacherId = await getTeacherId(context);
+  if (!teacherId) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   const { name } = await context.request.json();
 
   const { lastRowId } = await context.env.DB.prepare(
@@ -21,14 +29,19 @@ export async function onRequestPost(context) {
 // Helper: extract teacherId from session
 async function getTeacherId(context) {
   const cookie = context.request.headers.get("Cookie") || "";
-  const match = cookie.match(/session_id=([^;]+)/);
-  if (!match) throw new Response("Unauthorized", { status: 401 });
+  
+  // Look for either "session=" or "session_id="
+  const sessionId =
+    cookie
+      .split("; ")
+      .find((c) => c.startsWith("session=") || c.startsWith("session_id="))
+      ?.split("=")[1];
 
-  const sessionId = match[1];
+  if (!sessionId) return null;
+
   const { results } = await context.env.DB.prepare(
     "SELECT teacher_id FROM sessions WHERE id = ?"
   ).bind(sessionId).all();
 
-  if (!results.length) throw new Response("Unauthorized", { status: 401 });
-  return results[0].teacher_id;
+  return results.length ? results[0].teacher_id : null;
 }
