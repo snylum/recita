@@ -1,12 +1,16 @@
+import { getTeacherFromSession } from "../utils/session.js";
+
 export async function onRequestPost(context) {
-  const teacherId = await getTeacherId(context);
+  const teacher = await getTeacherFromSession(context.request, context.env);
+  if (!teacher) return new Response("Unauthorized", { status: 401 });
+
   const body = await context.request.json();
 
   // Case 1: Create recita session
   if (body.topic && body.classId) {
-    await ensureClassOwnership(context, teacherId, body.classId);
+    await ensureClassOwnership(context, teacher.id, body.classId);
 
-    const { lastRowId } = await context.env["recita-users"].prepare(
+    const { lastRowId } = await context.env.DB.prepare(
       "INSERT INTO recita_sessions (class_id, topic, created_at) VALUES (?, ?, datetime('now'))"
     ).bind(body.classId, body.topic).run();
 
@@ -15,7 +19,7 @@ export async function onRequestPost(context) {
 
   // Case 2: Mark attendance/score
   if (body.recitaId && body.studentId) {
-    await context.env["recita-users"].prepare(
+    await context.env.DB.prepare(
       "INSERT INTO attendance (recita_id, student_id, score) VALUES (?, ?, ?)"
     ).bind(body.recitaId, body.studentId, body.score).run();
 
@@ -25,26 +29,25 @@ export async function onRequestPost(context) {
   return new Response("Bad request", { status: 400 });
 }
 
-// Pick random student endpoint
 export async function onRequestGet(context) {
   const url = new URL(context.request.url);
 
   if (url.pathname.endsWith("/pick")) {
-    const teacherId = await getTeacherId(context);
+    const teacher = await getTeacherFromSession(context.request, context.env);
+    if (!teacher) return new Response("Unauthorized", { status: 401 });
+
     const recitaId = url.searchParams.get("recitaId");
 
-    // Get classId from recita
-    const { results: recitaRows } = await context.env["recita-users"].prepare(
+    const { results: recitaRows } = await context.env.DB.prepare(
       "SELECT class_id FROM recita_sessions WHERE id = ?"
     ).bind(recitaId).all();
 
     if (!recitaRows.length) throw new Response("Not found", { status: 404 });
     const classId = recitaRows[0].class_id;
 
-    await ensureClassOwnership(context, teacherId, classId);
+    await ensureClassOwnership(context, teacher.id, classId);
 
-    // Students not yet marked
-    const { results } = await context.env["recita-users"].prepare(`
+    const { results } = await context.env.DB.prepare(`
       SELECT s.id, s.name 
       FROM students s
       WHERE s.class_id = ?
@@ -61,22 +64,8 @@ export async function onRequestGet(context) {
 }
 
 // Helpers
-async function getTeacherId(context) {
-  const cookie = context.request.headers.get("Cookie") || "";
-  const match = cookie.match(/session_id=([^;]+)/);
-  if (!match) throw new Response("Unauthorized", { status: 401 });
-
-  const sessionId = match[1];
-  const { results } = await context.env["recita-users"].prepare(
-    "SELECT teacher_id FROM sessions WHERE id = ?"
-  ).bind(sessionId).all();
-
-  if (!results.length) throw new Response("Unauthorized", { status: 401 });
-  return results[0].teacher_id;
-}
-
 async function ensureClassOwnership(context, teacherId, classId) {
-  const { results } = await context.env["recita-users"].prepare(
+  const { results } = await context.env.DB.prepare(
     "SELECT id FROM classes WHERE id = ? AND teacher_id = ?"
   ).bind(classId, teacherId).all();
 
