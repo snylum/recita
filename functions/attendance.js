@@ -38,15 +38,17 @@ export async function onRequestGet(context) {
 
     const recitaId = url.searchParams.get("recitaId");
 
+    // Find class for this recita session
     const { results: recitaRows } = await context.env.DB.prepare(
       "SELECT class_id FROM recita_sessions WHERE id = ?"
     ).bind(recitaId).all();
 
-    if (!recitaRows.length) throw new Response("Not found", { status: 404 });
+    if (!recitaRows.length) return new Response("Not found", { status: 404 });
     const classId = recitaRows[0].class_id;
 
     await ensureClassOwnership(context, teacher.id, classId);
 
+    // Students not yet marked
     const { results } = await context.env.DB.prepare(`
       SELECT s.id, s.name 
       FROM students s
