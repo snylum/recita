@@ -21,63 +21,64 @@
     <div id="guestRecita">
       <!-- Welcome Section -->
       <h2>Try Recita Free!</h2>
-      <p style="margin-bottom: 20px; color: #666;">Random student picker for fair classroom participation. No login required to try it out!</p>
+      <p style="margin-bottom: 25px; color: #666; line-height: 1.5;">Random student picker for fair classroom participation. No login required to try it out!</p>
       
       <!-- Student Input -->
-      <div style="margin-bottom: 20px;">
-        <label for="guestStudentList" style="display: block; margin-bottom: 8px; font-weight: bold;">
+      <div style="margin-bottom: 25px;">
+        <label for="guestStudentList" style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
           Paste student names here (one per line):
         </label>
         <textarea 
           id="guestStudentList" 
-          style="height: 120px; resize: vertical; font-family: monospace;" 
-          placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;...">
+          style="height: 140px; resize: vertical; font-family: monospace; line-height: 1.4; padding: 12px;" 
+          placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;Alex Thompson&#10;Emma Davis&#10;...">
         </textarea>
       </div>
       
       <!-- Pick Button -->
-      <button id="guestPickBtn" style="background: #10b981; font-size: 16px;">
-        Pick Random Student
+      <button id="guestPickBtn" style="background: #10b981; font-size: 16px; padding: 12px; margin-bottom: 30px;">
+        🎲 Pick Random Student
       </button>
-      <button id="guestPickBtn:hover" style="display: none; background: #059669;"></button>
 
       <!-- Called Students Section -->
-      <div style="margin-top: 30px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <div style="margin-top: 35px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
           <h3 style="margin: 0;">Called Students</h3>
           <button 
             class="guestSaveBtn" 
-            style="width: auto; display: inline-block; margin: 0; padding: 8px 12px; background: #8b5cf6; font-size: 14px;">
-            Save Data / Export CSV
+            style="width: auto; display: inline-block; margin: 0; padding: 10px 16px; background: #8b5cf6; font-size: 14px;">
+            💾 Save Data / Export CSV
           </button>
         </div>
-        <div id="guestCalledStudents" style="min-height: 50px;">
-          <p style="color: #888; font-style: italic;">No students called yet</p>
+        <div id="guestCalledStudents" style="min-height: 60px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+          <p style="color: #888; font-style: italic; margin: 0; text-align: center;">No students called yet</p>
         </div>
       </div>
 
-      <!-- Clear Data Button -->
-      <div style="text-align: center; margin-top: 20px;">
+      <!-- Action Buttons -->
+      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
         <button 
           id="clearGuestData" 
-          style="width: auto; display: inline-block; margin: 0; padding: 8px 16px; background: #ef4444; font-size: 14px;">
-          Clear All Data
+          style="width: auto; display: inline-block; margin: 0; padding: 10px 20px; background: #ef4444; font-size: 14px;">
+          🗑️ Clear All Data
         </button>
       </div>
 
       <!-- Features Info -->
-      <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 20px; margin-top: 30px;">
-        <h3 style="color: #1e40af; margin-top: 0;">Why Create an Account?</h3>
-        <ul style="color: #1e40af; margin: 15px 0; padding-left: 20px;">
-          <li>Save your class rosters permanently</li>
-          <li>Export attendance data to CSV</li>
-          <li>Track student participation over time</li>
-          <li>Create multiple classes</li>
+      <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 25px; margin-top: 35px;">
+        <h3 style="color: #1e40af; margin-top: 0; margin-bottom: 15px;">Why Create an Account?</h3>
+        <ul style="color: #1e40af; margin: 15px 0; padding-left: 25px; line-height: 1.6;">
+          <li style="margin-bottom: 8px;">Save your class rosters permanently</li>
+          <li style="margin-bottom: 8px;">Export attendance data to CSV</li>
+          <li style="margin-bottom: 8px;">Track student participation over time</li>
+          <li style="margin-bottom: 8px;">Create multiple classes</li>
           <li>Access your data from any device</li>
         </ul>
-        <button class="guestSaveBtn" style="width: auto; display: inline-block; margin: 10px 0 0 0; padding: 10px 16px; background: #2563eb;">
-          Get Started Free
-        </button>
+        <div style="text-align: center; margin-top: 20px;">
+          <button class="guestSaveBtn" style="width: auto; display: inline-block; margin: 0; padding: 12px 24px; background: #2563eb; font-size: 15px;">
+            🚀 Get Started Free
+          </button>
+        </div>
       </div>
     </div>
   </div>
