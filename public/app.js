@@ -115,7 +115,7 @@ function showConfirmModal(message, onConfirm, onCancel = null, title = "Confirm"
 }
 
 // -------------------
-// AUTHENTICATED RECITA MODAL SYSTEM (works like guest modals)
+// AUTHENTICATED RECITA MODAL SYSTEM
 // -------------------
 function showRecitaInfoModal(message, title = "Information") {
   // Remove any existing recita modals
@@ -152,6 +152,7 @@ function showRecitaInfoModal(message, title = "Information") {
   return modal;
 }
 
+// Enhanced authenticated student modal for recita system
 function showAuthenticatedStudentModal(student) {
   // Remove any existing authenticated student modal
   const existingModals = document.querySelectorAll('.recita-modal');
@@ -354,7 +355,256 @@ function setupLogout(apiFetch, go) {
 }
 
 // -------------------
-// INIT APP - Part 2a (Guest Mode Functionality)
+// GUEST MODE FUNCTIONALITY
+// -------------------
+
+// Initialize guest mode on page load
+function initGuestMode() {
+  const savedTopic = localStorage.getItem("guestTopic");
+  const savedDate = localStorage.getItem("guestTopicDate");
+  const savedTime = localStorage.getItem("guestTopicTime");
+  
+  if (savedTopic) {
+    const topicInput = document.getElementById("guestTopic");
+    const topicStatus = document.getElementById("guestTopicStatus");
+    const topicDisplay = document.getElementById("guestTopicDisplay");
+    const dateDisplay = document.getElementById("guestDateDisplay");
+    
+    if (topicInput) topicInput.value = savedTopic;
+    if (topicDisplay) topicDisplay.textContent = savedTopic;
+    if (dateDisplay) dateDisplay.textContent = `Saved on ${savedDate} at ${savedTime}`;
+    if (topicStatus) topicStatus.style.display = "block";
+  }
+  
+  updateGuestCalledDisplay();
+}
+
+// Guest modal functionality
+function showGuestStudentModal(studentName) {
+  const existingModal = document.getElementById("guestStudentModal");
+  if (existingModal) existingModal.remove();
+
+  const modal = showModal(`
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+      <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${studentName}</p>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+      <button class="guestScoreBtn" data-score="10" style="margin: 0; background: #10b981;">10 pts</button>
+      <button class="guestScoreBtn" data-score="5" style="margin: 0; background: #10b981;">5 pts</button>
+      <button class="guestScoreBtn" data-score="custom" style="margin: 0; background: #8b5cf6;">Custom</button>
+      <button class="guestScoreBtn" data-score="skip" style="margin: 0; background: #f59e0b;">Skip</button>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <button class="guestScoreBtn" data-score="absent" style="margin: 0; background: #ef4444;">Absent</button>
+      <button id="guestModalClose" style="margin: 0; background: #6b7280;">Cancel</button>
+    </div>
+  `, "Selected Student");
+  
+  modal.id = "guestStudentModal";
+  modal.classList.add("guest-modal");
+  
+  modal.addEventListener("click", (e) => {
+    if (e.target.classList.contains("guestScoreBtn")) {
+      let score = e.target.dataset.score;
+      if (score === "custom") {
+        showCustomScoreModal(studentName, addToGuestCalledList);
+        return;
+      }
+      addToGuestCalledList(studentName, score);
+      modal.remove();
+    } else if (e.target.id === "guestModalClose" || e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+// Custom score modal for guest mode
+function showCustomScoreModal(studentName, callback) {
+  const existingModal = document.querySelector("#guestStudentModal, #customScoreModal");
+  if (existingModal) existingModal.remove();
+  
+  const modal = showModal(`
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+      <p style="font-size: 20px; font-weight: bold; margin: 0; color: #2c3e50;">${studentName}</p>
+    </div>
+    <input id="customScoreInput" type="text" placeholder="Enter score (e.g., 7, Good, Excellent)" style="margin-bottom: 15px;" autofocus>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <button id="saveCustomScore" style="margin: 0; background: #8b5cf6;">Save Score</button>
+      <button id="cancelCustomScore" style="margin: 0; background: #6b7280;">Cancel</button>
+    </div>
+  `, "Custom Score");
+  
+  modal.id = "customScoreModal";
+  modal.classList.add("guest-modal");
+  
+  const input = modal.querySelector("#customScoreInput");
+  input.focus();
+  
+  modal.addEventListener("click", (e) => {
+    if (e.target.id === "saveCustomScore") {
+      const customScore = input.value.trim();
+      if (customScore) {
+        callback(studentName, 'custom', customScore);
+        modal.remove();
+      } else {
+        input.style.borderColor = "#ef4444";
+        input.placeholder = "Please enter a score";
+      }
+    } else if (e.target.id === "cancelCustomScore" || e.target === modal) {
+      modal.remove();
+    }
+  });
+  
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      modal.querySelector("#saveCustomScore").click();
+    }
+  });
+}
+
+// CSV download function for guest mode
+function downloadGuestCSV() {
+  const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
+  if (calledStudents.length === 0) return;
+
+  const topic = localStorage.getItem("guestTopic") || "Demo Session";
+  const savedDate = localStorage.getItem("guestTopicDate");
+  const savedTime = localStorage.getItem("guestTopicTime");
+  
+  const date = savedDate || new Date().toLocaleDateString();
+  const time = savedTime || new Date().toLocaleTimeString();
+
+  let csvContent = `Recitation Topic: "${topic}"\nDate: ${date}\nTime: ${time}\n\nStudent Name,Score,Time Called\n`;
+  
+  calledStudents.forEach(student => {
+    let scoreDisplay = student.score;
+    if (student.score === 'custom' && student.customScore) {
+      scoreDisplay = student.customScore;
+    }
+    csvContent += `"${student.name}","${scoreDisplay}","${student.timestamp}"\n`;
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeTopic = topic.replace(/[^a-zA-Z0-9]/g, '-');
+  a.download = `recita-${safeTopic}-${date.replace(/\//g, '-')}.csv`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
+
+// Add student to guest called list
+function addToGuestCalledList(studentName, score, customScore = null) {
+  const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
+  
+  const studentEntry = {
+    name: studentName,
+    score: score,
+    timestamp: new Date().toLocaleTimeString()
+  };
+  
+  if (customScore) studentEntry.customScore = customScore;
+  
+  calledStudents.push(studentEntry);
+  
+  calledStudents.sort((a, b) => {
+    const lastNameA = a.name.split(' ').pop().toLowerCase();
+    const lastNameB = b.name.split(' ').pop().toLowerCase();
+    return lastNameA.localeCompare(lastNameB);
+  });
+  
+  localStorage.setItem("guestCalledStudents", JSON.stringify(calledStudents));
+  updateGuestCalledDisplay();
+  checkIfAllStudentsCalled();
+}
+
+// Check if all students have been called (for export option)
+function checkIfAllStudentsCalled() {
+  const studentListTextarea = document.getElementById("guestStudentList");
+  if (!studentListTextarea) return;
+  
+  const allStudents = studentListTextarea.value.trim().split('\n')
+    .map(name => name.trim()).filter(name => name.length > 0);
+  
+  const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
+  const finalAnsweredStudents = calledStudents.filter(s => s.score !== 'skip');
+  
+  if (allStudents.length > 0 && finalAnsweredStudents.length >= allStudents.length) {
+    setTimeout(() => {
+      showConfirmModal(
+        "All students have been called! Would you like to export your data as CSV?",
+        () => { downloadGuestCSV(); },
+        null,
+        "Export Complete Session"
+      );
+    }, 500);
+  }
+}
+
+// Update guest called students display - TABLE FORMAT
+function updateGuestCalledDisplay() {
+  const container = document.getElementById("guestCalledStudents");
+  if (!container) return;
+  
+  const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
+  
+  if (calledStudents.length === 0) {
+    container.innerHTML = '<p style="color: #888; font-style: italic; margin: 0; text-align: center;">No students called yet</p>';
+    return;
+  }
+  
+  let tableHTML = `
+    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <thead>
+        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+          <th style="padding: 12px; text-align: left; font-weight: bold; color: #495057;">Student Name</th>
+          <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 120px;">Score</th>
+          <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 100px;">Time</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  calledStudents.forEach((student, index) => {
+    let scoreDisplay = student.score;
+    let scoreBadgeStyle = "background: #e9ecef; color: #495057;";
+    
+    if (student.score === 'absent') {
+      scoreBadgeStyle = "background: #f8d7da; color: #721c24;";
+      scoreDisplay = "Absent";
+    } else if (student.score === 'skip') {
+      scoreBadgeStyle = "background: #fff3cd; color: #856404;";
+      scoreDisplay = "Skip";
+    } else if (student.score === 'custom') {
+      scoreBadgeStyle = "background: #e2e3ff; color: #5a67d8;";
+      scoreDisplay = student.customScore || "Custom";
+    } else if (parseInt(student.score)) {
+      scoreBadgeStyle = "background: #d1f2eb; color: #155724;";
+      scoreDisplay = student.score + " pts";
+    }
+    
+    const rowStyle = index % 2 === 0 ? "background: #ffffff;" : "background: #f8f9fa;";
+    
+    tableHTML += `
+      <tr style="${rowStyle} border-bottom: 1px solid #dee2e6;">
+        <td style="padding: 10px 12px; font-weight: 500; color: #212529;">${student.name}</td>
+        <td style="padding: 10px 12px; text-align: center;">
+          <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${scoreBadgeStyle}">
+            ${scoreDisplay}
+          </span>
+        </td>
+        <td style="padding: 10px 12px; text-align: center; font-size: 12px; color: #6c757d;">${student.timestamp}</td>
+      </tr>
+    `;
+  });
+  
+  tableHTML += `</tbody></table>`;
+  container.innerHTML = tableHTML;
+}
+
+// -------------------
+// MAIN APP INITIALIZATION AND DASHBOARD
 // -------------------
 document.addEventListener("DOMContentLoaded", () => {
   console.log('DOM loaded, initializing app...');
@@ -386,449 +636,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupLogout(apiFetch, go);
 
   // -------------------
-  // GUEST MODE FUNCTIONALITY
-  // -------------------
-  
-  // Initialize guest mode on page load
-  function initGuestMode() {
-    const savedTopic = localStorage.getItem("guestTopic");
-    const savedDate = localStorage.getItem("guestTopicDate");
-    const savedTime = localStorage.getItem("guestTopicTime");
-    
-    if (savedTopic) {
-      const topicInput = document.getElementById("guestTopic");
-      const topicStatus = document.getElementById("guestTopicStatus");
-      const topicDisplay = document.getElementById("guestTopicDisplay");
-      const dateDisplay = document.getElementById("guestDateDisplay");
-      
-      if (topicInput) topicInput.value = savedTopic;
-      if (topicDisplay) topicDisplay.textContent = savedTopic;
-      if (dateDisplay) dateDisplay.textContent = `Saved on ${savedDate} at ${savedTime}`;
-      if (topicStatus) topicStatus.style.display = "block";
-    }
-    
-    updateGuestCalledDisplay();
-  }
-  
-  // Save topic functionality
-  document.addEventListener("keyup", (e) => {
-    if (e.target && e.target.id === "guestTopic") {
-      const topic = e.target.value.trim();
-      if (topic && topic.length > 0) {
-        const now = new Date();
-        const dateStr = now.toLocaleDateString();
-        const timeStr = now.toLocaleTimeString();
-        
-        localStorage.setItem("guestTopic", topic);
-        localStorage.setItem("guestTopicDate", dateStr);
-        localStorage.setItem("guestTopicTime", timeStr);
-        
-        const topicStatus = document.getElementById("guestTopicStatus");
-        const topicDisplay = document.getElementById("guestTopicDisplay");
-        const dateDisplay = document.getElementById("guestDateDisplay");
-        
-        if (topicDisplay) topicDisplay.textContent = topic;
-        if (dateDisplay) dateDisplay.textContent = `Saved on ${dateStr} at ${timeStr}`;
-        if (topicStatus) topicStatus.style.display = "block";
-      }
-    }
-  });
-
-  const guestRecitaContainer = document.getElementById("guestRecita");
-  const studentListTextarea = document.getElementById("guestStudentList");
-  const guestPickBtn = document.getElementById("guestPickBtn");
-  const guestClearBtn = document.getElementById("guestClearBtn");
-  
-  if (guestRecitaContainer) {
-    console.log("Guest mode detected");
-    
-    if (guestPickBtn) {
-      guestPickBtn.addEventListener("click", () => {
-        const studentText = studentListTextarea ? studentListTextarea.value.trim() : '';
-        if (!studentText) {
-          showInfoModal("Please paste student names first!");
-          return;
-        }
-
-        const allStudents = studentText.split('\n').map(name => name.trim()).filter(name => name.length > 0);
-
-        if (allStudents.length === 0) {
-          showInfoModal("No valid student names found. Please check your list!");
-          return;
-        }
-
-        const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
-        const finalAnsweredStudents = calledStudents.filter(s => s.score !== 'skip').map(s => s.name);
-        const availableStudents = allStudents.filter(name => !finalAnsweredStudents.includes(name));
-
-        if (availableStudents.length === 0) {
-          showInfoModal("All students have been called and answered! Clear the list to start over.");
-          return;
-        }
-
-        const lastCalled = calledStudents[calledStudents.length - 1];
-        let eligibleStudents = availableStudents;
-        
-        if (lastCalled && lastCalled.score === 'skip' && availableStudents.length > 1) {
-          eligibleStudents = availableStudents.filter(name => name !== lastCalled.name);
-          if (eligibleStudents.length === 0) {
-            eligibleStudents = availableStudents;
-          }
-        }
-
-        const randomIndex = Math.floor(Math.random() * eligibleStudents.length);
-        const pickedStudent = eligibleStudents[randomIndex];
-
-        showGuestStudentModal(pickedStudent);
-      });
-    }
-  }
-  
-  if (guestClearBtn) {
-    guestClearBtn.addEventListener("click", () => {
-      showConfirmModal(
-        "This will clear your topic, student list, and all called students. Are you sure you want to start over?",
-        () => {
-          localStorage.removeItem("guestTopic");
-          localStorage.removeItem("guestTopicDate");
-          localStorage.removeItem("guestTopicTime");
-          localStorage.removeItem("guestCalledStudents");
-          
-          const topicInput = document.getElementById("guestTopic");
-          const topicStatus = document.getElementById("guestTopicStatus");
-          const studentListTextarea = document.getElementById("guestStudentList");
-          
-          if (topicInput) topicInput.value = "";
-          if (topicStatus) topicStatus.style.display = "none";
-          if (studentListTextarea) studentListTextarea.value = "";
-          
-          updateGuestCalledDisplay();
-          showInfoModal("All data cleared! You can start a new recitation session.");
-        },
-        null,
-        "Clear All Data"
-      );
-    });
-  }
-  
-  function showExportSuccessModal() {
-    const modal = showModal(`
-      <p>You can now download your student data as a CSV file.</p>
-      <div style="margin-top: 20px;">
-        <button id="downloadCsvBtn" style="background: #22c55e; margin-bottom: 10px;">Download CSV & Go to Dashboard</button>
-        <button id="continueToDashboard" style="background: #3b82f6; margin-bottom: 10px;">Continue to Dashboard</button>
-      </div>
-    `, "Account Created Successfully!");
-
-    modal.querySelector("#downloadCsvBtn").addEventListener("click", () => {
-      const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
-      if (calledStudents.length === 0) {
-        window.location.href = "dashboard.html";
-        return;
-      }
-      downloadGuestCSV();
-      setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
-    });
-
-    modal.querySelector("#continueToDashboard").addEventListener("click", () => {
-      window.location.href = "dashboard.html";
-    });
-
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) {
-        window.location.href = "dashboard.html";
-      }
-    });
-  }
-  
-  // Guest export/save buttons - show custom auth modal
-  document.addEventListener("click", (e) => {
-    if (e.target.classList.contains("guestSaveBtn")) {
-      const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
-      
-      if (calledStudents.length === 0) {
-        showInfoModal("No student data to export. Pick some students first!");
-        return;
-      }
-
-      localStorage.setItem('pendingExport', 'true');
-      
-      const modal = showModal(`
-        <p>You have <strong>${calledStudents.length} students</strong> in your list.</p>
-        <p>Create an account to download your data as a CSV file and save your progress.</p>
-        <div style="margin-top: 20px;">
-          <button id="authCreateAccount" style="background: #22c55e; margin-bottom: 10px;">Create Account & Export</button>
-          <button id="authLogin" style="background: #3b82f6; margin-bottom: 10px;">Log In & Export</button>
-          <button id="cancelAuth" style="background: #6b7280;">Cancel</button>
-        </div>
-      `, "Export Your Data");
-
-      modal.querySelector("#authCreateAccount").addEventListener("click", () => {
-        modal.remove();
-        const loginModal = document.getElementById('loginModal');
-        const loginSection = document.getElementById('loginSection');
-        const signupSection = document.getElementById('signupSection');
-        
-        if (loginModal && loginSection && signupSection) {
-          loginModal.style.display = 'flex';
-          loginSection.style.display = 'none';
-          signupSection.style.display = 'block';
-        }
-      });
-
-      modal.querySelector("#authLogin").addEventListener("click", () => {
-        modal.remove();
-        const loginModal = document.getElementById('loginModal');
-        const loginSection = document.getElementById('loginSection');
-        const signupSection = document.getElementById('signupSection');
-        
-        if (loginModal && loginSection && signupSection) {
-          loginModal.style.display = 'flex';
-          loginSection.style.display = 'block';
-          signupSection.style.display = 'none';
-        }
-      });
-
-      modal.querySelector("#cancelAuth").addEventListener("click", () => {
-        localStorage.removeItem('pendingExport');
-        modal.remove();
-      });
-
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-          localStorage.removeItem('pendingExport');
-          modal.remove();
-        }
-      });
-    }
-  });
-  
-  // Guest modal functionality
-  function showGuestStudentModal(studentName) {
-    const existingModal = document.getElementById("guestStudentModal");
-    if (existingModal) existingModal.remove();
-
-    const modal = showModal(`
-      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
-        <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${studentName}</p>
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <button class="guestScoreBtn" data-score="10" style="margin: 0; background: #10b981;">10 pts</button>
-        <button class="guestScoreBtn" data-score="5" style="margin: 0; background: #10b981;">5 pts</button>
-        <button class="guestScoreBtn" data-score="custom" style="margin: 0; background: #8b5cf6;">Custom</button>
-        <button class="guestScoreBtn" data-score="skip" style="margin: 0; background: #f59e0b;">Skip</button>
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <button class="guestScoreBtn" data-score="absent" style="margin: 0; background: #ef4444;">Absent</button>
-        <button id="guestModalClose" style="margin: 0; background: #6b7280;">Cancel</button>
-      </div>
-    `, "Selected Student");
-    
-    modal.id = "guestStudentModal";
-    modal.classList.add("guest-modal");
-    
-    modal.addEventListener("click", (e) => {
-      if (e.target.classList.contains("guestScoreBtn")) {
-        let score = e.target.dataset.score;
-        if (score === "custom") {
-          showCustomScoreModal(studentName, addToGuestCalledList);
-          return;
-        }
-        addToGuestCalledList(studentName, score);
-        modal.remove();
-      } else if (e.target.id === "guestModalClose" || e.target === modal) {
-        modal.remove();
-      }
-    });
-  }
-  
-  // Custom score modal for guest mode
-  function showCustomScoreModal(studentName, callback) {
-    const existingModal = document.querySelector("#guestStudentModal, #customScoreModal");
-    if (existingModal) existingModal.remove();
-    
-    const modal = showModal(`
-      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
-        <p style="font-size: 20px; font-weight: bold; margin: 0; color: #2c3e50;">${studentName}</p>
-      </div>
-      <input id="customScoreInput" type="text" placeholder="Enter score (e.g., 7, Good, Excellent)" style="margin-bottom: 15px;" autofocus>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <button id="saveCustomScore" style="margin: 0; background: #8b5cf6;">Save Score</button>
-        <button id="cancelCustomScore" style="margin: 0; background: #6b7280;">Cancel</button>
-      </div>
-    `, "Custom Score");
-    
-    modal.id = "customScoreModal";
-    modal.classList.add("guest-modal");
-    
-    const input = modal.querySelector("#customScoreInput");
-    input.focus();
-    
-    modal.addEventListener("click", (e) => {
-      if (e.target.id === "saveCustomScore") {
-        const customScore = input.value.trim();
-        if (customScore) {
-          callback(studentName, 'custom', customScore);
-          modal.remove();
-        } else {
-          input.style.borderColor = "#ef4444";
-          input.placeholder = "Please enter a score";
-        }
-      } else if (e.target.id === "cancelCustomScore" || e.target === modal) {
-        modal.remove();
-      }
-    });
-    
-    input.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        modal.querySelector("#saveCustomScore").click();
-      }
-    });
-  }
-  
-  // CSV download function
-  function downloadGuestCSV() {
-    const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
-    if (calledStudents.length === 0) return;
-
-    const topic = localStorage.getItem("guestTopic") || "Demo Session";
-    const savedDate = localStorage.getItem("guestTopicDate");
-    const savedTime = localStorage.getItem("guestTopicTime");
-    
-    const date = savedDate || new Date().toLocaleDateString();
-    const time = savedTime || new Date().toLocaleTimeString();
-
-    let csvContent = `Recitation Topic: "${topic}"\nDate: ${date}\nTime: ${time}\n\nStudent Name,Score,Time Called\n`;
-    
-    calledStudents.forEach(student => {
-      let scoreDisplay = student.score;
-      if (student.score === 'custom' && student.customScore) {
-        scoreDisplay = student.customScore;
-      }
-      csvContent += `"${student.name}","${scoreDisplay}","${student.timestamp}"\n`;
-    });
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const safeTopic = topic.replace(/[^a-zA-Z0-9]/g, '-');
-    a.download = `recita-${safeTopic}-${date.replace(/\//g, '-')}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
-  
-  // Add student to guest called list
-  function addToGuestCalledList(studentName, score, customScore = null) {
-    const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
-    
-    const studentEntry = {
-      name: studentName,
-      score: score,
-      timestamp: new Date().toLocaleTimeString()
-    };
-    
-    if (customScore) studentEntry.customScore = customScore;
-    
-    calledStudents.push(studentEntry);
-    
-    calledStudents.sort((a, b) => {
-      const lastNameA = a.name.split(' ').pop().toLowerCase();
-      const lastNameB = b.name.split(' ').pop().toLowerCase();
-      return lastNameA.localeCompare(lastNameB);
-    });
-    
-    localStorage.setItem("guestCalledStudents", JSON.stringify(calledStudents));
-    updateGuestCalledDisplay();
-    checkIfAllStudentsCalled();
-  }
-  
-  // Check if all students have been called (for export option)
-  function checkIfAllStudentsCalled() {
-    const studentListTextarea = document.getElementById("guestStudentList");
-    if (!studentListTextarea) return;
-    
-    const allStudents = studentListTextarea.value.trim().split('\n')
-      .map(name => name.trim()).filter(name => name.length > 0);
-    
-    const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
-    const finalAnsweredStudents = calledStudents.filter(s => s.score !== 'skip');
-    
-    if (allStudents.length > 0 && finalAnsweredStudents.length >= allStudents.length) {
-      setTimeout(() => {
-        showConfirmModal(
-          "All students have been called! Would you like to export your data as CSV?",
-          () => { downloadGuestCSV(); },
-          null,
-          "Export Complete Session"
-        );
-      }, 500);
-    }
-  }
-  
-  // Update guest called students display - TABLE FORMAT
-  function updateGuestCalledDisplay() {
-    const container = document.getElementById("guestCalledStudents");
-    if (!container) return;
-    
-    const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
-    
-    if (calledStudents.length === 0) {
-      container.innerHTML = '<p style="color: #888; font-style: italic; margin: 0; text-align: center;">No students called yet</p>';
-      return;
-    }
-    
-    let tableHTML = `
-      <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <thead>
-          <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-            <th style="padding: 12px; text-align: left; font-weight: bold; color: #495057;">Student Name</th>
-            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 120px;">Score</th>
-            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 100px;">Time</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-    
-    calledStudents.forEach((student, index) => {
-      let scoreDisplay = student.score;
-      let scoreBadgeStyle = "background: #e9ecef; color: #495057;";
-      
-      if (student.score === 'absent') {
-        scoreBadgeStyle = "background: #f8d7da; color: #721c24;";
-        scoreDisplay = "Absent";
-      } else if (student.score === 'skip') {
-        scoreBadgeStyle = "background: #fff3cd; color: #856404;";
-        scoreDisplay = "Skip";
-      } else if (student.score === 'custom') {
-        scoreBadgeStyle = "background: #e2e3ff; color: #5a67d8;";
-        scoreDisplay = student.customScore || "Custom";
-      } else if (parseInt(student.score)) {
-        scoreBadgeStyle = "background: #d1f2eb; color: #155724;";
-        scoreDisplay = student.score + " pts";
-      }
-      
-      const rowStyle = index % 2 === 0 ? "background: #ffffff;" : "background: #f8f9fa;";
-      
-      tableHTML += `
-        <tr style="${rowStyle} border-bottom: 1px solid #dee2e6;">
-          <td style="padding: 10px 12px; font-weight: 500; color: #212529;">${student.name}</td>
-          <td style="padding: 10px 12px; text-align: center;">
-            <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${scoreBadgeStyle}">
-              ${scoreDisplay}
-            </span>
-          </td>
-          <td style="padding: 10px 12px; text-align: center; font-size: 12px; color: #6c757d;">${student.timestamp}</td>
-        </tr>
-      `;
-    });
-    
-    tableHTML += `</tbody></table>`;
-    container.innerHTML = tableHTML;
-  }
-
-
-// -------------------
   // DASHBOARD: CREATE + LIST CLASSES
   // -------------------
   const createClassForm = document.getElementById("createClassForm");
@@ -1048,7 +855,56 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // -------------------
-  // RECITA PAGE - ENHANCED VERSION WITH PROPER MODAL SEPARATION
+  // EXPORT CSV BUTTON
+  // -------------------
+  const exportBtn = document.getElementById("exportCsvBtn");
+  if (exportBtn) {
+    exportBtn.addEventListener("click", () => {
+      const classId = localStorage.getItem("classId");
+      if (!classId) {
+        showInfoModal("No class selected");
+        return;
+      }
+      window.location.href = `/export?classId=${classId}`;
+    });
+  }
+
+  // -------------------
+  // SUCCESS MODAL FOR ACCOUNT CREATION FROM GUEST MODE
+  // -------------------
+  function showExportSuccessModal() {
+    const modal = showModal(`
+      <p>You can now download your student data as a CSV file.</p>
+      <div style="margin-top: 20px;">
+        <button id="downloadCsvBtn" style="background: #22c55e; margin-bottom: 10px;">Download CSV & Go to Dashboard</button>
+        <button id="continueToDashboard" style="background: #3b82f6; margin-bottom: 10px;">Continue to Dashboard</button>
+      </div>
+    `, "Account Created Successfully!");
+
+    modal.querySelector("#downloadCsvBtn").addEventListener("click", () => {
+      const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
+      if (calledStudents.length === 0) {
+        window.location.href = "dashboard.html";
+        return;
+      }
+      downloadGuestCSV();
+      setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
+    });
+
+    modal.querySelector("#continueToDashboard").addEventListener("click", () => {
+      window.location.href = "dashboard.html";
+    });
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        window.location.href = "dashboard.html";
+      }
+    });
+  }
+});
+
+// -------------------
+  // RECITA PAGE - ENHANCED WITH GUEST MODE FEATURES
   // -------------------
   const saveRecitaBtn = document.getElementById("saveRecitaBtn");
   const pickSection = document.getElementById("pickSection");
@@ -1112,6 +968,7 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("recitaDate", new Date().toLocaleDateString());
         localStorage.setItem("recitaTime", new Date().toLocaleTimeString());
         
+        // Clear any existing called students when starting a new recita
         localStorage.removeItem("calledStudents");
         
         const existingContainer = document.getElementById("calledStudentsContainer");
@@ -1133,6 +990,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Display current recita status with edit and export options
   function displayRecitaStatus() {
     const topic = localStorage.getItem("recitaTopic");
     const date = localStorage.getItem("recitaDate");
@@ -1165,6 +1023,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="flex gap-2">
             <button id="editRecitaBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-sm">Edit</button>
             <button id="exportCurrentRecitaBtn" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm">Export CSV</button>
+            <button id="clearRecitaBtn" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm">Clear</button>
           </div>
         </div>
       `;
@@ -1186,10 +1045,42 @@ document.addEventListener("DOMContentLoaded", () => {
           window.location.href = `/export?recitaId=${recitaId}`;
         });
       }
+
+      const clearBtn = document.getElementById("clearRecitaBtn");
+      if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+          showConfirmModal(
+            "This will clear your current recita session and all called students. Are you sure?",
+            () => {
+              localStorage.removeItem("recitaId");
+              localStorage.removeItem("recitaTopic");
+              localStorage.removeItem("recitaDate");
+              localStorage.removeItem("recitaTime");
+              localStorage.removeItem("calledStudents");
+              
+              const statusEl = document.getElementById("recitaStatus");
+              if (statusEl) statusEl.remove();
+              
+              const container = document.getElementById("calledStudentsContainer");
+              if (container) container.remove();
+              
+              const pickSectionEl = document.getElementById("pickSection");
+              if (pickSectionEl) pickSectionEl.classList.add("hidden");
+              
+              const topicInput = document.getElementById("topicInput");
+              if (topicInput) topicInput.value = "";
+              
+              showRecitaInfoModal("Recita session cleared!", "Success");
+            },
+            null,
+            "Clear Recita Session"
+          );
+        });
+      }
     }
   }
 
-  // Pick student event listener - ENHANCED FOR PROPER MODAL ISOLATION
+  // Enhanced pick student functionality with guest mode features
   console.log("Setting up pick student event listener");
   
   document.addEventListener("click", async (e) => {
@@ -1213,44 +1104,12 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Student picked:", student);
         
         if (!student) {
-          // All students called - offer export using RECITA modal system
-          const modal = document.createElement("div");
-          modal.className = "modal recita-modal confirm-export-modal";
-          modal.style.zIndex = "10000";
-          modal.innerHTML = `
-            <div class="modal-content">
-              <h3 style="margin-top: 0; margin-bottom: 15px;">All Students Called</h3>
-              <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">
-                All students have been called! Would you like to export this recitation as CSV?
-              </p>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button id="exportYesBtn" style="margin: 0; background: #22c55e;">Export CSV</button>
-                <button id="exportNoBtn" style="margin: 0; background: #6b7280;">Cancel</button>
-              </div>
-            </div>
-          `;
-          
-          document.body.appendChild(modal);
-          
-          modal.querySelector('#exportYesBtn').addEventListener('click', () => {
-            modal.remove();
-            window.location.href = `/export?recitaId=${recitaId}`;
-          });
-          
-          modal.querySelector('#exportNoBtn').addEventListener('click', () => {
-            modal.remove();
-          });
-          
-          modal.addEventListener("click", (e) => {
-            if (e.target === modal) {
-              modal.remove();
-            }
-          });
-          
+          // All students called - offer export using recita modal system
+          showAllStudentsCalledModal(recitaId);
           return;
         }
         
-        // USE THE SEPARATE AUTHENTICATED MODAL FUNCTION
+        // Show the authenticated student modal with guest mode features
         showAuthenticatedStudentModal(student);
       } catch (err) {
         console.error("Pick student error:", err);
@@ -1259,8 +1118,51 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Record score function - ENHANCED
-  async function recordScore(studentId, score, studentName, customScore = null) {
+  // All students called modal
+  function showAllStudentsCalledModal(recitaId) {
+    const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
+    const finalAnsweredStudents = calledStudents.filter(s => s.score !== 'skip');
+    
+    const modal = document.createElement("div");
+    modal.className = "modal recita-modal all-students-modal";
+    modal.style.zIndex = "10000";
+    modal.style.display = "flex";
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h3 style="margin-top: 0; margin-bottom: 15px;">All Students Called!</h3>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+          <p style="font-size: 18px; font-weight: bold; margin: 0; color: #2c3e50;">${finalAnsweredStudents.length} students participated</p>
+        </div>
+        <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">
+          All students have been called! Would you like to export this recitation as CSV?
+        </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <button id="exportYesBtn" style="margin: 0; background: #22c55e;">Export CSV</button>
+          <button id="exportNoBtn" style="margin: 0; background: #6b7280;">Continue</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.querySelector('#exportYesBtn').addEventListener('click', () => {
+      modal.remove();
+      window.location.href = `/export?recitaId=${recitaId}`;
+    });
+    
+    modal.querySelector('#exportNoBtn').addEventListener('click', () => {
+      modal.remove();
+    });
+    
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+
+  // Record score function - enhanced with local storage tracking
+  window.recordScore = async function(studentId, score, studentName, customScore = null) {
     const recitaId = localStorage.getItem("recitaId");
     
     if (!recitaId || !studentId) {
@@ -1281,9 +1183,9 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Failed to record score", err);
       showRecitaInfoModal("Failed to record score: " + err.message, "Error");
     }
-  }
+  };
 
-  // Add student to called list - ENHANCED TABLE FORMAT
+  // Add student to called list with guest mode table format
   function addToCalledStudentsList(studentName, score, customScore = null) {
     if (!studentName) return;
     
@@ -1319,6 +1221,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     calledStudents.push(studentEntry);
     
+    // Sort by last name like in guest mode
     calledStudents.sort((a, b) => {
       const lastNameA = a.name.split(' ').pop().toLowerCase();
       const lastNameB = b.name.split(' ').pop().toLowerCase();
@@ -1329,7 +1232,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateCalledStudentsDisplay();
   }
   
-  // Update called students display - TABLE FORMAT (name - score - time)
+  // Update called students display - guest mode table format
   function updateCalledStudentsDisplay() {
     const calledList = document.getElementById("calledStudentsList");
     if (!calledList) return;
@@ -1337,7 +1240,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
     
     if (calledStudents.length === 0) {
-      calledList.innerHTML = '<p style="color: #666; font-style: italic; text-align: center;">No students called yet</p>';
+      calledList.innerHTML = '<p style="color: #888; font-style: italic; margin: 0; text-align: center;">No students called yet</p>';
       return;
     }
     
@@ -1390,7 +1293,7 @@ document.addEventListener("DOMContentLoaded", () => {
     calledList.innerHTML = tableHTML;
   }
   
-  // Initialize called students display on page load
+  // Initialize called students display on page load for recita page
   if (document.getElementById("pickSection")) {
     setTimeout(() => {
       const existingCalledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
@@ -1401,97 +1304,78 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 500);
   }
 
-  // -------------------
-  // EXPORT CSV - ENHANCED
-  // -------------------
-  const exportBtn = document.getElementById("exportCsvBtn");
-  if (exportBtn) {
-    exportBtn.addEventListener("click", () => {
-      const classId = localStorage.getItem("classId");
-      if (!classId) {
-        showInfoModal("No class selected");
+  // Guest export/save buttons functionality for authenticated users too
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("guestSaveBtn") || e.target.classList.contains("authSaveBtn")) {
+      const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
+      const guestCalledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
+      
+      const totalStudents = calledStudents.length + guestCalledStudents.length;
+      
+      if (totalStudents === 0) {
+        showInfoModal("No student data to export. Pick some students first!");
         return;
       }
-      window.location.href = `/export?classId=${classId}`;
-    });
-  }
-});
 
-// --- Cache-busting logo system ---
-(function() {
-  // Generate cache-busting parameter once
-  const cacheBuster = "v=" + Date.now();
-  const logoUrl = "/logo.png?" + cacheBuster;
-  
-  // Insert favicon dynamically with cache busting
-  const link = document.createElement("link");
-  link.rel = "icon";
-  link.type = "image/png";
-  link.href = logoUrl;
-  document.head.appendChild(link);
-  
-  // Store the cache-busted URL globally for use in other functions
-  window.RECITA_LOGO_URL = logoUrl;
-})();
+      // If we're in authenticated mode and have a recitaId, export directly
+      const recitaId = localStorage.getItem("recitaId");
+      if (recitaId && calledStudents.length > 0) {
+        window.location.href = `/export?recitaId=${recitaId}`;
+        return;
+      }
 
-// --- Style Recita with logo (cache-busted version) ---
-function addRecitaLogos() {
-  if (document.body.dataset.recitaLogosProcessed === 'true') {
-    return;
-  }
+      // Otherwise handle as guest mode
+      if (guestCalledStudents.length > 0) {
+        localStorage.setItem('pendingExport', 'true');
+        
+        const modal = showModal(`
+          <p>You have <strong>${guestCalledStudents.length} students</strong> in your list.</p>
+          <p>Create an account to download your data as a CSV file and save your progress.</p>
+          <div style="margin-top: 20px;">
+            <button id="authCreateAccount" style="background: #22c55e; margin-bottom: 10px;">Create Account & Export</button>
+            <button id="authLogin" style="background: #3b82f6; margin-bottom: 10px;">Log In & Export</button>
+            <button id="cancelAuth" style="background: #6b7280;">Cancel</button>
+          </div>
+        `, "Export Your Data");
 
-  // Use the cache-busted logo URL
-  const logoUrl = window.RECITA_LOGO_URL || "/logo.png?" + Date.now();
+        modal.querySelector("#authCreateAccount").addEventListener("click", () => {
+          modal.remove();
+          const loginModal = document.getElementById('loginModal');
+          const loginSection = document.getElementById('loginSection');
+          const signupSection = document.getElementById('signupSection');
+          
+          if (loginModal && loginSection && signupSection) {
+            loginModal.style.display = 'flex';
+            loginSection.style.display = 'none';
+            signupSection.style.display = 'block';
+          }
+        });
 
-  document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button").forEach(el => {
-    if (el.dataset.recitaProcessed === 'true' || el.querySelector('img[alt="Recita Logo"]')) {
-      return;
-    }
+        modal.querySelector("#authLogin").addEventListener("click", () => {
+          modal.remove();
+          const loginModal = document.getElementById('loginModal');
+          const loginSection = document.getElementById('loginSection');
+          const signupSection = document.getElementById('signupSection');
+          
+          if (loginModal && loginSection && signupSection) {
+            loginModal.style.display = 'flex';
+            loginSection.style.display = 'block';
+            signupSection.style.display = 'none';
+          }
+        });
 
-    if (el.textContent.includes("Recita") && el.children.length === 0) {
-      const fontSize = window.getComputedStyle(el).fontSize;
-      
-      el.innerHTML = el.textContent.replace(
-        /Recita/g,
-        `<img src="${logoUrl}" alt="Recita Logo" style="height:${fontSize}; width:auto; vertical-align:middle; margin-right:0.3em; display:inline-block;"><span style="color:#fe731f; font-weight:bold;">Recita</span>`
-      );
-      
-      el.dataset.recitaProcessed = 'true';
+        modal.querySelector("#cancelAuth").addEventListener("click", () => {
+          localStorage.removeItem('pendingExport');
+          modal.remove();
+        });
+
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            localStorage.removeItem('pendingExport');
+            modal.remove();
+          }
+        });
+      }
     }
   });
-
-  document.body.dataset.recitaLogosProcessed = 'true';
-}
-
-// Function to update all existing logo images with cache-busted version
-function updateAllLogoImages() {
-  const cacheBuster = "v=" + Date.now();
-  const newLogoUrl = "/logo.png?" + cacheBuster;
-  
-  // Update favicon
-  const favicon = document.querySelector('link[rel="icon"]');
-  if (favicon) {
-    favicon.href = newLogoUrl;
-  }
-  
-  // Update all Recita logo images
-  const logoImages = document.querySelectorAll('img[alt="Recita Logo"]');
-  logoImages.forEach(img => {
-    img.src = newLogoUrl;
-  });
-  
-  // Update global reference
-  window.RECITA_LOGO_URL = newLogoUrl;
-}
-
-// Call this function whenever you want to force refresh all logos
-window.refreshAllLogos = updateAllLogoImages;
-
-document.addEventListener("DOMContentLoaded", () => {
-  addRecitaLogos();
-  setTimeout(addRecitaLogos, 100);
-  setTimeout(addRecitaLogos, 500);
-  
-  // Also call refresh function on page load to ensure latest logo
-  setTimeout(updateAllLogoImages, 1000);
 });
