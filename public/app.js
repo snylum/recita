@@ -115,7 +115,7 @@ function showConfirmModal(message, onConfirm, onCancel = null, title = "Confirm"
 }
 
 // -------------------
-// AUTHENTICATED RECITA MODAL SYSTEM (completely separate)
+// AUTHENTICATED RECITA MODAL SYSTEM (works like guest modals)
 // -------------------
 function showRecitaInfoModal(message, title = "Information") {
   // Remove any existing recita modals
@@ -125,6 +125,7 @@ function showRecitaInfoModal(message, title = "Information") {
   const modal = document.createElement("div");
   modal.className = "modal recita-modal recita-info-modal";
   modal.style.zIndex = "10000";
+  modal.style.display = "flex";
   modal.innerHTML = `
     <div class="modal-content">
       ${title ? `<h3 style="margin-top: 0; margin-bottom: 15px;">${title}</h3>` : ''}
@@ -161,6 +162,7 @@ function showAuthenticatedStudentModal(student) {
   modal.className = "modal recita-modal authenticated-student-modal";
   modal.id = "authenticatedStudentModal";
   modal.style.zIndex = "10000";
+  modal.style.display = "flex";
   modal.innerHTML = `
     <div class="modal-content">
       <h3 style="margin-top: 0; margin-bottom: 15px;">Selected Student</h3>
@@ -236,6 +238,7 @@ function showRecitaCustomScoreModal(studentName, callback) {
   const modal = document.createElement("div");
   modal.className = "modal recita-modal custom-score-modal";
   modal.style.zIndex = "10000";
+  modal.style.display = "flex";
   modal.innerHTML = `
     <div class="modal-content">
       <h3 style="margin-top: 0; margin-bottom: 15px;">Custom Score</h3>
