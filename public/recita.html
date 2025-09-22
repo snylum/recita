@@ -1,53 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Classes</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Add Recita</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="/logo.png">
 </head>
-<body class="bg-gray-100 min-h-screen">
-  <nav class="bg-white shadow p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">My Classes</h1>
-    <button onclick="window.location.href='index.html'" class="text-blue-500 hover:underline">Logout</button>
+<body>
+  <nav style="background:white; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; align-items:center;">
+      <h1 style="font-size:18px; margin:0;">Recita</h1>
+    </div>
+    <div>
+      <button onclick="window.location.href='class.html'" style="background:none; border:none; color:#2563eb; cursor:pointer;">Back</button>
+    </div>
   </nav>
 
-  <main class="p-6 max-w-4xl mx-auto space-y-6">
-
-    <!-- Example class card -->
-    <div class="class-card bg-white rounded-xl shadow p-6">
-      <h2 class="text-lg font-bold mb-2">Class 1 - Section A</h2>
-      <p class="text-gray-600 mb-4">Subject: Mathematics</p>
-      <div class="flex gap-3">
-        <button onclick="window.location.href='recita.html'" 
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-          Add Recita
-        </button>
-        <button onclick="window.location.href='students.html'" 
-                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-          Manage Students
-        </button>
+  <main style="max-width:760px; margin:18px auto; padding:12px;">
+    <section style="background:#fff; border-radius:12px; padding:16px;">
+      <h2 style="margin-top:0;">New Recita</h2>
+      <p style="color:#666; margin:6px 0;">Date: <span id="recitaDate"></span></p>
+      <input id="topicInput" placeholder="Topic" style="padding:10px; border-radius:8px; border:1px solid #ddd; width:100%; margin-bottom:10px;">
+      <div style="display:flex; gap:10px;">
+        <button id="saveRecitaBtn" class="btn-accent">Save Recita</button>
+        <button id="dummyExportBtn" class="btn-accent" style="background:#10b981;" onclick="/* optional immediate export */">Export</button>
       </div>
-      <!-- Export Recitas to CSV button will be injected here by app.js -->
-    </div>
+    </section>
 
-    <!-- Another class card -->
-    <div class="class-card bg-white rounded-xl shadow p-6">
-      <h2 class="text-lg font-bold mb-2">Class 2 - Section B</h2>
-      <p class="text-gray-600 mb-4">Subject: Science</p>
-      <div class="flex gap-3">
-        <button onclick="window.location.href='recita.html'" 
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-          Add Recita
-        </button>
-        <button onclick="window.location.href='students.html'" 
-                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-          Manage Students
-        </button>
+    <section id="pickSection" class="hidden" style="margin-top:14px;">
+      <div style="background:#fff; padding:12px; border-radius:10px;">
+        <button id="pickStudentBtn" class="btn-accent" style="background:#16a34a;">Pick Student</button>
+        <!-- viewScoresBtn is injected by JS if not present -->
       </div>
-      <!-- Export Recitas to CSV button will be injected here by app.js -->
-    </div>
+    </section>
 
+    <!-- called students will be injected here -->
+    <div id="calledStudentsContainer"></div>
   </main>
 
   <script src="app.js"></script>
