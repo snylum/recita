@@ -1417,12 +1417,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// --- Insert favicon dynamically ---
+// --- Insert favicon dynamically with cache busting ---
 (function() {
   const link = document.createElement("link");
   link.rel = "icon";
   link.type = "image/png";
-  link.href = "/logo.png";
+  link.href = "/logo.png?v=" + Date.now(); // Force refresh
   document.head.appendChild(link);
 })();
 
