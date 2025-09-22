@@ -1,6 +1,3 @@
-/* style.css - unified styles for Recita app */
-
-/* Base */
 body {
   font-family: Arial, sans-serif;
   background: #f9fafb;
@@ -9,102 +6,150 @@ body {
   padding: 20px;
 }
 
-#app, .page-card {
-  max-width: 950px;
+#app {
+  max-width: 700px;
   margin: auto;
   background: #fff;
-  padding: 18px;
+  padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* simple button / input */
-input, button, textarea {
-  font-family: inherit;
-  font-size: 14px;
+h2, h3 {
+  color: #2c3e50;
+}
+
+input, button {
+  display: block;
+  margin: 8px 0;
+  padding: 10px;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
 
 button {
+  background: #4f46e5;
+  color: white;
+  font-weight: bold;
   cursor: pointer;
 }
 
-.btn-accent {
-  background: #7c3aed;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
+button:hover {
+  background: #4338ca;
 }
 
-/* Unified modal overlay and window */
-.modal-overlay {
+/* MODAL SYSTEM - ALL MODALS WORK THE SAME WAY */
+.modal {
   position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.56);
+  top: 0; 
+  left: 0;
+  width: 100%; 
+  height: 100%;
+  background: rgba(0,0,0,0.6);
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 20000;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
   padding: 20px;
-}
-
-.modal-window {
-  background: white;
   border-radius: 12px;
-  padding: 18px;
-  max-width: 720px;
+  text-align: center;
+  width: 300px;
+  max-width: 90vw;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.modal-content button {
+  margin: 5px 0;
+  padding: 10px;
   width: 100%;
-  box-shadow: 0 18px 50px rgba(0,0,0,0.25);
-  position: relative;
-  animation: modalUp .18s ease;
-}
-
-@keyframes modalUp {
-  from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; }
-}
-
-.modal-close {
-  position: absolute;
-  right: 12px;
-  top: 10px;
-  background: transparent;
   border: none;
-  font-size: 20px;
-  color: #6b7280;
+  border-radius: 6px;
+  background: #4f46e5;
+  color: #fff;
+  font-weight: bold;
   cursor: pointer;
 }
 
-.modal-body { margin-top: 6px; }
-
-.modal-title { margin: 0 0 12px 0; font-size: 18px; font-weight: 600; }
-.modal-text { color: #374151; margin-bottom: 12px; }
-
-/* Modal buttons */
-.modal-btn {
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 10px 12px;
-  border-radius: 8px;
-  cursor: pointer;
+.modal-content button:hover {
+  background: #4338ca;
 }
-.modal-btn:hover { background: #1d4ed8; }
-.modal-cancel { background: #6b7280; }
 
-/* small utilities */
-.recita-status { background: #ecfdf5; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
-.recita-icon { width: 18px; height: 18px; vertical-align: -2px; margin-right: 6px; display:inline-block; }
+.modal-content input {
+  width: 100%;
+  max-width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
 
-/* class-card */
-.class-card { margin-bottom: 18px; padding: 14px; border-radius: 10px; background: white; box-shadow: 0 6px 16px rgba(0,0,0,0.04); }
+.modal-content form input {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 
-/* Called students table */
-.called-container { margin-top: 12px; }
-.called-container table { width:100%; border-collapse: collapse; }
-.called-container th, .called-container td { padding: 8px; border-bottom: 1px solid #eee; text-align:left; }
+/* GUEST MODE MODAL STYLING */
+.guest-modal {
+  z-index: 2000;
+}
 
-/* responsive */
-@media (max-width: 650px) {
-  .modal-window { max-width: 95%; padding: 14px; }
-  #app { padding: 12px; }
+.guest-modal .modal-content {
+  border: 2px solid #e5e7eb;
+}
+
+/* RECITA AUTHENTICATED MODAL SYSTEM */
+.recita-modal {
+  z-index: 10000;
+}
+
+.recita-modal .modal-content {
+  border: 2px solid #3b82f6;
+}
+
+/* AUTHENTICATED STUDENT MODAL */
+.authenticated-student-modal {
+  z-index: 15000;
+}
+
+.authenticated-student-modal .modal-content {
+  border: 3px solid #10b981;
+}
+
+/* CUSTOM SCORE MODAL */
+.custom-score-modal {
+  z-index: 12000;
+}
+
+.custom-score-modal .modal-content {
+  border: 2px solid #8b5cf6;
+}
+
+/* INFO MODAL */
+.info-modal .modal-content {
+  border: 2px solid #22c55e;
+}
+
+/* CONFIRM MODAL */
+.confirm-modal .modal-content {
+  border: 2px solid #ef4444;
+}
+
+/* EXPORT MODAL */
+.confirm-export-modal .modal-content {
+  border: 2px solid #f59e0b;
+}
+
+/* ENSURE ALL MODAL BUTTONS ARE CLICKABLE */
+.modal button,
+.modal .modal-content button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative !important;
 }
