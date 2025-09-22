@@ -1,3 +1,6 @@
+/* ======================
+   Base Layout
+   ====================== */
 body {
   font-family: Arial, sans-serif;
   background: #f9fafb;
@@ -39,7 +42,9 @@ button:hover {
   background: #4338ca;
 }
 
-/* MODAL SYSTEM - ALL MODALS WORK THE SAME WAY */
+/* ======================
+   Unified Modal System
+   ====================== */
 .modal {
   position: fixed;
   top: 0; 
@@ -50,21 +55,37 @@ button:hover {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-in-out;
 }
 
 .modal-content {
   background: #fff;
-  padding: 20px;
+  padding: 24px;
   border-radius: 12px;
   text-align: center;
-  width: 300px;
+  width: 320px;
   max-width: 90vw;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  animation: slideUp 0.25s ease-in-out;
+}
+
+.modal-content h2,
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.modal-content p {
+  color: #374151;
+  line-height: 1.5;
+  margin-bottom: 20px;
 }
 
 .modal-content button {
-  margin: 5px 0;
+  margin: 6px 0;
   padding: 10px;
   width: 100%;
   border: none;
@@ -73,6 +94,7 @@ button:hover {
   color: #fff;
   font-weight: bold;
   cursor: pointer;
+  transition: background 0.2s ease;
 }
 
 .modal-content button:hover {
@@ -81,7 +103,6 @@ button:hover {
 
 .modal-content input {
   width: 100%;
-  max-width: 100%;
   margin: 10px 0;
   padding: 10px;
   border: 1px solid #ccc;
@@ -89,67 +110,24 @@ button:hover {
   box-sizing: border-box;
 }
 
-.modal-content form input {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+/* ======================
+   Optional Accent Borders
+   ====================== */
+.info-modal .modal-content       { border: 2px solid #22c55e; }
+.confirm-modal .modal-content    { border: 2px solid #ef4444; }
+.confirm-export-modal .modal-content { border: 2px solid #f59e0b; }
+.custom-score-modal .modal-content  { border: 2px solid #8b5cf6; }
+.authenticated-student-modal .modal-content { border: 2px solid #10b981; }
+
+/* ======================
+   Animations
+   ====================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* GUEST MODE MODAL STYLING */
-.guest-modal {
-  z-index: 2000;
-}
-
-.guest-modal .modal-content {
-  border: 2px solid #e5e7eb;
-}
-
-/* RECITA AUTHENTICATED MODAL SYSTEM */
-.recita-modal {
-  z-index: 10000;
-}
-
-.recita-modal .modal-content {
-  border: 2px solid #3b82f6;
-}
-
-/* AUTHENTICATED STUDENT MODAL */
-.authenticated-student-modal {
-  z-index: 15000;
-}
-
-.authenticated-student-modal .modal-content {
-  border: 3px solid #10b981;
-}
-
-/* CUSTOM SCORE MODAL */
-.custom-score-modal {
-  z-index: 12000;
-}
-
-.custom-score-modal .modal-content {
-  border: 2px solid #8b5cf6;
-}
-
-/* INFO MODAL */
-.info-modal .modal-content {
-  border: 2px solid #22c55e;
-}
-
-/* CONFIRM MODAL */
-.confirm-modal .modal-content {
-  border: 2px solid #ef4444;
-}
-
-/* EXPORT MODAL */
-.confirm-export-modal .modal-content {
-  border: 2px solid #f59e0b;
-}
-
-/* ENSURE ALL MODAL BUTTONS ARE CLICKABLE */
-.modal button,
-.modal .modal-content button {
-  pointer-events: auto !important;
-  cursor: pointer !important;
-  position: relative !important;
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
 }
