@@ -3,42 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/png" href="/logo.png">
-
-  <title>Add Recita</title>
+  <title>Classes</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
   <nav class="bg-white shadow p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Recita</h1>
-    <button onclick="window.location.href='class.html'" class="text-blue-500 hover:underline">Back</button>
+    <h1 class="text-xl font-bold">My Classes</h1>
+    <button onclick="window.location.href='index.html'" class="text-blue-500 hover:underline">Logout</button>
   </nav>
 
-  <main class="p-6 max-w-3xl mx-auto">
-    <div class="bg-white rounded-xl shadow p-6 mb-6">
-      <h2 class="text-lg font-bold mb-4">New Recita</h2>
-      <p class="mb-2 text-sm text-gray-600">Date: <span id="recitaDate"></span></p>
-      <input id="topicInput" type="text" placeholder="Topic" class="w-full p-3 border rounded-lg mb-4">
-      <button id="saveRecitaBtn" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Save Recita</button>
-    </div>
+  <main class="p-6 max-w-4xl mx-auto space-y-6">
 
-    <div id="pickSection" class="hidden">
-      <button id="pickStudentBtn" class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600">Pick Student</button>
-    </div>
-  </main>
-
-  <!-- Modal -->
-  <div id="studentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
-    <div class="bg-white rounded-xl shadow p-6 w-80 text-center">
-      <h2 id="selectedStudent" class="text-xl font-bold mb-6">Student Name</h2>
-      <div class="flex flex-col gap-2">
-        <button class="scoreBtn bg-blue-500 text-white p-3 rounded-lg" data-score="5">+5 Points</button>
-        <button class="scoreBtn bg-blue-600 text-white p-3 rounded-lg" data-score="10">+10 Points</button>
-        <button class="scoreBtn bg-gray-500 text-white p-3 rounded-lg" data-score="skip">Skip</button>
-        <button class="scoreBtn bg-red-500 text-white p-3 rounded-lg" data-score="absent">Absent</button>
+    <!-- Example class card -->
+    <div class="class-card bg-white rounded-xl shadow p-6">
+      <h2 class="text-lg font-bold mb-2">Class 1 - Section A</h2>
+      <p class="text-gray-600 mb-4">Subject: Mathematics</p>
+      <div class="flex gap-3">
+        <button onclick="window.location.href='recita.html'" 
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+          Add Recita
+        </button>
+        <button onclick="window.location.href='students.html'" 
+                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+          Manage Students
+        </button>
       </div>
+      <!-- Export Recitas to CSV button will be injected here by app.js -->
     </div>
-  </div>
+
+    <!-- Another class card -->
+    <div class="class-card bg-white rounded-xl shadow p-6">
+      <h2 class="text-lg font-bold mb-2">Class 2 - Section B</h2>
+      <p class="text-gray-600 mb-4">Subject: Science</p>
+      <div class="flex gap-3">
+        <button onclick="window.location.href='recita.html'" 
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+          Add Recita
+        </button>
+        <button onclick="window.location.href='students.html'" 
+                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+          Manage Students
+        </button>
+      </div>
+      <!-- Export Recitas to CSV button will be injected here by app.js -->
+    </div>
+
+  </main>
 
   <script src="app.js"></script>
 </body>
