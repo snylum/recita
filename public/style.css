@@ -104,49 +104,60 @@ button:hover {
   border: 2px solid #e5e7eb;
 }
 
-/* RECITA AUTHENTICATED MODAL SYSTEM (higher priority) */
+/* RECITA AUTHENTICATED MODAL SYSTEM - COMPLETELY HIDDEN BY DEFAULT */
 .recita-modal {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  z-index: -1 !important;
+}
+
+/* Only show recita modals when explicitly made visible via JavaScript */
+.recita-modal.show {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
   z-index: 10000 !important;
   position: fixed !important;
 }
 
-.recita-modal .modal-content {
+.recita-modal.show .modal-content {
   z-index: 10001 !important;
   position: relative !important;
   background: #fff !important;
   border: 2px solid #3b82f6;
 }
 
-.recita-modal .modal-content button {
+.recita-modal.show .modal-content button {
   position: relative !important;
   z-index: 10002 !important;
   pointer-events: auto !important;
   cursor: pointer !important;
 }
 
-/* AUTHENTICATED STUDENT MODAL - HIGHEST PRIORITY */
-.authenticated-student-modal {
+/* AUTHENTICATED STUDENT MODAL - HIGHEST PRIORITY WHEN SHOWN */
+.authenticated-student-modal.show {
   z-index: 15000 !important;
 }
 
-.authenticated-student-modal .modal-content {
+.authenticated-student-modal.show .modal-content {
   z-index: 15001 !important;
   border: 3px solid #10b981;
 }
 
-.authenticated-student-modal .score-btn,
-.authenticated-student-modal #cancelAuthScoring {
+.authenticated-student-modal.show .score-btn,
+.authenticated-student-modal.show #cancelAuthScoring {
   pointer-events: auto !important;
   z-index: 15002 !important;
   position: relative !important;
 }
 
 /* CUSTOM SCORE MODAL */
-.custom-score-modal {
+.custom-score-modal.show {
   z-index: 12000 !important;
 }
 
-.custom-score-modal .modal-content {
+.custom-score-modal.show .modal-content {
   border: 2px solid #8b5cf6;
 }
 
@@ -161,7 +172,7 @@ button:hover {
 }
 
 /* EXPORT MODAL */
-.confirm-export-modal .modal-content {
+.confirm-export-modal.show .modal-content {
   border: 2px solid #f59e0b;
 }
 
