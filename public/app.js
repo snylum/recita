@@ -123,7 +123,7 @@ function showRecitaInfoModal(message, title = "Information") {
   existingModals.forEach(modal => modal.remove());
   
   const modal = document.createElement("div");
-  modal.className = "modal recita-modal recita-info-modal";
+  modal.className = "modal recita-modal info-modal"; // EDITED THIS ONE
   modal.style.zIndex = "10000";
   modal.style.display = "flex";
   modal.innerHTML = `
