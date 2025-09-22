@@ -45,11 +45,11 @@ function go(url) {
 }
 
 // -------------------
-// MODAL SYSTEM (consistent styling)
+// GENERAL MODAL SYSTEM (for guest mode and general use)
 // -------------------
 function showModal(content, title = null) {
   const modal = document.createElement("div");
-  modal.className = "modal";
+  modal.className = "modal general-modal";
   modal.innerHTML = `
     <div class="modal-content">
       ${title ? `<h3 style="margin-top: 0; margin-bottom: 15px;">${title}</h3>` : ''}
@@ -72,12 +72,15 @@ function showInfoModal(message, title = "Information") {
   `, title);
   
   modal.id = "infoModal";
+  modal.classList.add("info-modal");
   
   modal.addEventListener("click", (e) => {
     if (e.target === modal) {
       modal.remove();
     }
   });
+  
+  return modal;
 }
 
 function showConfirmModal(message, onConfirm, onCancel = null, title = "Confirm") {
@@ -88,6 +91,8 @@ function showConfirmModal(message, onConfirm, onCancel = null, title = "Confirm"
       <button id="cancelBtn" style="margin: 0; background: #6b7280;">Cancel</button>
     </div>
   `, title);
+  
+  modal.classList.add("confirm-modal");
   
   modal.querySelector('#confirmBtn').addEventListener('click', () => {
     modal.remove();
@@ -105,22 +110,57 @@ function showConfirmModal(message, onConfirm, onCancel = null, title = "Confirm"
       if (onCancel) onCancel();
     }
   });
+  
+  return modal;
 }
 
 // -------------------
-// SEPARATE AUTHENTICATED STUDENT MODAL
+// AUTHENTICATED RECITA MODAL SYSTEM (completely separate)
 // -------------------
+function showRecitaInfoModal(message, title = "Information") {
+  // Remove any existing recita modals
+  const existingModals = document.querySelectorAll('.recita-modal');
+  existingModals.forEach(modal => modal.remove());
+  
+  const modal = document.createElement("div");
+  modal.className = "modal recita-modal recita-info-modal";
+  modal.style.zIndex = "10000";
+  modal.innerHTML = `
+    <div class="modal-content">
+      ${title ? `<h3 style="margin-top: 0; margin-bottom: 15px;">${title}</h3>` : ''}
+      <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">${message}</p>
+      <button class="recita-modal-close" style="margin: 0;">OK</button>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Add event listeners
+  modal.querySelector('.recita-modal-close').addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    modal.remove();
+  });
+  
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+  
+  return modal;
+}
+
 function showAuthenticatedStudentModal(student) {
   // Remove any existing authenticated student modal
-  const existingModal = document.getElementById("authenticatedStudentModal");
-  if (existingModal) {
-    existingModal.remove();
-  }
+  const existingModals = document.querySelectorAll('.recita-modal');
+  existingModals.forEach(modal => modal.remove());
 
-  // Create modal using your existing CSS classes
+  // Create modal using recita modal system
   const modal = document.createElement("div");
-  modal.className = "modal";
+  modal.className = "modal recita-modal authenticated-student-modal";
   modal.id = "authenticatedStudentModal";
+  modal.style.zIndex = "10000";
   modal.innerHTML = `
     <div class="modal-content">
       <h3 style="margin-top: 0; margin-bottom: 15px;">Selected Student</h3>
@@ -128,13 +168,13 @@ function showAuthenticatedStudentModal(student) {
         <p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;">${student.name}</p>
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <button data-score="10" data-student-id="${student.id}" style="margin: 0; background: #10b981;">10 pts</button>
-        <button data-score="5" data-student-id="${student.id}" style="margin: 0; background: #10b981;">5 pts</button>
-        <button data-score="custom" data-student-id="${student.id}" style="margin: 0; background: #8b5cf6;">Custom</button>
-        <button data-score="skip" data-student-id="${student.id}" style="margin: 0; background: #f59e0b;">Skip</button>
+        <button class="score-btn" data-score="10" data-student-id="${student.id}" style="margin: 0; background: #10b981;">10 pts</button>
+        <button class="score-btn" data-score="5" data-student-id="${student.id}" style="margin: 0; background: #10b981;">5 pts</button>
+        <button class="score-btn" data-score="custom" data-student-id="${student.id}" style="margin: 0; background: #8b5cf6;">Custom</button>
+        <button class="score-btn" data-score="skip" data-student-id="${student.id}" style="margin: 0; background: #f59e0b;">Skip</button>
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <button data-score="absent" data-student-id="${student.id}" style="margin: 0; background: #ef4444;">Absent</button>
+        <button class="score-btn" data-score="absent" data-student-id="${student.id}" style="margin: 0; background: #ef4444;">Absent</button>
         <button id="cancelAuthScoring" style="margin: 0; background: #6b7280;">Cancel</button>
       </div>
     </div>
@@ -143,9 +183,9 @@ function showAuthenticatedStudentModal(student) {
   // Append to body
   document.body.appendChild(modal);
   
-  // Add click handlers to each button individually
-  const buttons = modal.querySelectorAll('button[data-score]');
-  buttons.forEach(button => {
+  // Add click handlers to each score button
+  const scoreButtons = modal.querySelectorAll('.score-btn');
+  scoreButtons.forEach(button => {
     button.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -153,9 +193,11 @@ function showAuthenticatedStudentModal(student) {
       const score = this.getAttribute('data-score');
       const studentId = this.getAttribute('data-student-id');
       
+      console.log('Score button clicked:', score, 'for student:', studentId);
+      
       if (score === "custom") {
         modal.remove();
-        showCustomScoreModal(student.name, (name, scoreType, customScore) => {
+        showRecitaCustomScoreModal(student.name, (name, scoreType, customScore) => {
           recordScore(studentId, scoreType, student.name, customScore);
         });
         return;
@@ -183,6 +225,58 @@ function showAuthenticatedStudentModal(student) {
     }
   });
 
+  return modal;
+}
+
+// Custom score modal for recita system
+function showRecitaCustomScoreModal(studentName, callback) {
+  const existingModals = document.querySelectorAll('.recita-modal');
+  existingModals.forEach(modal => modal.remove());
+  
+  const modal = document.createElement("div");
+  modal.className = "modal recita-modal custom-score-modal";
+  modal.style.zIndex = "10000";
+  modal.innerHTML = `
+    <div class="modal-content">
+      <h3 style="margin-top: 0; margin-bottom: 15px;">Custom Score</h3>
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+        <p style="font-size: 20px; font-weight: bold; margin: 0; color: #2c3e50;">${studentName}</p>
+      </div>
+      <input id="recitaCustomScoreInput" type="text" placeholder="Enter score (e.g., 7, Good, Excellent)" style="margin-bottom: 15px;" autofocus>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button id="saveRecitaCustomScore" style="margin: 0; background: #8b5cf6;">Save Score</button>
+        <button id="cancelRecitaCustomScore" style="margin: 0; background: #6b7280;">Cancel</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  const input = modal.querySelector("#recitaCustomScoreInput");
+  input.focus();
+  
+  modal.addEventListener("click", (e) => {
+    if (e.target.id === "saveRecitaCustomScore") {
+      const customScore = input.value.trim();
+      if (customScore) {
+        callback(studentName, 'custom', customScore);
+        modal.remove();
+      } else {
+        input.style.borderColor = "#ef4444";
+        input.placeholder = "Please enter a score";
+      }
+    } else if (e.target.id === "cancelRecitaCustomScore" || e.target === modal) {
+      modal.remove();
+    }
+  });
+  
+  // Handle Enter key
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      modal.querySelector("#saveRecitaCustomScore").click();
+    }
+  });
+  
   return modal;
 }
 
@@ -257,7 +351,7 @@ function setupLogout(apiFetch, go) {
 }
 
 // -------------------
-// INIT APP
+// INIT APP - Part 2a (Guest Mode Functionality)
 // -------------------
 document.addEventListener("DOMContentLoaded", () => {
   console.log('DOM loaded, initializing app...');
@@ -267,7 +361,6 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Setup authentication with post-auth callback
   setupLogin(apiFetch, (url) => {
-    // Check if user came from export flow
     const fromExport = localStorage.getItem('pendingExport');
     if (fromExport === 'true') {
       localStorage.removeItem('pendingExport');
@@ -278,7 +371,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   
   setupSignup(apiFetch, (url) => {
-    // Check if user came from export flow
     const fromExport = localStorage.getItem('pendingExport');
     if (fromExport === 'true') {
       localStorage.removeItem('pendingExport');
@@ -296,7 +388,6 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Initialize guest mode on page load
   function initGuestMode() {
-    // Load existing topic if any
     const savedTopic = localStorage.getItem("guestTopic");
     const savedDate = localStorage.getItem("guestTopicDate");
     const savedTime = localStorage.getItem("guestTopicTime");
@@ -313,7 +404,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (topicStatus) topicStatus.style.display = "block";
     }
     
-    // Load existing students and called list
     updateGuestCalledDisplay();
   }
   
@@ -349,7 +439,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (guestRecitaContainer) {
     console.log("Guest mode detected");
     
-    // Guest pick student functionality - UPDATED to handle skipped students
     if (guestPickBtn) {
       guestPickBtn.addEventListener("click", () => {
         const studentText = studentListTextarea ? studentListTextarea.value.trim() : '';
@@ -358,44 +447,32 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // Get all students
-        const allStudents = studentText.split('\n')
-          .map(name => name.trim())
-          .filter(name => name.length > 0);
+        const allStudents = studentText.split('\n').map(name => name.trim()).filter(name => name.length > 0);
 
         if (allStudents.length === 0) {
           showInfoModal("No valid student names found. Please check your list!");
           return;
         }
 
-        // Get students who haven't been called OR were skipped (can be called again)
         const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
-        const finalAnsweredStudents = calledStudents.filter(s => 
-          s.score !== 'skip' // Only exclude students who actually answered (not skipped)
-        ).map(s => s.name);
-        
-        const availableStudents = allStudents.filter(name => 
-          !finalAnsweredStudents.includes(name)
-        );
+        const finalAnsweredStudents = calledStudents.filter(s => s.score !== 'skip').map(s => s.name);
+        const availableStudents = allStudents.filter(name => !finalAnsweredStudents.includes(name));
 
         if (availableStudents.length === 0) {
           showInfoModal("All students have been called and answered! Clear the list to start over.");
           return;
         }
 
-        // If a student was just skipped, don't pick them again immediately
         const lastCalled = calledStudents[calledStudents.length - 1];
         let eligibleStudents = availableStudents;
         
         if (lastCalled && lastCalled.score === 'skip' && availableStudents.length > 1) {
           eligibleStudents = availableStudents.filter(name => name !== lastCalled.name);
-          // If after filtering we have no students, use all available
           if (eligibleStudents.length === 0) {
             eligibleStudents = availableStudents;
           }
         }
 
-        // Pick random student from eligible ones
         const randomIndex = Math.floor(Math.random() * eligibleStudents.length);
         const pickedStudent = eligibleStudents[randomIndex];
 
@@ -404,19 +481,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   
-  // Clear all guest data functionality - UPDATED to include topic
   if (guestClearBtn) {
     guestClearBtn.addEventListener("click", () => {
       showConfirmModal(
         "This will clear your topic, student list, and all called students. Are you sure you want to start over?",
         () => {
-          // Clear all localStorage data
           localStorage.removeItem("guestTopic");
           localStorage.removeItem("guestTopicDate");
           localStorage.removeItem("guestTopicTime");
           localStorage.removeItem("guestCalledStudents");
           
-          // Reset UI
           const topicInput = document.getElementById("guestTopic");
           const topicStatus = document.getElementById("guestTopicStatus");
           const studentListTextarea = document.getElementById("guestStudentList");
@@ -434,34 +508,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   
-  // Show export success modal after authentication
   function showExportSuccessModal() {
     const modal = showModal(`
       <p>You can now download your student data as a CSV file.</p>
       <div style="margin-top: 20px;">
-        <button id="downloadCsvBtn" style="background: #22c55e; margin-bottom: 10px;">
-          Download CSV & Go to Dashboard
-        </button>
-        <button id="continueToDashboard" style="background: #3b82f6; margin-bottom: 10px;">
-          Continue to Dashboard
-        </button>
+        <button id="downloadCsvBtn" style="background: #22c55e; margin-bottom: 10px;">Download CSV & Go to Dashboard</button>
+        <button id="continueToDashboard" style="background: #3b82f6; margin-bottom: 10px;">Continue to Dashboard</button>
       </div>
     `, "Account Created Successfully!");
 
-    // Download CSV functionality
     modal.querySelector("#downloadCsvBtn").addEventListener("click", () => {
       const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
       if (calledStudents.length === 0) {
         window.location.href = "dashboard.html";
         return;
       }
-
-      // Generate and download CSV
       downloadGuestCSV();
-
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 1000);
+      setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
     });
 
     modal.querySelector("#continueToDashboard").addEventListener("click", () => {
@@ -485,22 +548,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Mark that user is trying to export
       localStorage.setItem('pendingExport', 'true');
       
       const modal = showModal(`
         <p>You have <strong>${calledStudents.length} students</strong> in your list.</p>
         <p>Create an account to download your data as a CSV file and save your progress.</p>
         <div style="margin-top: 20px;">
-          <button id="authCreateAccount" style="background: #22c55e; margin-bottom: 10px;">
-            Create Account & Export
-          </button>
-          <button id="authLogin" style="background: #3b82f6; margin-bottom: 10px;">
-            Log In & Export
-          </button>
-          <button id="cancelAuth" style="background: #6b7280;">
-            Cancel
-          </button>
+          <button id="authCreateAccount" style="background: #22c55e; margin-bottom: 10px;">Create Account & Export</button>
+          <button id="authLogin" style="background: #3b82f6; margin-bottom: 10px;">Log In & Export</button>
+          <button id="cancelAuth" style="background: #6b7280;">Cancel</button>
         </div>
       `, "Export Your Data");
 
@@ -544,12 +600,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   
-  // Guest modal functionality (UNCHANGED - keeps working as expected)
+  // Guest modal functionality
   function showGuestStudentModal(studentName) {
     const existingModal = document.getElementById("guestStudentModal");
-    if (existingModal) {
-      existingModal.remove();
-    }
+    if (existingModal) existingModal.remove();
 
     const modal = showModal(`
       <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
@@ -568,17 +622,15 @@ document.addEventListener("DOMContentLoaded", () => {
     `, "Selected Student");
     
     modal.id = "guestStudentModal";
+    modal.classList.add("guest-modal");
     
-    // Add event listeners
     modal.addEventListener("click", (e) => {
       if (e.target.classList.contains("guestScoreBtn")) {
         let score = e.target.dataset.score;
-        
         if (score === "custom") {
           showCustomScoreModal(studentName, addToGuestCalledList);
           return;
         }
-        
         addToGuestCalledList(studentName, score);
         modal.remove();
       } else if (e.target.id === "guestModalClose" || e.target === modal) {
@@ -587,12 +639,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   
-  // Custom score modal (reusable)
+  // Custom score modal for guest mode
   function showCustomScoreModal(studentName, callback) {
-    const existingModal = document.querySelector("#guestStudentModal, #customScoreModal, #authenticatedStudentModal");
-    if (existingModal) {
-      existingModal.remove();
-    }
+    const existingModal = document.querySelector("#guestStudentModal, #customScoreModal");
+    if (existingModal) existingModal.remove();
     
     const modal = showModal(`
       <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
@@ -606,6 +656,7 @@ document.addEventListener("DOMContentLoaded", () => {
     `, "Custom Score");
     
     modal.id = "customScoreModal";
+    modal.classList.add("guest-modal");
     
     const input = modal.querySelector("#customScoreInput");
     input.focus();
@@ -625,7 +676,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
     
-    // Handle Enter key
     input.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
         modal.querySelector("#saveCustomScore").click();
@@ -645,10 +695,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const date = savedDate || new Date().toLocaleDateString();
     const time = savedTime || new Date().toLocaleTimeString();
 
-    let csvContent = `Recitation Topic: "${topic}"\n`;
-    csvContent += `Date: ${date}\n`;
-    csvContent += `Time: ${time}\n\n`;
-    csvContent += "Student Name,Score,Time Called\n";
+    let csvContent = `Recitation Topic: "${topic}"\nDate: ${date}\nTime: ${time}\n\nStudent Name,Score,Time Called\n`;
     
     calledStudents.forEach(student => {
       let scoreDisplay = student.score;
@@ -678,13 +725,10 @@ document.addEventListener("DOMContentLoaded", () => {
       timestamp: new Date().toLocaleTimeString()
     };
     
-    if (customScore) {
-      studentEntry.customScore = customScore;
-    }
+    if (customScore) studentEntry.customScore = customScore;
     
     calledStudents.push(studentEntry);
     
-    // Sort by last name
     calledStudents.sort((a, b) => {
       const lastNameA = a.name.split(' ').pop().toLowerCase();
       const lastNameB = b.name.split(' ').pop().toLowerCase();
@@ -693,8 +737,6 @@ document.addEventListener("DOMContentLoaded", () => {
     
     localStorage.setItem("guestCalledStudents", JSON.stringify(calledStudents));
     updateGuestCalledDisplay();
-    
-    // Check if all students called
     checkIfAllStudentsCalled();
   }
   
@@ -704,20 +746,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!studentListTextarea) return;
     
     const allStudents = studentListTextarea.value.trim().split('\n')
-      .map(name => name.trim())
-      .filter(name => name.length > 0);
+      .map(name => name.trim()).filter(name => name.length > 0);
     
     const calledStudents = JSON.parse(localStorage.getItem("guestCalledStudents") || "[]");
     const finalAnsweredStudents = calledStudents.filter(s => s.score !== 'skip');
     
     if (allStudents.length > 0 && finalAnsweredStudents.length >= allStudents.length) {
-      // All students have been called, show export option
       setTimeout(() => {
         showConfirmModal(
           "All students have been called! Would you like to export your data as CSV?",
-          () => {
-            downloadGuestCSV();
-          },
+          () => { downloadGuestCSV(); },
           null,
           "Export Complete Session"
         );
@@ -737,7 +775,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     
-    // Create table with requested order: name - score - time
     let tableHTML = `
       <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <thead>
@@ -783,15 +820,12 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     });
     
-    tableHTML += `
-        </tbody>
-      </table>
-    `;
-    
+    tableHTML += `</tbody></table>`;
     container.innerHTML = tableHTML;
   }
 
-  // -------------------
+
+// -------------------
   // DASHBOARD: CREATE + LIST CLASSES
   // -------------------
   const createClassForm = document.getElementById("createClassForm");
@@ -812,14 +846,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Load classes
     (async () => {
       try {
         const classes = await apiFetch("/classes");
         classes.forEach((c) => {
           const div = document.createElement("div");
-          div.className =
-            "bg-white p-4 rounded-lg shadow hover:bg-gray-50 cursor-pointer";
+          div.className = "bg-white p-4 rounded-lg shadow hover:bg-gray-50 cursor-pointer";
           div.textContent = c.name;
           div.addEventListener("click", () => {
             localStorage.setItem("classId", c.id);
@@ -845,10 +877,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const classId = localStorage.getItem("classId");
 
     addStudentsBtn.addEventListener("click", async () => {
-      const names = studentInput.value
-        .split("\n")
-        .map((n) => n.trim())
-        .filter(Boolean);
+      const names = studentInput.value.split("\n").map((n) => n.trim()).filter(Boolean);
 
       if (!names.length) return;
 
@@ -863,7 +892,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Load students
     (async () => {
       try {
         const students = await apiFetch(`/students?classId=${classId}`);
@@ -878,17 +906,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     })();
 
-    // Load recita history for this class
     loadRecitaHistory(classId);
   }
 
-  // Function to load recita history
   async function loadRecitaHistory(classId) {
     if (!recitaHistoryContainer) return;
     
     try {
-      // This would need a new API endpoint - for now using mock data structure
-      // You'll need to create /functions/recitas.js to handle this
       const recitas = await apiFetch(`/recitas?classId=${classId}`);
       
       if (recitas.length === 0) {
@@ -944,7 +968,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Global functions for recita history buttons
   window.exportRecitaCSV = async function(recitaId, topic) {
     try {
       window.location.href = `/export?recitaId=${recitaId}`;
@@ -976,8 +999,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <tbody>
         `;
         
-        details.attendance
-          .sort((a, b) => a.student_name.localeCompare(b.student_name))
+        details.attendance.sort((a, b) => a.student_name.localeCompare(b.student_name))
           .forEach((record, index) => {
             const rowStyle = index % 2 === 0 ? "background: #fff;" : "background: #f8f9fa;";
             let scoreDisplay = record.score || 'No score';
@@ -1004,10 +1026,7 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
           });
         
-        detailsHTML += `
-            </tbody>
-          </table>
-        `;
+        detailsHTML += `</tbody></table>`;
       } else {
         detailsHTML += '<p style="color: #666; margin-top: 15px;">No students were called in this session.</p>';
       }
@@ -1026,7 +1045,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // -------------------
-  // RECITA PAGE - ENHANCED VERSION
+  // RECITA PAGE - ENHANCED VERSION WITH PROPER MODAL SEPARATION
   // -------------------
   const saveRecitaBtn = document.getElementById("saveRecitaBtn");
   const pickSection = document.getElementById("pickSection");
@@ -1038,7 +1057,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const classId = localStorage.getItem("classId");
     console.log("Class ID from localStorage:", classId);
     
-    // Check if we already have a saved recita
     const existingRecitaId = localStorage.getItem("recitaId");
     if (existingRecitaId) {
       console.log("Found existing recita ID:", existingRecitaId);
@@ -1051,7 +1069,7 @@ document.addEventListener("DOMContentLoaded", () => {
     saveRecitaBtn.addEventListener("click", async () => {
       const topicInput = document.getElementById("topicInput");
       if (!topicInput) {
-        showInfoModal("Topic input not found!", "Error");
+        showRecitaInfoModal("Topic input not found!", "Error");
         return;
       }
       
@@ -1059,7 +1077,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Saving recita with topic:", topic, "and classId:", classId);
       
       if (!topic) {
-        showInfoModal("Please enter a topic for the recita");
+        showRecitaInfoModal("Please enter a topic for the recita");
         return;
       }
       
@@ -1080,7 +1098,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         if (!recitaId) {
           console.error("No ID in server response:", response);
-          showInfoModal("Recita saved but ID not found. Please refresh and try again.", "Error");
+          showRecitaInfoModal("Recita saved but ID not found. Please refresh and try again.", "Error");
           return;
         }
         
@@ -1103,16 +1121,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         displayRecitaStatus();
-        showInfoModal(`Recita "${topic}" saved successfully!`, "Success");
+        showRecitaInfoModal(`Recita "${topic}" saved successfully!`, "Success");
         
       } catch (err) {
         console.error("Save recita error:", err);
-        showInfoModal("Failed to save recita: " + err.message, "Error");
+        showRecitaInfoModal("Failed to save recita: " + err.message, "Error");
       }
     });
   }
 
-  // Function to display current recita status
   function displayRecitaStatus() {
     const topic = localStorage.getItem("recitaTopic");
     const date = localStorage.getItem("recitaDate");
@@ -1143,17 +1160,12 @@ document.addEventListener("DOMContentLoaded", () => {
             <small class="text-green-600">${date} at ${time}</small>
           </div>
           <div class="flex gap-2">
-            <button id="editRecitaBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-sm">
-              Edit
-            </button>
-            <button id="exportCurrentRecitaBtn" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm">
-              Export CSV
-            </button>
+            <button id="editRecitaBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-sm">Edit</button>
+            <button id="exportCurrentRecitaBtn" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm">Export CSV</button>
           </div>
         </div>
       `;
       
-      // Add edit functionality
       const editBtn = document.getElementById("editRecitaBtn");
       if (editBtn) {
         editBtn.addEventListener("click", () => {
@@ -1165,7 +1177,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
 
-      // Add export functionality for current recita
       const exportBtn = document.getElementById("exportCurrentRecitaBtn");
       if (exportBtn) {
         exportBtn.addEventListener("click", () => {
@@ -1175,7 +1186,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Pick student event listener
+  // Pick student event listener - ENHANCED FOR PROPER MODAL ISOLATION
   console.log("Setting up pick student event listener");
   
   document.addEventListener("click", async (e) => {
@@ -1188,7 +1199,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       if (!recitaId || recitaId === 'null' || recitaId === 'undefined') {
         console.error("No valid recita ID found");
-        showInfoModal("No recita ID found. Please save a recita first.");
+        showRecitaInfoModal("No recita ID found. Please save a recita first.");
         return;
       }
       
@@ -1199,33 +1210,58 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Student picked:", student);
         
         if (!student) {
-          // All students called - offer export
-          showConfirmModal(
-            "All students have been called! Would you like to export this recitation as CSV?",
-            () => {
-              window.location.href = `/export?recitaId=${recitaId}`;
-            },
-            null,
-            "All Students Called"
-          );
+          // All students called - offer export using RECITA modal system
+          const modal = document.createElement("div");
+          modal.className = "modal recita-modal confirm-export-modal";
+          modal.style.zIndex = "10000";
+          modal.innerHTML = `
+            <div class="modal-content">
+              <h3 style="margin-top: 0; margin-bottom: 15px;">All Students Called</h3>
+              <p style="color: #666; margin-bottom: 20px; line-height: 1.4;">
+                All students have been called! Would you like to export this recitation as CSV?
+              </p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button id="exportYesBtn" style="margin: 0; background: #22c55e;">Export CSV</button>
+                <button id="exportNoBtn" style="margin: 0; background: #6b7280;">Cancel</button>
+              </div>
+            </div>
+          `;
+          
+          document.body.appendChild(modal);
+          
+          modal.querySelector('#exportYesBtn').addEventListener('click', () => {
+            modal.remove();
+            window.location.href = `/export?recitaId=${recitaId}`;
+          });
+          
+          modal.querySelector('#exportNoBtn').addEventListener('click', () => {
+            modal.remove();
+          });
+          
+          modal.addEventListener("click", (e) => {
+            if (e.target === modal) {
+              modal.remove();
+            }
+          });
+          
           return;
         }
         
-        // USE THE NEW AUTHENTICATED MODAL FUNCTION
+        // USE THE SEPARATE AUTHENTICATED MODAL FUNCTION
         showAuthenticatedStudentModal(student);
       } catch (err) {
         console.error("Pick student error:", err);
-        showInfoModal("Failed to pick student: " + err.message, "Error");
+        showRecitaInfoModal("Failed to pick student: " + err.message, "Error");
       }
     }
   });
 
-  // Record score function
+  // Record score function - ENHANCED
   async function recordScore(studentId, score, studentName, customScore = null) {
     const recitaId = localStorage.getItem("recitaId");
     
     if (!recitaId || !studentId) {
-      showInfoModal("Missing recita or student ID", "Error");
+      showRecitaInfoModal("Missing recita or student ID", "Error");
       return;
     }
     
@@ -1240,7 +1276,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
     } catch (err) {
       console.error("Failed to record score", err);
-      showInfoModal("Failed to record score: " + err.message, "Error");
+      showRecitaInfoModal("Failed to record score: " + err.message, "Error");
     }
   }
 
@@ -1280,7 +1316,6 @@ document.addEventListener("DOMContentLoaded", () => {
     
     calledStudents.push(studentEntry);
     
-    // Sort alphabetically by last name
     calledStudents.sort((a, b) => {
       const lastNameA = a.name.split(' ').pop().toLowerCase();
       const lastNameB = b.name.split(' ').pop().toLowerCase();
@@ -1348,11 +1383,7 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     });
     
-    tableHTML += `
-        </tbody>
-      </table>
-    `;
-    
+    tableHTML += `</tbody></table>`;
     calledList.innerHTML = tableHTML;
   }
   
@@ -1378,7 +1409,6 @@ document.addEventListener("DOMContentLoaded", () => {
         showInfoModal("No class selected");
         return;
       }
-      // Export all recitas for this class
       window.location.href = `/export?classId=${classId}`;
     });
   }
