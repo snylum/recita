@@ -27,21 +27,38 @@
         type="text" 
         placeholder="Enter recitation topic (e.g., Chapter 5: Photosynthesis)" 
         style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px;">
-      <button 
-        id="saveRecitaBtn" 
-        style="width: 100%; background: #4f46e5; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px;">
-        Save Recita
-      </button>
+      
+      <!-- Three Button Row -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+        <button 
+          id="saveRecitaBtn" 
+          style="background: #4f46e5; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px;">
+          Save Recita
+        </button>
+        <button 
+          id="editRecitaBtn" 
+          style="background: #f59e0b; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; display: none;">
+          Edit Recita
+        </button>
+        <button 
+          id="exportRecitaBtn" 
+          style="background: #10b981; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; display: none;">
+          Export CSV
+        </button>
+      </div>
     </div>
 
-    <!-- Pick Student Section (Hidden by default) -->
-    <div id="pickSection" class="hidden" style="display: none;">
-      <div style="background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 24px;">
+    <!-- Pick Student Section -->
+    <div id="pickSection" style="display: none;">
+      <div style="background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 24px;">
         <button 
           id="pickStudentBtn" 
-          style="width: 100%; background: #10b981; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px;">
+          style="width: 100%; background: #10b981; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px; margin-bottom: 20px;">
           🎲 Pick Random Student
         </button>
+        
+        <!-- Called Students Table will be inserted here by JavaScript -->
+        <div id="calledStudentsTableContainer"></div>
       </div>
     </div>
   </main>
