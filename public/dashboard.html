@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-
   <title>Recita Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -13,7 +12,6 @@
     <h1 class="text-xl font-bold">Recita</h1>
     <button id="logoutBtn" class="text-red-500 hover:underline">Logout</button>
   </nav>
-
   <main class="p-6">
     <div class="bg-white rounded-xl shadow p-6 mb-6 max-w-md">
       <h2 class="text-lg font-bold mb-4">Create Class</h2>
@@ -22,12 +20,181 @@
         <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Create</button>
       </form>
     </div>
-
     <div>
       <h2 class="text-lg font-bold mb-4">My Classes</h2>
       <div id="classList" class="grid md:grid-cols-3 gap-4"></div>
     </div>
   </main>
-  <script src="app.js"></script>
+
+  <script>
+    // Function to export all recita sessions for a class
+    async function exportAllRecitaSessions(classId, className) {
+      try {
+        console.log(`Exporting all recita sessions for class: ${className} (ID: ${classId})`);
+        
+        // Show loading state
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = `
+          <svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Exporting...
+        `;
+        button.disabled = true;
+
+        // Call your existing export API endpoint
+        const response = await fetch(`/api/export?classId=${encodeURIComponent(classId)}`, {
+          method: 'GET',
+          credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || `Export failed: ${response.status}`);
+        }
+
+        // Create download link
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Extract filename from response headers or use default
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = `${className}-all-recitations.csv`;
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="(.+)"/);
+          if (match) filename = match[1];
+        }
+        
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        console.log(`Successfully exported CSV for ${className}`);
+        
+      } catch (error) {
+        console.error('Export error:', error);
+        alert(`Export failed: ${error.message}`);
+      } finally {
+        // Restore button state
+        const button = event.target;
+        button.innerHTML = originalText;
+        button.disabled = false;
+      }
+    }
+
+    // Function to create class card with export button
+    function createClassCard(classData) {
+      return `
+        <div class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
+          <h3 class="font-bold text-lg mb-2">${classData.name}</h3>
+          <p class="text-gray-600 mb-4">${classData.studentCount || 0} students</p>
+          <div class="space-y-2">
+            <button onclick="window.location.href='class.html?id=${classData.id}'" 
+                    class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors">
+              View Class
+            </button>
+            <button onclick="exportAllRecitaSessions('${classData.id}', '${classData.name.replace(/'/g, "\\'")}');" 
+                    class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Export All CSV
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Load classes from your API
+    async function loadClasses() {
+      try {
+        const response = await fetch('/api/classes', {
+          credentials: 'same-origin'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load classes: ${response.status}`);
+        }
+        
+        const classes = await response.json();
+        const classList = document.getElementById('classList');
+        
+        if (classes.length === 0) {
+          classList.innerHTML = '<p class="text-gray-500 text-center">No classes created yet.</p>';
+          return;
+        }
+        
+        classList.innerHTML = classes.map(classData => createClassCard(classData)).join('');
+        
+      } catch (error) {
+        console.error('Error loading classes:', error);
+        document.getElementById('classList').innerHTML = 
+          '<p class="text-red-500 text-center">Error loading classes. Please refresh the page.</p>';
+      }
+    }
+
+    // Handle create class form submission
+    async function handleCreateClass(e) {
+      e.preventDefault();
+      
+      const className = document.getElementById('className').value.trim();
+      if (!className) return;
+      
+      try {
+        const response = await fetch('/api/classes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ name: className })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to create class: ${response.status}`);
+        }
+        
+        // Clear form and reload classes
+        document.getElementById('className').value = '';
+        await loadClasses();
+        
+      } catch (error) {
+        console.error('Error creating class:', error);
+        alert(`Failed to create class: ${error.message}`);
+      }
+    }
+
+    // Handle logout
+    async function handleLogout() {
+      try {
+        await fetch('/api/logout', { 
+          method: 'POST',
+          credentials: 'same-origin'
+        });
+        window.location.href = '/login.html';
+      } catch (error) {
+        console.error('Logout error:', error);
+        window.location.href = '/login.html';
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load existing classes
+      loadClasses();
+      
+      // Set up form handler
+      document.getElementById('createClassForm').addEventListener('submit', handleCreateClass);
+      
+      // Set up logout handler
+      document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    });
+  </script>
 </body>
 </html>
