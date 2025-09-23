@@ -4,33 +4,461 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-
-  <title>Class</title>
+  <title>Class Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
   <nav class="bg-white shadow p-4 flex justify-between items-center">
     <h1 class="text-xl font-bold">Recita</h1>
-    <button onclick="window.location.href='dashboard.html'" class="text-blue-500 hover:underline">Back</button>
+    <div class="flex gap-4 items-center">
+      <span id="className" class="text-lg font-medium text-gray-700"></span>
+      <button onclick="window.location.href='dashboard.html'" class="text-blue-500 hover:underline">Back to Dashboard</button>
+    </div>
   </nav>
+  
+  <main class="p-6 max-w-7xl mx-auto">
+    <!-- Two Column Layout for Desktop, Stacked for Mobile -->
+    <div class="grid lg:grid-cols-2 gap-6">
+      
+      <!-- Left Column: Students Management -->
+      <div class="space-y-6">
+        <!-- Add Students Section -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <h2 class="text-lg font-bold mb-4">Add Students</h2>
+          <textarea id="studentInput" placeholder="One student per line" class="w-full p-3 border rounded-lg h-32 mb-4"></textarea>
+          <button id="addStudentsBtn" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Add Students</button>
+        </div>
 
-  <main class="p-6 max-w-3xl mx-auto">
-    <div class="bg-white rounded-xl shadow p-6 mb-6">
-      <h2 class="text-lg font-bold mb-4">Add Students</h2>
-      <textarea id="studentInput" placeholder="One student per line" class="w-full p-3 border rounded-lg h-32"></textarea>
-      <button id="addStudentsBtn" class="mt-4 w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Add Students</button>
-    </div>
+        <!-- Students List -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold">Students</h2>
+            <span id="studentCount" class="text-sm text-gray-500">0 students</span>
+          </div>
+          <div id="studentList" class="space-y-2 max-h-96 overflow-y-auto">
+            <p class="text-gray-500 text-center py-8">No students added yet</p>
+          </div>
+        </div>
+      </div>
 
-    <div class="bg-white rounded-xl shadow p-6 mb-6">
-      <h2 class="text-lg font-bold mb-4">Students</h2>
-      <ul id="studentList" class="space-y-2"></ul>
-    </div>
+      <!-- Right Column: Recitas Management -->
+      <div class="space-y-6">
+        <!-- Create New Recita -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <h2 class="text-lg font-bold mb-4">Create New Recita</h2>
+          <form id="createRecitaForm" class="space-y-4">
+            <input id="recitaTopic" type="text" placeholder="Recita topic" class="w-full p-3 border rounded-lg" required>
+            <div class="flex gap-2">
+              <button type="submit" class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600">Create Recita</button>
+              <button type="button" id="exportSelectedBtn" class="bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 disabled:opacity-50" disabled>
+                Export Selected
+              </button>
+            </div>
+          </form>
+        </div>
 
-    <div class="flex gap-4">
-      <button onclick="window.location.href='recita.html'" class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600">Add Recita!</button>
-      <button id="exportCsvBtn" class="flex-1 bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600">Export CSV</button>
+        <!-- Recitas List -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold">Recitas</h2>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="selectAllRecitas" class="rounded">
+              <label for="selectAllRecitas" class="text-sm text-gray-600">Select All</label>
+            </div>
+          </div>
+          <div id="recitasList" class="space-y-3 max-h-96 overflow-y-auto">
+            <p class="text-gray-500 text-center py-8">No recitas created yet</p>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
-  <script src="app.js"></script>
+
+  <script>
+    // Global variables
+    let currentClassId = null;
+    let students = [];
+    let recitas = [];
+
+    // Get class ID from URL
+    function getClassIdFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('id');
+    }
+
+    // Load class information
+    async function loadClassInfo() {
+      currentClassId = getClassIdFromUrl();
+      if (!currentClassId) {
+        alert('No class ID provided');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      try {
+        // Load class details using your existing API
+        const response = await fetch(`/api/classes/${currentClassId}`, {
+          credentials: 'same-origin'
+        });
+        
+        if (response.ok) {
+          const classData = await response.json();
+          document.getElementById('className').textContent = classData.name;
+        }
+      } catch (error) {
+        console.error('Error loading class info:', error);
+      }
+    }
+
+    // Load students using your existing API
+    async function loadStudents() {
+      try {
+        const response = await fetch(`/api/students?classId=${currentClassId}`, {
+          credentials: 'same-origin'
+        });
+        
+        if (response.ok) {
+          students = await response.json();
+          renderStudents();
+        }
+      } catch (error) {
+        console.error('Error loading students:', error);
+      }
+    }
+
+    // Load recitas using your existing attendance API
+    async function loadRecitas() {
+      try {
+        // Use your attendance API to get recita sessions
+        const response = await fetch(`/api/attendance?action=getRecitas&classId=${currentClassId}`, {
+          credentials: 'same-origin'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          recitas = data || [];
+          renderRecitas();
+        }
+      } catch (error) {
+        console.error('Error loading recitas:', error);
+        // If the API doesn't support getRecitas yet, show empty state
+        recitas = [];
+        renderRecitas();
+      }
+    }
+
+    // Render students list
+    function renderStudents() {
+      const studentList = document.getElementById('studentList');
+      const studentCount = document.getElementById('studentCount');
+      
+      studentCount.textContent = `${students.length} student${students.length !== 1 ? 's' : ''}`;
+      
+      if (students.length === 0) {
+        studentList.innerHTML = '<p class="text-gray-500 text-center py-8">No students added yet</p>';
+        return;
+      }
+
+      studentList.innerHTML = students.map(student => `
+        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100">
+          <div class="flex items-center flex-1">
+            <input type="text" value="${student.name}" 
+                   class="bg-transparent border-none outline-none flex-1 font-medium"
+                   onblur="updateStudentName(${student.id}, this.value)"
+                   onkeypress="if(event.key==='Enter') this.blur()">
+          </div>
+          <button onclick="deleteStudent(${student.id})" 
+                  class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1 transition-opacity">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Render recitas list
+    function renderRecitas() {
+      const recitasList = document.getElementById('recitasList');
+      
+      if (recitas.length === 0) {
+        recitasList.innerHTML = '<p class="text-gray-500 text-center py-8">No recitas created yet</p>';
+        return;
+      }
+
+      recitasList.innerHTML = recitas.map(recita => {
+        const date = new Date(recita.created_at);
+        const dateStr = date.toLocaleDateString();
+        const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        return `
+          <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <input type="checkbox" class="recita-checkbox rounded" value="${recita.id}" 
+                       onchange="updateExportButton()">
+                <div>
+                  <h3 class="font-semibold text-gray-900">${recita.topic}</h3>
+                  <p class="text-sm text-gray-600">${dateStr} at ${timeStr}</p>
+                  <p class="text-xs text-gray-500">
+                    ${recita.student_count || 0} student${(recita.student_count || 0) !== 1 ? 's' : ''} participated
+                  </p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="editRecita(${recita.id})" 
+                        class="text-blue-500 hover:text-blue-700 p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                </button>
+                <button onclick="deleteRecita(${recita.id})" 
+                        class="text-red-500 hover:text-red-700 p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="flex gap-2 mt-3">
+              <button onclick="startRecita(${recita.id})" 
+                      class="flex-1 bg-green-500 text-white text-sm py-2 px-3 rounded hover:bg-green-600">
+                Start Recita
+              </button>
+              <button onclick="exportSingleRecita(${recita.id})" 
+                      class="bg-gray-500 text-white text-sm py-2 px-3 rounded hover:bg-gray-600">
+                Export
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Add students using your existing API
+    async function addStudents() {
+      const input = document.getElementById('studentInput');
+      const names = input.value.trim().split('\n').filter(name => name.trim());
+      
+      if (names.length === 0) {
+        alert('Please enter at least one student name');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ 
+            classId: currentClassId, 
+            names: names.map(name => name.trim()) 
+          })
+        });
+
+        if (response.ok) {
+          input.value = '';
+          await loadStudents();
+        } else {
+          alert('Failed to add students');
+        }
+      } catch (error) {
+        console.error('Error adding students:', error);
+        alert('Error adding students');
+      }
+    }
+
+    // Update student name using your individual student API
+    async function updateStudentName(studentId, newName) {
+      if (!newName.trim()) return;
+      
+      try {
+        const response = await fetch(`/api/students/${studentId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ name: newName.trim() })
+        });
+
+        if (response.ok) {
+          await loadStudents();
+        }
+      } catch (error) {
+        console.error('Error updating student:', error);
+      }
+    }
+
+    // Delete student using your individual student API
+    async function deleteStudent(studentId) {
+      if (!confirm('Are you sure you want to delete this student?')) return;
+      
+      try {
+        const response = await fetch(`/api/students/${studentId}`, {
+          method: 'DELETE',
+          credentials: 'same-origin'
+        });
+
+        if (response.ok) {
+          await loadStudents();
+        }
+      } catch (error) {
+        console.error('Error deleting student:', error);
+      }
+    }
+
+    // Create recita using your existing attendance API
+    async function createRecita(event) {
+      event.preventDefault();
+      
+      const topic = document.getElementById('recitaTopic').value.trim();
+      if (!topic) return;
+
+      try {
+        const response = await fetch('/api/attendance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ 
+            classId: currentClassId, 
+            topic: topic 
+          })
+        });
+
+        if (response.ok) {
+          document.getElementById('recitaTopic').value = '';
+          await loadRecitas();
+        } else {
+          alert('Failed to create recita');
+        }
+      } catch (error) {
+        console.error('Error creating recita:', error);
+        alert('Error creating recita');
+      }
+    }
+
+    // Edit recita (navigate to recita page)
+    function editRecita(recitaId) {
+      window.location.href = `recita.html?id=${recitaId}`;
+    }
+
+    // Delete recita using your individual recita API
+    async function deleteRecita(recitaId) {
+      if (!confirm('Are you sure you want to delete this recita?')) return;
+      
+      try {
+        const response = await fetch(`/api/recitas/${recitaId}`, {
+          method: 'DELETE',
+          credentials: 'same-origin'
+        });
+
+        if (response.ok) {
+          await loadRecitas();
+        }
+      } catch (error) {
+        console.error('Error deleting recita:', error);
+      }
+    }
+
+    // Start recita
+    function startRecita(recitaId) {
+      window.location.href = `recita.html?id=${recitaId}`;
+    }
+
+    // Export single recita using your existing export API
+    async function exportSingleRecita(recitaId) {
+      try {
+        const response = await fetch(`/api/export?recitaId=${recitaId}`, {
+          credentials: 'same-origin'
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          
+          const contentDisposition = response.headers.get('Content-Disposition');
+          let filename = 'recita-export.csv';
+          if (contentDisposition) {
+            const match = contentDisposition.match(/filename="(.+)"/);
+            if (match) filename = match[1];
+          }
+          
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        }
+      } catch (error) {
+        console.error('Export error:', error);
+        alert('Export failed');
+      }
+    }
+
+    // Update export button state
+    function updateExportButton() {
+      const checkboxes = document.querySelectorAll('.recita-checkbox:checked');
+      const exportBtn = document.getElementById('exportSelectedBtn');
+      exportBtn.disabled = checkboxes.length === 0;
+    }
+
+    // Export selected recitas using your updated export API
+    async function exportSelectedRecitas() {
+      const checkboxes = document.querySelectorAll('.recita-checkbox:checked');
+      const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+      
+      if (selectedIds.length === 0) {
+        alert('Please select at least one recita to export');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/export`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ recitaIds: selectedIds })
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `selected-recitas-${new Date().toISOString().slice(0, 10)}.csv`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        }
+      } catch (error) {
+        console.error('Export error:', error);
+        alert('Export failed');
+      }
+    }
+
+    // Select all recitas
+    function toggleSelectAllRecitas() {
+      const selectAll = document.getElementById('selectAllRecitas');
+      const checkboxes = document.querySelectorAll('.recita-checkbox');
+      
+      checkboxes.forEach(cb => cb.checked = selectAll.checked);
+      updateExportButton();
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async function() {
+      await loadClassInfo();
+      await loadStudents();
+      await loadRecitas();
+      
+      // Event listeners
+      document.getElementById('addStudentsBtn').addEventListener('click', addStudents);
+      document.getElementById('createRecitaForm').addEventListener('submit', createRecita);
+      document.getElementById('exportSelectedBtn').addEventListener('click', exportSelectedRecitas);
+      document.getElementById('selectAllRecitas').addEventListener('change', toggleSelectAllRecitas);
+    });
+  </script>
 </body>
 </html>
