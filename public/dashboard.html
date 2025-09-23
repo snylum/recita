@@ -3,198 +3,171 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <title>Recita Dashboard</title>
+  <title>Recita - Dashboard</title>
+  <link rel="icon" type="image/png" href="/logo.png">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
-  <nav class="bg-white shadow p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Recita</h1>
-    <button id="logoutBtn" class="text-red-500 hover:underline">Logout</button>
-  </nav>
-  <main class="p-6">
-    <div class="bg-white rounded-xl shadow p-6 mb-6 max-w-md">
-      <h2 class="text-lg font-bold mb-4">Create Class</h2>
-      <form id="createClassForm" class="space-y-4">
-        <input id="className" type="text" placeholder="Class name" class="w-full p-3 border rounded-lg" required>
-        <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Create</button>
-      </form>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold text-gray-800">Recita Dashboard</h1>
+      <nav>
+        <a href="dashboard.html" class="text-gray-700 hover:text-blue-600 mr-4">Dashboard</a>
+        <a href="class.html" class="text-gray-700 hover:text-blue-600">Classes</a>
+      </nav>
     </div>
-    <div>
-      <h2 class="text-lg font-bold mb-4">My Classes</h2>
-      <div id="classList" class="grid md:grid-cols-3 gap-4"></div>
+  </header>
+
+  <!-- Main content -->
+  <main class="flex-1 max-w-7xl mx-auto p-6">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4">My Classes</h2>
+
+    <!-- Class list container -->
+    <div id="classesList" class="space-y-3 max-h-96 overflow-y-auto flex justify-center py-8">
+      <!-- Spinner shown initially -->
+      <div class="flex flex-col items-center gap-2 text-gray-500">
+        <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <span>Loading classes...</span>
+      </div>
+    </div>
+
+    <!-- Create Class Button -->
+    <div class="mt-6">
+      <button id="openCreateClassModal"
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+        + Create Class
+      </button>
     </div>
   </main>
 
-  <script>
-    // Function to export all recita sessions for a class
-    async function exportAllRecitaSessions(classId, className) {
-      try {
-        console.log(`Exporting all recita sessions for class: ${className} (ID: ${classId})`);
-        
-        // Show loading state
-        const button = event.target;
-        const originalText = button.innerHTML;
-        button.innerHTML = `
-          <svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+  <!-- Create Class Modal -->
+  <div id="createClassModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Create a New Class</h3>
+      <input type="text" id="classNameInput" placeholder="Enter class name"
+        class="w-full border rounded-lg px-3 py-2 mb-4 focus:ring focus:ring-blue-200">
+      <div class="flex justify-end gap-3">
+        <button id="cancelCreateClass" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">
+          Cancel
+        </button>
+        <button id="confirmCreateClass" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+          <span id="createBtnText">Create</span>
+          <svg id="createBtnSpinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
           </svg>
-          Exporting...
-        `;
-        button.disabled = true;
+        </button>
+      </div>
+    </div>
+  </div>
 
-        // Call your existing export API endpoint
-        const response = await fetch(`/api/export?classId=${encodeURIComponent(classId)}`, {
-          method: 'GET',
-          credentials: 'same-origin'
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText || `Export failed: ${response.status}`);
-        }
-
-        // Create download link
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        
-        // Extract filename from response headers or use default
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let filename = `${className}-all-recitations.csv`;
-        if (contentDisposition) {
-          const match = contentDisposition.match(/filename="(.+)"/);
-          if (match) filename = match[1];
-        }
-        
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        
-        console.log(`Successfully exported CSV for ${className}`);
-        
-      } catch (error) {
-        console.error('Export error:', error);
-        alert(`Export failed: ${error.message}`);
-      } finally {
-        // Restore button state
-        const button = event.target;
-        button.innerHTML = originalText;
-        button.disabled = false;
-      }
-    }
-
-    // Function to create class card with export button
-    function createClassCard(classData) {
-      return `
-        <div class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
-          <h3 class="font-bold text-lg mb-2">${classData.name}</h3>
-          <p class="text-gray-600 mb-4">${classData.studentCount || 0} students</p>
-          <div class="space-y-2">
-            <button onclick="window.location.href='class.html?id=${classData.id}'" 
-                    class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors">
-              View Class
-            </button>
-            <button onclick="exportAllRecitaSessions('${classData.id}', '${classData.name.replace(/'/g, "\\'")}');" 
-                    class="w-full bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-              </svg>
-              Export All CSV
-            </button>
-          </div>
+  <script>
+    async function loadClasses() {
+      const container = document.getElementById('classesList');
+      // Reset to spinner while loading
+      container.innerHTML = `
+        <div class="flex flex-col items-center gap-2 text-gray-500 py-8 w-full">
+          <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <span>Loading classes...</span>
         </div>
       `;
-    }
 
-    // Load classes from your API
-    async function loadClasses() {
       try {
-        const response = await fetch('/api/classes', {
-          credentials: 'same-origin'
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to load classes: ${response.status}`);
-        }
+        const response = await fetch('/api/classes', { credentials: 'same-origin' });
+        if (!response.ok) throw new Error('Failed to load classes');
         
         const classes = await response.json();
-        const classList = document.getElementById('classList');
-        
-        if (classes.length === 0) {
-          classList.innerHTML = '<p class="text-gray-500 text-center">No classes created yet.</p>';
-          return;
-        }
-        
-        classList.innerHTML = classes.map(classData => createClassCard(classData)).join('');
-        
-      } catch (error) {
-        console.error('Error loading classes:', error);
-        document.getElementById('classList').innerHTML = 
-          '<p class="text-red-500 text-center">Error loading classes. Please refresh the page.</p>';
+        renderClasses(classes);
+      } catch (err) {
+        console.error('Error loading classes:', err);
+        container.innerHTML =
+          '<p class="text-red-500 text-center py-8">Failed to load classes</p>';
       }
     }
 
-    // Handle create class form submission
-    async function handleCreateClass(e) {
-      e.preventDefault();
-      
-      const className = document.getElementById('className').value.trim();
-      if (!className) return;
-      
+    function renderClasses(classes) {
+      const container = document.getElementById('classesList');
+      if (!classes.length) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-8">No classes yet</p>';
+        return;
+      }
+
+      container.innerHTML = classes.map(c => `
+        <div class="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer bg-white"
+             onclick="window.location.href='class.html?id=${c.id}'">
+          <h3 class="font-semibold text-gray-900">${c.name}</h3>
+          <p class="text-sm text-gray-600">${c.student_count || 0} students</p>
+        </div>
+      `).join('');
+    }
+
+    // Modal logic
+    const modal = document.getElementById('createClassModal');
+    const openBtn = document.getElementById('openCreateClassModal');
+    const cancelBtn = document.getElementById('cancelCreateClass');
+    const confirmBtn = document.getElementById('confirmCreateClass');
+    const input = document.getElementById('classNameInput');
+    const createBtnText = document.getElementById('createBtnText');
+    const createBtnSpinner = document.getElementById('createBtnSpinner');
+
+    openBtn.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      input.value = '';
+      input.focus();
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    });
+
+    confirmBtn.addEventListener('click', async () => {
+      const name = input.value.trim();
+      if (!name) return alert('Please enter a class name.');
+
+      // Show spinner inside button
+      createBtnText.textContent = "Creating...";
+      createBtnSpinner.classList.remove('hidden');
+      confirmBtn.disabled = true;
+
       try {
         const response = await fetch('/api/classes', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'same-origin',
-          body: JSON.stringify({ name: className })
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to create class: ${response.status}`);
-        }
-        
-        // Clear form and reload classes
-        document.getElementById('className').value = '';
-        await loadClasses();
-        
-      } catch (error) {
-        console.error('Error creating class:', error);
-        alert(`Failed to create class: ${error.message}`);
-      }
-    }
-
-    // Handle logout
-    async function handleLogout() {
-      try {
-        await fetch('/api/logout', { 
-          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name }),
           credentials: 'same-origin'
         });
-        window.location.href = '/login.html';
-      } catch (error) {
-        console.error('Logout error:', error);
-        window.location.href = '/login.html';
-      }
-    }
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-      // Load existing classes
-      loadClasses();
-      
-      // Set up form handler
-      document.getElementById('createClassForm').addEventListener('submit', handleCreateClass);
-      
-      // Set up logout handler
-      document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+        if (!response.ok) throw new Error('Failed to create class');
+        await response.json();
+
+        // Close modal
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+
+        // Refresh class list
+        loadClasses();
+      } catch (err) {
+        console.error('Error creating class:', err);
+        alert('Failed to create class. Try again.');
+      } finally {
+        // Reset button state
+        createBtnText.textContent = "Create";
+        createBtnSpinner.classList.add('hidden');
+        confirmBtn.disabled = false;
+      }
     });
+
+    document.addEventListener('DOMContentLoaded', loadClasses);
   </script>
 </body>
 </html>
