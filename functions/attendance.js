@@ -11,7 +11,7 @@ export async function onRequestPost(context) {
     // Case 1: Create recita session
     if (body.topic && body.classId) {
       const ownership = await ensureClassOwnership(context, teacher.id, body.classId);
-      if (ownership !== true) return ownership; // Return the error response
+      if (ownership !== true) return ownership;
 
       console.log("Creating recita session for:", { classId: body.classId, topic: body.topic, teacherId: teacher.id });
 
@@ -20,34 +20,16 @@ export async function onRequestPost(context) {
       ).bind(body.classId, body.topic).run();
 
       console.log("D1 insert result:", result);
-      console.log("D1 result structure:", Object.keys(result || {}));
 
-      // D1 returns the insert ID in different ways depending on the version
-      // Try multiple approaches to get the ID
+      // Get the insert ID from D1 result
       let insertId = null;
-
-      // Method 1: Check result.meta.last_row_id (most common)
-      if (result && result.meta && result.meta.last_row_id) {
+      if (result?.meta?.last_row_id) {
         insertId = result.meta.last_row_id;
-        console.log("Found ID in result.meta.last_row_id:", insertId);
-      }
-      // Method 2: Check result.meta.lastRowId
-      else if (result && result.meta && result.meta.lastRowId) {
+      } else if (result?.meta?.lastRowId) {
         insertId = result.meta.lastRowId;
-        console.log("Found ID in result.meta.lastRowId:", insertId);
-      }
-      // Method 3: Check direct result.lastRowId (your original code)
-      else if (result && result.lastRowId) {
+      } else if (result?.lastRowId) {
         insertId = result.lastRowId;
-        console.log("Found ID in result.lastRowId:", insertId);
       }
-      // Method 4: Check result.changes.last_insert_rowid
-      else if (result && result.changes && result.changes.last_insert_rowid) {
-        insertId = result.changes.last_insert_rowid;
-        console.log("Found ID in result.changes.last_insert_rowid:", insertId);
-      }
-
-      console.log("Final insertId:", insertId);
 
       if (!insertId) {
         console.error("No insert ID found in D1 result:", JSON.stringify(result, null, 2));
@@ -69,7 +51,6 @@ export async function onRequestPost(context) {
         created_at: new Date().toISOString()
       };
 
-      console.log("Returning response:", response);
       return Response.json(response);
     }
 
@@ -79,7 +60,7 @@ export async function onRequestPost(context) {
       
       await context.env.DB.prepare(
         "INSERT INTO attendance (recita_id, student_id, score) VALUES (?, ?, ?)"
-      ).bind(body.recitaId, body.studentId, body.score).run();
+      ).bind(body.recitaId, body.studentId, body.score || null).run();
 
       return Response.json({ ok: true });
     }
@@ -88,7 +69,6 @@ export async function onRequestPost(context) {
     return new Response("Bad request", { status: 400 });
   } catch (error) {
     console.error("POST /attendance error:", error);
-    console.error("Error stack:", error.stack);
     return new Response(JSON.stringify({
       error: "Internal server error",
       message: error.message,
@@ -103,17 +83,15 @@ export async function onRequestPost(context) {
 export async function onRequestGet(context) {
   try {
     const url = new URL(context.request.url);
-    console.log("GET attendance - pathname:", url.pathname, "search:", url.searchParams.toString());
-
     const action = url.searchParams.get("action");
     const recitaId = url.searchParams.get("recitaId");
 
-    // Handle both /attendance/pick?recitaId=X and /attendance?action=pick&recitaId=X
+    console.log("GET attendance - action:", action, "recitaId:", recitaId);
+
+    // Handle /attendance/pick or /attendance?action=pick
     if (url.pathname.endsWith("/pick") || action === "pick") {
       const teacher = await getTeacherFromSession(context.request, context.env);
       if (!teacher) return new Response("Unauthorized", { status: 401 });
-
-      console.log("Pick request for recitaId:", recitaId);
 
       if (!recitaId) {
         return new Response("Missing recitaId parameter", { status: 400 });
@@ -125,17 +103,14 @@ export async function onRequestGet(context) {
       ).bind(recitaId).all();
 
       if (!recitaRows.length) {
-        console.log("No recita found with id:", recitaId);
         return new Response("Recita session not found", { status: 404 });
       }
 
       const classId = recitaRows[0].class_id;
-      console.log("Found classId:", classId, "for recita:", recitaId);
-
       const ownership = await ensureClassOwnership(context, teacher.id, classId);
-      if (ownership !== true) return ownership; // Return the error response
+      if (ownership !== true) return ownership;
 
-      // Students not yet marked
+      // Get students not yet marked for this recita
       const { results } = await context.env.DB.prepare(`
         SELECT s.id, s.name 
         FROM students s
@@ -143,28 +118,28 @@ export async function onRequestGet(context) {
         AND s.id NOT IN (SELECT student_id FROM attendance WHERE recita_id = ?)
       `).bind(classId, recitaId).all();
 
-      console.log("Found", results.length, "unmarked students");
-
       if (!results.length) {
-        console.log("All students already marked");
-        return Response.json(null);
+        return Response.json(null); // All students marked
       }
 
+      // Pick random student
       const random = results[Math.floor(Math.random() * results.length)];
-      console.log("Picked random student:", random);
       return Response.json(random);
     }
 
-    // Default response for GET /attendance (for testing)
-    console.log("GET /attendance - no action specified");
-    return Response.json({ message: "Attendance endpoint is working", availableActions: ["pick"] });
+    // Default GET response
+    return Response.json({ 
+      message: "Attendance endpoint is working", 
+      availableActions: ["pick"],
+      usage: "Use ?action=pick&recitaId=X to pick a random student"
+    });
   } catch (error) {
     console.error("GET /attendance error:", error);
     return new Response("Internal server error", { status: 500 });
   }
 }
 
-// Helpers
+// Helper function for class ownership verification
 async function ensureClassOwnership(context, teacherId, classId) {
   try {
     const { results } = await context.env.DB.prepare(
@@ -176,7 +151,7 @@ async function ensureClassOwnership(context, teacherId, classId) {
       return new Response("Forbidden - You don't own this class", { status: 403 });
     }
 
-    return true; // Success
+    return true;
   } catch (error) {
     console.error("ensureClassOwnership error:", error);
     return new Response("Database error", { status: 500 });
