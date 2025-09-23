@@ -81,7 +81,7 @@
       `;
 
       try {
-        const response = await fetch('/api/classes', { credentials: 'same-origin' });
+        const response = await fetch('/classes', { credentials: 'same-origin' });
         if (!response.ok) throw new Error('Failed to load classes');
         
         const classes = await response.json();
