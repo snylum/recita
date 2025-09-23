@@ -1421,11 +1421,11 @@ document.addEventListener("DOMContentLoaded", () => {
 (function() {
   // Generate cache-busting parameter once
   const cacheBuster = "v=" + Date.now();
-  const logoUrl = "/logo.png?" + cacheBuster;
+  const logoUrl = "/favicon.png?" + cacheBuster;
   
   // Insert favicon dynamically with cache busting
   const link = document.createElement("link");
-  link.rel = "icon";
+  link.rel = "favicon";
   link.type = "image/png";
   link.href = logoUrl;
   document.head.appendChild(link);
@@ -1441,7 +1441,7 @@ function addRecitaLogos() {
   }
 
   // Use the cache-busted logo URL
-  const logoUrl = window.RECITA_LOGO_URL || "/logo.png?" + Date.now();
+  const logoUrl = window.RECITA_LOGO_URL || "/favicon.png?" + Date.now();
 
   document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button").forEach(el => {
     if (el.dataset.recitaProcessed === 'true' || el.querySelector('img[alt="Recita Logo"]')) {
@@ -1466,7 +1466,7 @@ function addRecitaLogos() {
 // Function to update all existing logo images with cache-busted version
 function updateAllLogoImages() {
   const cacheBuster = "v=" + Date.now();
-  const newLogoUrl = "/logo.png?" + cacheBuster;
+  const newLogoUrl = "/favicon.png?" + cacheBuster;
   
   // Update favicon
   const favicon = document.querySelector('link[rel="icon"]');
