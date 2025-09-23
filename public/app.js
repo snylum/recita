@@ -1056,77 +1056,80 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("saveRecitaBtn found:", !!saveRecitaBtn);
   console.log("pickSection found:", !!pickSection);
 
-  if (saveRecitaBtn) {
-    const classId = localStorage.getItem("classId");
-    console.log("Class ID from localStorage:", classId);
-    
-    const existingRecitaId = localStorage.getItem("recitaId");
-    if (existingRecitaId) {
-      console.log("Found existing recita ID:", existingRecitaId);
-      if (pickSection) {
-        pickSection.classList.remove("hidden");
-      }
-      displayRecitaStatus();
+if (saveRecitaBtn) {
+  const classId = localStorage.getItem("classId");
+  
+  saveRecitaBtn.addEventListener("click", async () => {
+    const topicInput = document.getElementById("topicInput");
+    if (!topicInput || !topicInput.value.trim()) {
+      showRecitaInfoModal("Please enter a topic for the recita");
+      return;
     }
     
-    saveRecitaBtn.addEventListener("click", async () => {
-      const topicInput = document.getElementById("topicInput");
-      if (!topicInput) {
-        showRecitaInfoModal("Topic input not found!", "Error");
-        return;
-      }
+    const topic = topicInput.value.trim();
+    
+    try {
+      const response = await apiFetch("/attendance", {
+        method: "POST",
+        body: JSON.stringify({ topic, classId: parseInt(classId) }),
+      });
       
-      const topic = topicInput.value.trim();
-      console.log("Saving recita with topic:", topic, "and classId:", classId);
+      localStorage.setItem("recitaId", response.id.toString());
+      localStorage.setItem("recitaTopic", topic);
+      localStorage.removeItem("calledStudents");
       
-      if (!topic) {
-        showRecitaInfoModal("Please enter a topic for the recita");
-        return;
-      }
+      // Update UI state
+      topicInput.disabled = true;
+      topicInput.style.backgroundColor = "#f3f4f6";
       
-      try {
-        const numericClassId = parseInt(classId, 10);
-        console.log("Sending to server:", { topic, classId: numericClassId });
-        
-        const response = await apiFetch("/attendance", {
-          method: "POST",
-          body: JSON.stringify({ 
-            topic: topic,
-            classId: numericClassId
-          }),
-        });
-        
-        console.log("Server response:", response);
-        const recitaId = response.id;
-        
-        if (!recitaId) {
-          console.error("No ID in server response:", response);
-          showRecitaInfoModal("Recita saved but ID not found. Please refresh and try again.", "Error");
-          return;
-        }
-        
-        console.log("Got recita ID:", recitaId);
-        
-        localStorage.setItem("recitaId", recitaId.toString());
-        localStorage.setItem("recitaTopic", topic);
-        localStorage.setItem("recitaDate", new Date().toLocaleDateString());
-        localStorage.setItem("recitaTime", new Date().toLocaleTimeString());
-        
-        localStorage.removeItem("calledStudents");
-        
-        const existingContainer = document.getElementById("calledStudentsContainer");
-        if (existingContainer) {
-          existingContainer.remove();
-        }
-        
-        if (pickSection) {
-          pickSection.classList.remove("hidden");
-        }
-        
-        displayRecitaStatus();
-        showRecitaInfoModal(`Recita "${topic}" saved successfully!`, "Success");
+      const editBtn = document.getElementById("editRecitaBtn");
+      const exportBtn = document.getElementById("exportRecitaBtn");
+      const pickSection = document.getElementById("pickSection");
+      
+      if (editBtn) editBtn.style.display = "block";
+      if (exportBtn) exportBtn.style.display = "block";
+      if (pickSection) pickSection.style.display = "block";
+      
+      showRecitaInfoModal(`Recita "${topic}" saved successfully!`, "Success");
+      
+    } catch (err) {
+      showRecitaInfoModal("Failed to save recita: " + err.message, "Error");
+    }
+  });
+}
+// Edit Button Handler
+const editRecitaBtn = document.getElementById("editRecitaBtn");
+if (editRecitaBtn) {
+  editRecitaBtn.addEventListener("click", () => {
+    const topicInput = document.getElementById("topicInput");
+    if (topicInput) {
+      topicInput.disabled = false;
+      topicInput.style.backgroundColor = "white";
+      topicInput.focus();
+    }
+  });
+}
 
-
+// Export Button Handler
+const exportRecitaBtn = document.getElementById("exportRecitaBtn");
+if (exportRecitaBtn) {
+  exportRecitaBtn.addEventListener("click", () => {
+    const recitaId = localStorage.getItem("recitaId");
+    const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
+    
+    if (!recitaId) {
+      showRecitaInfoModal("No recita to export. Please save a recita first.", "Export Error");
+      return;
+    }
+    
+    if (calledStudents.length === 0) {
+      showRecitaInfoModal("No students have been picked yet. Pick some students first before exporting.", "Nothing to Export");
+      return;
+    }
+    
+    window.location.href = `/export?recitaId=${recitaId}`;
+  });
+}
   // After successful save:
   const topicInput = document.getElementById("topicInput");
   const editBtn = document.getElementById("editRecitaBtn");
@@ -1346,122 +1349,53 @@ async function loadExistingRecitaData() {
 }
 
   // Add student to called list - ENHANCED TABLE FORMAT
-  function addToCalledStudentsList(studentName, score, customScore = null) {
-    if (!studentName) return;
-
-// Modify the addToCalledStudentsList function to use the new container
+function addToCalledStudentsList(studentName, score, customScore = null) {
+  if (!studentName) return;
   
-  let calledContainer = document.getElementById("calledStudentsTableContainer");
-  if (!calledContainer) return; // Container should exist in the HTML now
+  const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
   
-  // ... rest of existing logic but target the new container ...
+  const studentEntry = {
+    name: studentName,
+    score: score,
+    timestamp: new Date().toLocaleTimeString()
+  };
+  
+  if (customScore) studentEntry.customScore = customScore;
+  
+  calledStudents.push(studentEntry);
+  localStorage.setItem("calledStudents", JSON.stringify(calledStudents));
+  updateCalledStudentsDisplay();
+}
 
-    
-    let calledContainer = document.getElementById("calledStudentsContainer");
-    if (!calledContainer) {
-      calledContainer = document.createElement("div");
-      calledContainer.id = "calledStudentsContainer";
-      calledContainer.className = "mt-6";
-      calledContainer.innerHTML = `
-        <h3 class="text-lg font-semibold mb-3">Called Students</h3>
-        <div id="calledStudentsList"></div>
-      `;
-      
-      const pickSection = document.getElementById("pickSection");
-      if (pickSection && pickSection.parentNode) {
-        pickSection.parentNode.insertBefore(calledContainer, pickSection.nextSibling);
-      } else {
-        document.body.appendChild(calledContainer);
-      }
-    }
-    
-    const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
-    
-    const studentEntry = {
-      name: studentName,
-      score: score,
-      timestamp: new Date().toLocaleTimeString()
-    };
-    
-    if (customScore) {
-      studentEntry.customScore = customScore;
-    }
-    
-    calledStudents.push(studentEntry);
-    
-    calledStudents.sort((a, b) => {
-      const lastNameA = a.name.split(' ').pop().toLowerCase();
-      const lastNameB = b.name.split(' ').pop().toLowerCase();
-      return lastNameA.localeCompare(lastNameB);
-    });
-    
-    localStorage.setItem("calledStudents", JSON.stringify(calledStudents));
-    updateCalledStudentsDisplay();
+function updateCalledStudentsDisplay() {
+  const calledContainer = document.getElementById("calledStudentsTableContainer");
+  if (!calledContainer) return;
+  
+  const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
+  
+  if (calledStudents.length === 0) {
+    calledContainer.innerHTML = '<p style="color: #888; font-style: italic; text-align: center;">No students called yet</p>';
+    return;
   }
-
-  // Update called students display - TABLE FORMAT (name - score - time)
-  function updateCalledStudentsDisplay() {
-    const calledList = document.getElementById("calledStudentsList");
-    if (!calledList) return;
+  
+  let tableHTML = `<h3 style="margin-bottom: 15px;">Called Students (${calledStudents.length})</h3>
+    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden;">
+      <thead><tr style="background: #f8f9fa;"><th style="padding: 12px; text-align: left;">Student Name</th><th style="padding: 12px; text-align: center;">Score</th><th style="padding: 12px; text-align: center;">Time</th></tr></thead><tbody>`;
+  
+  calledStudents.forEach((student, index) => {
+    let scoreDisplay = student.score;
+    if (student.score === 'custom') scoreDisplay = student.customScore || "Custom";
+    else if (parseInt(student.score)) scoreDisplay = student.score + " pts";
     
-    const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
-    
-    if (calledStudents.length === 0) {
-      calledList.innerHTML = '<p style="color: #666; font-style: italic; text-align: center;">No students called yet</p>';
-      return;
-    }
-    
-    let tableHTML = `
-      <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <thead>
-          <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-            <th style="padding: 12px; text-align: left; font-weight: bold; color: #495057;">Student Name</th>
-            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 120px;">Score</th>
-            <th style="padding: 12px; text-align: center; font-weight: bold; color: #495057; width: 100px;">Time</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-    
-    calledStudents.forEach((student, index) => {
-      let scoreDisplay = student.score;
-      let scoreBadgeStyle = "background: #e9ecef; color: #495057;";
-      
-      if (student.score === 'absent') {
-        scoreBadgeStyle = "background: #f8d7da; color: #721c24;";
-        scoreDisplay = "Absent";
-      } else if (student.score === 'skip') {
-        scoreBadgeStyle = "background: #fff3cd; color: #856404;";
-        scoreDisplay = "Skip";
-      } else if (student.score === 'custom') {
-        scoreBadgeStyle = "background: #e2e3ff; color: #5a67d8;";
-        scoreDisplay = student.customScore || "Custom";
-      } else if (parseInt(student.score)) {
-        scoreBadgeStyle = "background: #d1f2eb; color: #155724;";
-        scoreDisplay = student.score + " pts";
-      }
-      
-      const rowStyle = index % 2 === 0 ? "background: #ffffff;" : "background: #f8f9fa;";
-      
-      tableHTML += `
-        <tr style="${rowStyle} border-bottom: 1px solid #dee2e6;">
-          <td style="padding: 10px 12px; font-weight: 500; color: #212529;">${student.name}</td>
-          <td style="padding: 10px 12px; text-align: center;">
-            <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${scoreBadgeStyle}">
-              ${scoreDisplay}
-            </span>
-          </td>
-          <td style="padding: 10px 12px; text-align: center; font-size: 12px; color: #6c757d;">${student.timestamp}</td>
-        </tr>
-      `;
-    });
-    
-    tableHTML += `</tbody></table>`;
-    calledList.innerHTML = tableHTML;
-  }
-
-      }
-    
+    tableHTML += `<tr style="${index % 2 === 0 ? 'background: #fff;' : 'background: #f8f9fa;'}">
+      <td style="padding: 10px 12px;">${student.name}</td>
+      <td style="padding: 10px 12px; text-align: center;">${scoreDisplay}</td>
+      <td style="padding: 10px 12px; text-align: center; font-size: 12px;">${student.timestamp}</td></tr>`;
+  });
+  
+  tableHTML += '</tbody></table>';
+  calledContainer.innerHTML = tableHTML;
+}
   // Initialize called students display on page load
   if (document.getElementById("pickSection")) {
     setTimeout(() => {
