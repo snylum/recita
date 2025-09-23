@@ -849,6 +849,7 @@ function setupDashboard() {
 // -------------------
 // CLASS PAGE: ADD STUDENTS + LIST + RECITA HISTORY
 // -------------------
+// REPLACE the entire setupClassPage function with this:
 function setupClassPage() {
   const addStudentsBtn = document.getElementById("addStudentsBtn");
   const studentInput = document.getElementById("studentInput");
@@ -867,7 +868,7 @@ function setupClassPage() {
       try {
         await apiFetch("/students", {
           method: "POST",
-          body: JSON.stringify({ classId, students: names }),
+          body: JSON.stringify({ classId: parseInt(classId), students: names }),
         });
         location.reload();
       } catch (err) {
@@ -882,7 +883,7 @@ function setupClassPage() {
         students.forEach((s) => {
           const li = document.createElement("li");
           li.textContent = s.name;
-          li.className = "p-2 border rounded";
+          li.style.cssText = "padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 8px; background: #f9fafb;";
           studentList.appendChild(li);
         });
       } catch (err) {
