@@ -292,6 +292,7 @@ async function exportAllDataCSV(env, teacher) {
       "Content-Disposition": `attachment; filename="${filename}"`
     }
   });
+}
 
   // Add this function to your existing functions/export.js file
 // Paste this BEFORE the last closing brace
@@ -410,5 +411,4 @@ export async function onRequestPost({ request, env }) {
     console.error('Export selected error:', error);
     return new Response(`Export failed: ${error.message}`, { status: 500 });
   }
-}
 }
