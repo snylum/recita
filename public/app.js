@@ -1125,6 +1125,22 @@ document.addEventListener("DOMContentLoaded", () => {
         
         displayRecitaStatus();
         showRecitaInfoModal(`Recita "${topic}" saved successfully!`, "Success");
+
+
+  // After successful save:
+  const topicInput = document.getElementById("topicInput");
+  const editBtn = document.getElementById("editRecitaBtn");
+  const exportBtn = document.getElementById("exportRecitaBtn");
+  
+  if (topicInput) {
+    topicInput.disabled = true;
+    topicInput.style.backgroundColor = "#f3f4f6";
+  }
+  
+  if (editBtn) editBtn.style.display = "block";
+  if (exportBtn) exportBtn.style.display = "block";
+});
+
         
       } catch (err) {
         console.error("Save recita error:", err);
@@ -1169,25 +1185,41 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
       
-      const editBtn = document.getElementById("editRecitaBtn");
-      if (editBtn) {
-        editBtn.addEventListener("click", () => {
-          const topicInput = document.getElementById("topicInput");
-          if (topicInput) {
-            topicInput.value = topic;
-            topicInput.focus();
-          }
-        });
-      }
 
-      const exportBtn = document.getElementById("exportCurrentRecitaBtn");
-      if (exportBtn) {
-        exportBtn.addEventListener("click", () => {
-          window.location.href = `/export?recitaId=${recitaId}`;
-        });
-      }
+// Add new event listener for edit button
+const editRecitaBtn = document.getElementById("editRecitaBtn");
+if (editRecitaBtn) {
+  editRecitaBtn.addEventListener("click", () => {
+    const topicInput = document.getElementById("topicInput");
+    if (topicInput) {
+      topicInput.disabled = false;
+      topicInput.style.backgroundColor = "white";
+      topicInput.focus();
     }
-  }
+  });
+}
+
+      // Add new event listener for export button
+// Export Button Handler with validation
+const exportRecitaBtn = document.getElementById("exportRecitaBtn");
+if (exportRecitaBtn) {
+  exportRecitaBtn.addEventListener("click", () => {
+    const recitaId = localStorage.getItem("recitaId");
+    const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
+    
+    if (!recitaId) {
+      showRecitaInfoModal("No recita to export. Please save a recita first.");
+      return;
+    }
+    
+    if (calledStudents.length === 0) {
+      showRecitaInfoModal("No students have been picked yet. Pick some students first before exporting.", "Nothing to Export");
+      return;
+    }
+    
+    window.location.href = `/export?recitaId=${recitaId}`;
+  });
+}
 
   // Pick student event listener - ENHANCED FOR PROPER MODAL ISOLATION
   console.log("Setting up pick student event listener");
@@ -1260,32 +1292,70 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Record score function - ENHANCED
-  async function recordScore(studentId, score, studentName, customScore = null) {
-    const recitaId = localStorage.getItem("recitaId");
-    
-    if (!recitaId || !studentId) {
-      showRecitaInfoModal("Missing recita or student ID", "Error");
-      return;
-    }
-    
-    try {
-      await apiFetch("/attendance", {
-        method: "POST",
-        body: JSON.stringify({ recitaId, studentId, score }),
-      });
-      
-      console.log("Score recorded successfully");
-      addToCalledStudentsList(studentName, score, customScore);
-      
-    } catch (err) {
-      console.error("Failed to record score", err);
-      showRecitaInfoModal("Failed to record score: " + err.message, "Error");
-    }
+// Enhanced recordScore function to sync with server
+async function recordScore(studentId, score, studentName, customScore = null) {
+  const recitaId = localStorage.getItem("recitaId");
+  
+  if (!recitaId || !studentId) {
+    showRecitaInfoModal("Missing recita or student ID", "Error");
+    return;
   }
+  
+  try {
+    // Save to server first
+    await apiFetch("/attendance", {
+      method: "POST",
+      body: JSON.stringify({ 
+        recitaId: parseInt(recitaId), 
+        studentId: parseInt(studentId), 
+        score: score 
+      }),
+    });
+    
+    // Then update local storage for immediate UI updates
+    addToCalledStudentsList(studentName, score, customScore);
+    
+    console.log("Score recorded and synced to server");
+    
+  } catch (err) {
+    console.error("Failed to record score", err);
+    showRecitaInfoModal("Failed to record score: " + err.message, "Error");
+  }
+}
+
+// Load existing data when page loads
+async function loadExistingRecitaData() {
+  const recitaId = localStorage.getItem("recitaId");
+  if (!recitaId) return;
+  
+  try {
+    // Fetch existing attendance data from server
+    const attendanceData = await apiFetch(`/attendance/${recitaId}`);
+    
+    if (attendanceData && attendanceData.length > 0) {
+      // Clear local storage and rebuild from server data
+      localStorage.removeItem("calledStudents");
+      
+      attendanceData.forEach(record => {
+        addToCalledStudentsList(record.student_name, record.score, record.custom_score);
+      });
+    }
+  } catch (err) {
+    console.error("Failed to load existing recita data:", err);
+  }
+}
 
   // Add student to called list - ENHANCED TABLE FORMAT
   function addToCalledStudentsList(studentName, score, customScore = null) {
     if (!studentName) return;
+
+// Modify the addToCalledStudentsList function to use the new container
+  
+  let calledContainer = document.getElementById("calledStudentsTableContainer");
+  if (!calledContainer) return; // Container should exist in the HTML now
+  
+  // ... rest of existing logic but target the new container ...
+
     
     let calledContainer = document.getElementById("calledStudentsContainer");
     if (!calledContainer) {
@@ -1328,7 +1398,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("calledStudents", JSON.stringify(calledStudents));
     updateCalledStudentsDisplay();
   }
-  
+
   // Update called students display - TABLE FORMAT (name - score - time)
   function updateCalledStudentsDisplay() {
     const calledList = document.getElementById("calledStudentsList");
@@ -1389,7 +1459,9 @@ document.addEventListener("DOMContentLoaded", () => {
     tableHTML += `</tbody></table>`;
     calledList.innerHTML = tableHTML;
   }
-  
+
+      }
+    
   // Initialize called students display on page load
   if (document.getElementById("pickSection")) {
     setTimeout(() => {
@@ -1491,7 +1563,33 @@ document.addEventListener("DOMContentLoaded", () => {
   addRecitaLogos();
   setTimeout(addRecitaLogos, 100);
   setTimeout(addRecitaLogos, 500);
+
+
+  const existingRecitaId = localStorage.getItem("recitaId");
+  if (existingRecitaId) {
+    const pickSection = document.getElementById("pickSection");
+    const topicInput = document.getElementById("topicInput");
+    const editBtn = document.getElementById("editRecitaBtn");
+    const exportBtn = document.getElementById("exportRecitaBtn");
+    
+    if (pickSection) pickSection.style.display = "block";
+    
+    // Set UI to saved state
+    if (topicInput) {
+      topicInput.value = localStorage.getItem("recitaTopic") || "";
+      topicInput.disabled = true;
+      topicInput.style.backgroundColor = "#f3f4f6";
+    }
+    
+    if (editBtn) editBtn.style.display = "block";
+    if (exportBtn) exportBtn.style.display = "block";
+    
+    // Load server data
+    loadExistingRecitaData();
+  }
+});
   
   // Also call refresh function on page load to ensure latest logo
   setTimeout(updateAllLogoImages, 1000);
 });
+
