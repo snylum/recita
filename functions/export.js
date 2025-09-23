@@ -292,4 +292,123 @@ async function exportAllDataCSV(env, teacher) {
       "Content-Disposition": `attachment; filename="${filename}"`
     }
   });
+
+  // Add this function to your existing functions/export.js file
+// Paste this BEFORE the last closing brace
+
+export async function onRequestPost({ request, env }) {
+  const teacher = await getTeacherFromSession(request, env);
+  if (!teacher) return new Response("Unauthorized", { status: 401 });
+
+  try {
+    const { recitaIds } = await request.json();
+
+    if (!recitaIds || !Array.isArray(recitaIds) || recitaIds.length === 0) {
+      return new Response("No recita IDs provided", { status: 400 });
+    }
+
+    // Verify all recitas belong to teacher
+    const placeholders = recitaIds.map(() => '?').join(',');
+    const verifyQuery = `
+      SELECT r.id FROM recita_sessions r
+      JOIN classes c ON r.class_id = c.id
+      WHERE r.id IN (${placeholders}) AND c.teacher_id = ?
+    `;
+    
+    const { results: verification } = await env.DB.prepare(verifyQuery)
+      .bind(...recitaIds, teacher.id).all();
+    
+    if (verification.length !== recitaIds.length) {
+      return new Response("Some recitas not found or access denied", { status: 403 });
+    }
+
+    // Get all data for selected recitas
+    const dataQuery = `
+      SELECT 
+        rs.id as recita_id,
+        rs.topic,
+        rs.created_at,
+        c.name as class_name,
+        s.name as student_name,
+        a.score,
+        a.status,
+        a.picked_at
+      FROM recita_sessions rs
+      JOIN classes c ON rs.class_id = c.id
+      LEFT JOIN attendance a ON rs.id = a.recita_id
+      LEFT JOIN students s ON a.student_id = s.id
+      WHERE rs.id IN (${placeholders})
+      ORDER BY rs.created_at DESC, a.picked_at ASC
+    `;
+
+    const { results } = await env.DB.prepare(dataQuery)
+      .bind(...recitaIds).all();
+
+    // Generate CSV
+    let csv = "";
+    csv += `Selected Recitas Export\n`;
+    csv += `Export Date: ${new Date().toLocaleDateString()}\n`;
+    csv += `Export Time: ${new Date().toLocaleTimeString()}\n`;
+    csv += `Total Recitas: ${recitaIds.length}\n\n`;
+
+    // Group by recitation
+    const recitaGroups = {};
+    results.forEach(row => {
+      const recitaKey = row.recita_id;
+      if (!recitaGroups[recitaKey]) {
+        recitaGroups[recitaKey] = {
+          topic: row.topic,
+          created_at: row.created_at,
+          class_name: row.class_name,
+          students: []
+        };
+      }
+      
+      if (row.student_name) {
+        recitaGroups[recitaKey].students.push(row);
+      }
+    });
+
+    // Add each recitation section
+    Object.values(recitaGroups).forEach(recita => {
+      csv += `=== ${recita.topic} ===\n`;
+      csv += `Class: ${recita.class_name}\n`;
+      csv += `Date: ${new Date(recita.created_at).toLocaleDateString()}\n`;
+      csv += `Time: ${new Date(recita.created_at).toLocaleTimeString()}\n`;
+      csv += `Students Called: ${recita.students.length}\n\n`;
+      
+      if (recita.students.length > 0) {
+        csv += "Order,Student Name,Score,Status,Time Called\n";
+        
+        let order = 1;
+        recita.students.forEach(student => {
+          const timeFormatted = student.picked_at ? new Date(student.picked_at).toLocaleTimeString() : 'N/A';
+          const score = student.score || (student.status === 'skipped' ? 'Skipped' : 'No Score');
+          const status = student.status || 'called';
+          
+          csv += `${order},"${student.student_name}","${score}","${status}","${timeFormatted}"\n`;
+          order++;
+        });
+      } else {
+        csv += "No students called for this recitation\n";
+      }
+      
+      csv += "\n";
+    });
+
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const filename = `selected-recitas-${dateStr}.csv`;
+
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}"`
+      }
+    });
+
+  } catch (error) {
+    console.error('Export selected error:', error);
+    return new Response(`Export failed: ${error.message}`, { status: 500 });
+  }
+}
 }
