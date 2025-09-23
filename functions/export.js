@@ -125,7 +125,7 @@ async function exportRecitaCSV(env, teacher, recitaId) {
   // Generate filename - handle edge cases
   const safeTopic = recita.topic ? recita.topic.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_') : 'recitation';
   const dateStr = new Date().toISOString().slice(0, 10);
-  const filename = `recita-${safeTopic}-${dateStr}.csv`;
+  const filename = `Recita-${safeTopic}-${dateStr}.csv`;
 
   return new Response(csv, {
     headers: {
