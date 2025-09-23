@@ -5,42 +5,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="style.css"> 
-
   <title>Add Recita</title>
-  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
-  <nav class="bg-white shadow p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Recita</h1>
-    <button onclick="window.location.href='class.html'" class="text-blue-500 hover:underline">Back</button>
+<body>
+  <!-- Navigation -->
+  <nav style="background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
+    <h1 style="color: #2c3e50; margin: 0; font-size: 20px; font-weight: bold;">Recita</h1>
+    <button onclick="window.location.href='class.html'" style="background: none; border: none; color: #4f46e5; text-decoration: underline; cursor: pointer; width: auto; padding: 8px 16px; margin: 0;">Back to Class</button>
   </nav>
 
-  <main class="p-6 max-w-3xl mx-auto">
-    <div class="bg-white rounded-xl shadow p-6 mb-6">
-      <h2 class="text-lg font-bold mb-4">New Recita</h2>
-      <p class="mb-2 text-sm text-gray-600">Date: <span id="recitaDate"></span></p>
-      <input id="topicInput" type="text" placeholder="Topic" class="w-full p-3 border rounded-lg mb-4">
-      <button id="saveRecitaBtn" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Save Recita</button>
+  <!-- Main Content -->
+  <main style="padding: 24px; max-width: 800px; margin: 0 auto;">
+    <!-- Recita Creation Section -->
+    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 24px;">
+      <h2 style="color: #2c3e50; font-size: 18px; font-weight: bold; margin-bottom: 16px;">New Recita</h2>
+      <p style="margin-bottom: 8px; font-size: 14px; color: #666;">
+        Date: <span id="recitaDate" style="font-weight: 500;"></span>
+      </p>
+      <input 
+        id="topicInput" 
+        type="text" 
+        placeholder="Enter recitation topic (e.g., Chapter 5: Photosynthesis)" 
+        style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px;">
+      <button 
+        id="saveRecitaBtn" 
+        style="width: 100%; background: #4f46e5; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px;">
+        Save Recita
+      </button>
     </div>
 
-    <div id="pickSection" class="hidden">
-      <button id="pickStudentBtn" class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600">Pick Student</button>
+    <!-- Pick Student Section (Hidden by default) -->
+    <div id="pickSection" class="hidden" style="display: none;">
+      <div style="background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 24px;">
+        <button 
+          id="pickStudentBtn" 
+          style="width: 100%; background: #10b981; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px;">
+          🎲 Pick Random Student
+        </button>
+      </div>
     </div>
   </main>
 
-  <!-- Modal -->
-  <div id="studentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
-    <div class="bg-white rounded-xl shadow p-6 w-80 text-center">
-      <h2 id="selectedStudent" class="text-xl font-bold mb-6">Student Name</h2>
-      <div class="flex flex-col gap-2">
-        <button class="scoreBtn bg-blue-500 text-white p-3 rounded-lg" data-score="5">+5 Points</button>
-        <button class="scoreBtn bg-blue-600 text-white p-3 rounded-lg" data-score="10">+10 Points</button>
-        <button class="scoreBtn bg-gray-500 text-white p-3 rounded-lg" data-score="skip">Skip</button>
-        <button class="scoreBtn bg-red-500 text-white p-3 rounded-lg" data-score="absent">Absent</button>
-      </div>
-    </div>
-  </div>
-
   <script src="app.js"></script>
+  <script>
+    // Set current date
+    document.addEventListener('DOMContentLoaded', () => {
+      const dateSpan = document.getElementById('recitaDate');
+      if (dateSpan) {
+        dateSpan.textContent = new Date().toLocaleDateString();
+      }
+    });
+  </script>
 </body>
 </html>
