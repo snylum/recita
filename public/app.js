@@ -1072,6 +1072,7 @@ function setupGeneralExport() {
 // -------------------
 
 // Record score function for authenticated mode
+// Record score function for authenticated mode
 async function recordScore(studentId, score, studentName, customScore = null) {
   const recitaId = localStorage.getItem("recitaId");
   
@@ -1081,16 +1082,26 @@ async function recordScore(studentId, score, studentName, customScore = null) {
   }
   
   try {
-    await apiFetch("/attendance", {
-      method: "POST", 
-      body: JSON.stringify({ 
-        recitaId: parseInt(recitaId), 
-        studentId: parseInt(studentId), 
-        score: score 
-      }),
-    });
+    // Only record to database if it's not a skip
+    if (score !== 'skip') {
+      await apiFetch("/attendance", {
+        method: "POST", 
+        body: JSON.stringify({ 
+          recitaId: parseInt(recitaId), 
+          studentId: parseInt(studentId), 
+          score: score 
+        }),
+      });
+    }
     
-    addToCalledStudentsList(studentName, score, customScore);
+    // Only add to called students list if it's not a skip
+    // Skipped students should remain available for future picks
+    if (score !== 'skip') {
+      addToCalledStudentsList(studentName, score, customScore);
+    } else {
+      // For skipped students, just show a message but don't record anything
+      showRecitaInfoModal(`${studentName} was skipped and remains available for selection.`, "Student Skipped");
+    }
     
   } catch (err) {
     showRecitaInfoModal("Failed to record score: " + err.message, "Error");
