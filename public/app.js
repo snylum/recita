@@ -1344,12 +1344,15 @@ function setupRecitaPage() {
     if (urlRecitaId) {
       localStorage.setItem("recitaId", urlRecitaId);
     }
+
+    const classId = getUrlParameter('classId') || localStorage.getItem("classId");
     
     // Load existing recita data
     loadExistingRecita(existingRecitaId);
   }
 }
 
+const classId = getUrlParameter('classId') || localStorage.getItem("classId");
 // **NEW: Add this function to load existing recita data**
 async function loadExistingRecita(recitaId) {
   try {
