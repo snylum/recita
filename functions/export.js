@@ -59,14 +59,13 @@ export async function onRequestPost({ request, env }) {
         c.name as class_name,
         s.name as student_name,
         a.score,
-        a.status,
-        a.picked_at
+        a.created_at as picked_at
       FROM recita_sessions rs
       JOIN classes c ON rs.class_id = c.id
       LEFT JOIN attendance a ON rs.id = a.recita_id
       LEFT JOIN students s ON a.student_id = s.id
       WHERE rs.id IN (${placeholders})
-      ORDER BY rs.created_at DESC, a.picked_at ASC
+      ORDER BY rs.created_at DESC, a.created_at ASC
     `;
 
     const { results } = await env.DB.prepare(dataQuery)
@@ -106,15 +105,14 @@ export async function onRequestPost({ request, env }) {
       csv += `Students Called: ${recita.students.length}\n\n`;
       
       if (recita.students.length > 0) {
-        csv += "Order,Student Name,Score,Status,Time Called\n";
+        csv += "Order,Student Name,Score,Time Called\n";
         
         let order = 1;
         recita.students.forEach(student => {
           const timeFormatted = student.picked_at ? new Date(student.picked_at).toLocaleTimeString() : 'N/A';
-          const score = student.score || (student.status === 'skipped' ? 'Skipped' : 'No Score');
-          const status = student.status || 'called';
+          const score = student.score === null ? 'Skip' : (student.score || 'Absent');
           
-          csv += `${order},"${student.student_name}","${score}","${status}","${timeFormatted}"\n`;
+          csv += `${order},"${student.student_name}","${score}","${timeFormatted}"\n`;
           order++;
         });
       } else {
@@ -163,8 +161,8 @@ async function exportRecitaCSV(env, teacher, recitaId) {
   const completionQuery = `
     SELECT 
       COUNT(s.id) as total_students,
-      COUNT(CASE WHEN a.status = 'called' THEN 1 END) as called_students,
-      COUNT(CASE WHEN a.status = 'skipped' THEN 1 END) as skipped_students,
+      COUNT(CASE WHEN a.score IS NOT NULL THEN 1 END) as scored_students,
+      COUNT(CASE WHEN a.score IS NULL AND a.id IS NOT NULL THEN 1 END) as skipped_students,
       COUNT(a.id) as processed_students
     FROM students s
     LEFT JOIN attendance a ON s.id = a.student_id AND a.recita_id = ?
@@ -191,12 +189,11 @@ async function exportRecitaCSV(env, teacher, recitaId) {
     SELECT 
       s.name as student_name,
       a.score,
-      a.status,
-      a.picked_at
+      a.created_at as picked_at
     FROM attendance a
     JOIN students s ON a.student_id = s.id
     WHERE a.recita_id = ?
-    ORDER BY a.picked_at ASC
+    ORDER BY a.created_at ASC
   `;
   
   const dataResult = await env.DB.prepare(dataQuery).bind(recitaId).all();
@@ -216,30 +213,29 @@ async function exportRecitaCSV(env, teacher, recitaId) {
   csv += `Students Processed: ${totalProcessed}\n\n`;
   
   // CSV headers
-  csv += "Order,Student Name,Score,Status,Time Called\n";
+  csv += "Order,Student Name,Score,Time Called\n";
   
   // Add data rows
   let order = 1;
   for (const row of dataResult.results) {
     const timeFormatted = row.picked_at ? new Date(row.picked_at).toLocaleTimeString() : 'N/A';
-    const score = row.score || (row.status === 'skipped' ? 'Skipped' : 'No Score');
-    const status = row.status || 'called';
+    const score = row.score === null ? 'Skip' : (row.score || 'Absent');
     
-    csv += `${order},"${row.student_name}","${score}","${status}","${timeFormatted}"\n`;
+    csv += `${order},"${row.student_name}","${score}","${timeFormatted}"\n`;
     order++;
   }
 
   // Add summary
-  const calledCount = dataResult.results.filter(r => r.status === 'called').length;
-  const skippedCount = dataResult.results.filter(r => r.status === 'skipped').length;
+  const calledCount = dataResult.results.filter(r => r.score !== null).length;
+  const skippedCount = dataResult.results.filter(r => r.score === null).length;
   
   csv += `\nSummary:\n`;
   csv += `Called: ${calledCount}\n`;
-  csv += `Skipped: ${skippedCount}\n`;
+  csv += `Skip: ${skippedCount}\n`;
   csv += `Total Processed: ${dataResult.results.length}\n`;
 
   // Generate filename - handle edge cases
-  const safeTopic = recita.topic ? recita.topic.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_') : 'recitation';
+  const safeTopic = recita.topic ? recita.topic.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_') : 'Recitation';
   const dateStr = new Date().toISOString().slice(0, 10);
   const filename = `Recita-${safeTopic}-${dateStr}.csv`;
 
@@ -273,13 +269,12 @@ async function exportClassCSV(env, teacher, classId) {
       rs.created_at,
       s.name as student_name,
       a.score,
-      a.status,
-      a.picked_at
+      a.created_at as picked_at
     FROM recita_sessions rs
     LEFT JOIN attendance a ON rs.id = a.recita_id
     LEFT JOIN students s ON a.student_id = s.id
     WHERE rs.class_id = ?
-    ORDER BY rs.created_at DESC, a.picked_at ASC
+    ORDER BY rs.created_at DESC, a.created_at ASC
   `;
 
   const result = await env.DB.prepare(query).bind(classId).all();
@@ -322,15 +317,14 @@ async function exportClassCSV(env, teacher, classId) {
     csv += `Students Called: ${recita.students.length}\n\n`;
     
     if (recita.students.length > 0) {
-      csv += "Order,Student Name,Score,Status,Time Called\n";
+      csv += "Order,Student Name,Score,Time Called\n";
       
       let order = 1;
       recita.students.forEach(student => {
         const timeFormatted = student.picked_at ? new Date(student.picked_at).toLocaleTimeString() : 'N/A';
-        const score = student.score || (student.status === 'skipped' ? 'Skipped' : 'No Score');
-        const status = student.status || 'called';
+        const score = student.score === null ? 'Skip' : (student.score || 'Absent');
         
-        csv += `${order},"${student.student_name}","${score}","${status}","${timeFormatted}"\n`;
+        csv += `${order},"${student.student_name}","${score}","${timeFormatted}"\n`;
         order++;
       });
     } else {
@@ -364,14 +358,13 @@ async function exportAllDataCSV(env, teacher) {
       s.name as student_name, 
       c.name as class_name, 
       a.score,
-      a.status,
-      a.picked_at
+      a.created_at as picked_at
     FROM attendance a
     JOIN students s ON a.student_id = s.id
     JOIN classes c ON s.class_id = c.id
     JOIN recita_sessions rs ON a.recita_id = rs.id
     WHERE c.teacher_id = ?
-    ORDER BY c.name, rs.created_at DESC, a.picked_at ASC
+    ORDER BY c.name, rs.created_at DESC, a.created_at ASC
   `;
 
   const result = await env.DB.prepare(query).bind(teacher.id).all();
@@ -387,16 +380,15 @@ async function exportAllDataCSV(env, teacher) {
   csv += `Total Records: ${result.results.length}\n\n`;
 
   // CSV headers
-  csv += "Student Name,Class,Topic,Score,Status,Date,Time Called\n";
+  csv += "Student Name,Class,Topic,Score,Date,Time Called\n";
 
   // Add data rows
   for (const row of result.results) {
     const dateFormatted = row.created_at ? new Date(row.created_at).toLocaleDateString() : '';
     const timeFormatted = row.picked_at ? new Date(row.picked_at).toLocaleTimeString() : '';
-    const score = row.score || (row.status === 'skipped' ? 'Skipped' : 'No Score');
-    const status = row.status || 'called';
+    const score = row.score === null ? 'Skip' : (row.score || 'Absent');
     
-    csv += `"${row.student_name}","${row.class_name}","${row.topic || 'No Topic'}","${score}","${status}","${dateFormatted}","${timeFormatted}"\n`;
+    csv += `"${row.student_name}","${row.class_name}","${row.topic || 'No Topic'}","${score}","${dateFormatted}","${timeFormatted}"\n`;
   }
 
   const dateStr = new Date().toISOString().slice(0, 10);
