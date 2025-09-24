@@ -248,16 +248,21 @@ export async function onRequestGet(context) {
       const ownership = await ensureClassOwnership(context, teacher.id, classId);
       if (ownership !== true) return ownership;
 
-      // Get students not yet marked for this recita
+      // Get students not yet marked for this recita (excluding skipped students)
+      // Only exclude students who have actual scores (not null/skipped)
       const { results } = await context.env.DB.prepare(`
         SELECT s.id, s.name 
         FROM students s
         WHERE s.class_id = ?
-        AND s.id NOT IN (SELECT student_id FROM attendance WHERE recita_id = ?)
+        AND s.id NOT IN (
+          SELECT student_id 
+          FROM attendance 
+          WHERE recita_id = ? AND score IS NOT NULL
+        )
       `).bind(classId, recitaId).all();
 
       if (!results.length) {
-        return Response.json(null); // All students marked
+        return Response.json(null); // All students marked with scores
       }
 
       // Pick random student
