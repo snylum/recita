@@ -22,12 +22,12 @@
 
   <!-- Main content -->
   <main class="flex-1 max-w-7xl mx-auto p-6">
-    <h2 class="text-2xl font-semibold text-gray-900 mb-4">My Classes</h2>
+    <h2 class="text-2xl font-semibold text-gray-900 mb-6">My Classes</h2>
 
     <!-- Class list container -->
-    <div id="classesList" class="space-y-3 max-h-96 overflow-y-auto flex justify-center py-8">
+    <div id="classesList" class="space-y-4 max-h-96 overflow-y-auto">
       <!-- Spinner shown initially -->
-      <div class="flex flex-col items-center gap-2 text-gray-500">
+      <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
         <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
@@ -46,16 +46,16 @@
   </main>
 
   <!-- Create Class Modal -->
-  <div id="createClassModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+  <div id="createClassModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
       <h3 class="text-lg font-semibold text-gray-800 mb-4">Create a New Class</h3>
       <input type="text" id="classNameInput" placeholder="Enter class name"
-        class="w-full border rounded-lg px-3 py-2 mb-4 focus:ring focus:ring-blue-200">
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 outline-none">
       <div class="flex justify-end gap-3">
-        <button id="cancelCreateClass" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">
+        <button id="cancelCreateClass" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
           Cancel
         </button>
-        <button id="confirmCreateClass" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+        <button id="confirmCreateClass" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
           <span id="createBtnText">Create</span>
           <svg id="createBtnSpinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -71,7 +71,7 @@
       const container = document.getElementById('classesList');
       // Reset to spinner while loading
       container.innerHTML = `
-        <div class="flex flex-col items-center gap-2 text-gray-500 py-8 w-full">
+        <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
           <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
@@ -82,31 +82,65 @@
 
       try {
         const response = await fetch('/classes', { credentials: 'same-origin' });
-        if (!response.ok) throw new Error('Failed to load classes');
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         
         const classes = await response.json();
         renderClasses(classes);
       } catch (err) {
         console.error('Error loading classes:', err);
-        container.innerHTML =
-          '<p class="text-red-500 text-center py-8">Failed to load classes</p>';
+        container.innerHTML = `
+          <div class="text-center py-8">
+            <p class="text-red-500 mb-2">Failed to load classes</p>
+            <p class="text-sm text-gray-500">${err.message}</p>
+            <button onclick="loadClasses()" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              Try Again
+            </button>
+          </div>
+        `;
       }
     }
 
     function renderClasses(classes) {
       const container = document.getElementById('classesList');
+      
       if (!classes.length) {
-        container.innerHTML = '<p class="text-gray-500 text-center py-8">No classes yet</p>';
+        container.innerHTML = `
+          <div class="text-center py-12">
+            <div class="text-6xl mb-4">📚</div>
+            <p class="text-gray-500 text-lg mb-2">No classes yet</p>
+            <p class="text-sm text-gray-400">Create your first class to get started</p>
+          </div>
+        `;
         return;
       }
 
       container.innerHTML = classes.map(c => `
-        <div class="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer bg-white"
+        <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group"
              onclick="window.location.href='class.html?id=${c.id}'">
-          <h3 class="font-semibold text-gray-900">${c.name}</h3>
-          <p class="text-sm text-gray-600">${c.student_count || 0} students</p>
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">${escapeHtml(c.name)}</h3>
+              <p class="text-sm text-gray-600 mt-1">
+                ${c.students ? c.students.length : 0} student${c.students && c.students.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <div class="text-gray-400 group-hover:text-blue-500 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
+          </div>
         </div>
       `).join('');
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     // Modal logic
@@ -125,14 +159,41 @@
       input.focus();
     });
 
-    cancelBtn.addEventListener('click', () => {
+    function closeModal() {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
+    }
+
+    cancelBtn.addEventListener('click', closeModal);
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        closeModal();
+      }
+    });
+
+    // Handle Enter key in input
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        confirmBtn.click();
+      }
     });
 
     confirmBtn.addEventListener('click', async () => {
       const name = input.value.trim();
-      if (!name) return alert('Please enter a class name.');
+      if (!name) {
+        alert('Please enter a class name.');
+        input.focus();
+        return;
+      }
 
       // Show spinner inside button
       createBtnText.textContent = "Creating...";
@@ -140,25 +201,28 @@
       confirmBtn.disabled = true;
 
       try {
-        const response = await fetch('/api/classes', {
+        const response = await fetch('/classes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name }),
           credentials: 'same-origin'
         });
 
-        if (!response.ok) throw new Error('Failed to create class');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
         await response.json();
 
         // Close modal
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+        closeModal();
 
         // Refresh class list
         loadClasses();
       } catch (err) {
         console.error('Error creating class:', err);
-        alert('Failed to create class. Try again.');
+        alert(`Failed to create class: ${err.message}`);
       } finally {
         // Reset button state
         createBtnText.textContent = "Create";
