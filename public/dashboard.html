@@ -13,8 +13,17 @@
   <header class="bg-white shadow-sm">
     <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
       <h1 class="text-xl font-bold text-gray-800">Recita Dashboard</h1>
-      <nav>
- <!-- put some logout button here-->
+      <nav class="flex items-center gap-4">
+        <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+          </svg>
+          <span id="logoutBtnText">Logout</span>
+          <svg id="logoutSpinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+        </button>
       </nav>
     </div>
   </header>
@@ -230,7 +239,46 @@
       }
     });
 
-    document.addEventListener('DOMContentLoaded', loadClasses);
+    // Logout functionality
+    async function logout() {
+      const logoutBtn = document.getElementById('logoutBtn');
+      const logoutBtnText = document.getElementById('logoutBtnText');
+      const logoutSpinner = document.getElementById('logoutSpinner');
+
+      // Show loading state
+      logoutBtnText.textContent = 'Logging out...';
+      logoutSpinner.classList.remove('hidden');
+      logoutBtn.disabled = true;
+
+      try {
+        const response = await fetch('/logout', {
+          method: 'POST',
+          credentials: 'same-origin'
+        });
+
+        if (response.ok) {
+          // Redirect to login page after successful logout
+          window.location.href = '/login.html';
+        } else {
+          throw new Error('Logout failed');
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        alert('Failed to logout. Please try again.');
+        
+        // Reset button state on error
+        logoutBtnText.textContent = 'Logout';
+        logoutSpinner.classList.add('hidden');
+        logoutBtn.disabled = false;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadClasses();
+      
+      // Add logout button event listener
+      document.getElementById('logoutBtn').addEventListener('click', logout);
+    });
   </script>
 </body>
 </html>
