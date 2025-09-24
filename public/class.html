@@ -232,7 +232,7 @@
         <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
           <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8v4a4 4 0 00-4 4H4z"></path>
           </svg>
           <span>Loading recitas...</span>
         </div>
@@ -511,9 +511,10 @@
       }
     }
 
-    // Edit recita (navigate to recita page)
+    // Edit recita (navigate to recita page) - FIXED WITH CLASSID
     function editRecita(recitaId) {
-      window.location.href = `recita.html?id=${recitaId}`;
+      const classId = currentClassId || getClassIdFromUrl();
+      window.location.href = `recita.html?id=${recitaId}&classId=${classId}`;
     }
 
     // Confirm delete recita
@@ -547,9 +548,10 @@
       }
     }
 
-    // Start recita
+    // Start recita - FIXED WITH CLASSID
     function startRecita(recitaId) {
-      window.location.href = `recita.html?id=${recitaId}`;
+      const classId = currentClassId || getClassIdFromUrl();
+      window.location.href = `recita.html?id=${recitaId}&classId=${classId}`;
     }
 
     // Export single recita
