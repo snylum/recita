@@ -1188,14 +1188,14 @@ function updateCalledStudentsDisplay() {
 }
 
 // Setup recita page functionality
-// Replace your existing setupRecitaPage function with this updated version
+// Update the setupRecitaPage function
 function setupRecitaPage() {
   const saveRecitaBtn = document.getElementById("saveRecitaBtn");
   const editRecitaBtn = document.getElementById("editRecitaBtn");  
   const exportRecitaBtn = document.getElementById("exportRecitaBtn");
 
   if (saveRecitaBtn) {
-    const classId = localStorage.getItem("classId");
+    const classId = getUrlParameter('classId') || localStorage.getItem("classId");
     
     saveRecitaBtn.addEventListener("click", async () => {
       const topicInput = document.getElementById("topicInput");
@@ -1214,6 +1214,7 @@ function setupRecitaPage() {
         
         localStorage.setItem("recitaId", response.id.toString());
         localStorage.setItem("recitaTopic", topic);
+        localStorage.setItem("classId", classId);
         localStorage.removeItem("calledStudents");
         
         // Update UI state
@@ -1224,7 +1225,9 @@ function setupRecitaPage() {
         const editBtn = document.getElementById("editRecitaBtn");
         const exportBtn = document.getElementById("exportRecitaBtn");
         const pickSection = document.getElementById("pickSection");
+        const saveBtn = document.getElementById("saveRecitaBtn");
         
+        if (saveBtn) saveBtn.style.display = "none";
         if (editBtn) editBtn.style.display = "block";
         if (exportBtn) exportBtn.style.display = "block";
         if (pickSection) pickSection.style.display = "block";
@@ -1240,16 +1243,65 @@ function setupRecitaPage() {
     });
   }
 
-  // Edit Button Handler
+  // Edit Button Handler - Updated to allow editing existing recita topic
   if (editRecitaBtn) {
-    editRecitaBtn.addEventListener("click", () => {
+    editRecitaBtn.addEventListener("click", async () => {
       const topicInput = document.getElementById("topicInput");
       if (topicInput) {
+        const originalTopic = topicInput.value;
+        
         topicInput.disabled = false;
         topicInput.style.backgroundColor = "white";
         topicInput.style.color = "#333";
         topicInput.focus();
-        showRecitaInfoModal("You can now edit the recita topic. Click 'Save Recita' when done.", "Edit Mode");
+        
+        // Change edit button to save button temporarily
+        editRecitaBtn.textContent = "Save Changes";
+        editRecitaBtn.style.background = "#4f46e5";
+        
+        // Create a one-time event handler for saving changes
+        const saveChanges = async () => {
+          const newTopic = topicInput.value.trim();
+          if (!newTopic) {
+            topicInput.value = originalTopic;
+            showRecitaInfoModal("Topic cannot be empty");
+            return;
+          }
+          
+          const recitaId = localStorage.getItem("recitaId") || getUrlParameter('id');
+          
+          try {
+            // Update the recita topic via API
+            await apiFetch("/attendance", {
+              method: "PUT",
+              body: JSON.stringify({ 
+                recitaId: parseInt(recitaId), 
+                topic: newTopic 
+              }),
+            });
+            
+            // Update local storage
+            localStorage.setItem("recitaTopic", newTopic);
+            
+            // Reset UI
+            topicInput.disabled = true;
+            topicInput.style.backgroundColor = "#f3f4f6";
+            topicInput.style.color = "#6b7280";
+            
+            editRecitaBtn.textContent = "Edit Recita";
+            editRecitaBtn.style.background = "#f59e0b";
+            editRecitaBtn.removeEventListener("click", saveChanges);
+            
+            showRecitaInfoModal(`Recita topic updated to "${newTopic}"!`, "Success");
+            
+          } catch (err) {
+            topicInput.value = originalTopic;
+            showRecitaInfoModal("Failed to update recita: " + err.message, "Error");
+          }
+        };
+        
+        editRecitaBtn.removeEventListener("click", saveChanges);
+        editRecitaBtn.addEventListener("click", saveChanges, { once: true });
       }
     });
   }
@@ -1290,7 +1342,6 @@ function setupRecitaPage() {
         const student = await apiFetch(`/attendance?action=pick&recitaId=${recitaId}`);
         
         if (!student) {
-          // All students called - show completion modal
           const modal = document.createElement("div");
           modal.className = "modal recita-modal confirm-export-modal";
           modal.style.zIndex = "10000";
@@ -1335,30 +1386,60 @@ function setupRecitaPage() {
     }
   });
 
-  // **NEW: Initialize existing recita from URL parameter or localStorage**
+  // Initialize existing recita from URL parameter
   const urlRecitaId = getUrlParameter('id');
-  const existingRecitaId = urlRecitaId || localStorage.getItem("recitaId");
+  const urlClassId = getUrlParameter('classId');
   
-  if (existingRecitaId) {
-    // Store the recita ID in localStorage for consistency
-    if (urlRecitaId) {
-      localStorage.setItem("recitaId", urlRecitaId);
+  if (urlRecitaId) {
+    localStorage.setItem("recitaId", urlRecitaId);
+    if (urlClassId) {
+      localStorage.setItem("classId", urlClassId);
     }
+    loadExistingRecita(urlRecitaId);
+  }
+}
 
-    const classId = getUrlParameter('classId') || localStorage.getItem("classId");
+// Add this new function to load existing attendance records
+async function loadExistingAttendanceRecords(recitaId) {
+  try {
+    const response = await apiFetch(`/attendance?action=getDetails&recitaId=${recitaId}`);
     
-    // Load existing recita data
-    loadExistingRecita(existingRecitaId);
+    if (response && response.attendance) {
+      const calledStudents = response.attendance.map(record => ({
+        name: record.student_name,
+        score: record.score || 'no-score',
+        customScore: record.score && !['10', '5', 'skip', 'absent'].includes(record.score) ? record.score : null,
+        timestamp: new Date(record.created_at).toLocaleTimeString()
+      }));
+      
+      // Sort by last name
+      calledStudents.sort((a, b) => {
+        const lastNameA = a.name.split(' ').pop().toLowerCase();
+        const lastNameB = b.name.split(' ').pop().toLowerCase();
+        return lastNameA.localeCompare(lastNameB);
+      });
+      
+      localStorage.setItem("calledStudents", JSON.stringify(calledStudents));
+      updateCalledStudentsDisplay();
+    }
+  } catch (err) {
+    console.error("Failed to load existing attendance records:", err);
   }
 }
 
 const classId = getUrlParameter('classId') || localStorage.getItem("classId");
 // **NEW: Add this function to load existing recita data**
+// Add this updated loadExistingRecita function to your app.js
 async function loadExistingRecita(recitaId) {
   try {
-    // You'll need to add this endpoint to your attendance.js or create a new one
-    // For now, we'll try to get the recita info from your existing endpoint
-    const response = await apiFetch(`/attendance?action=getRecitas&classId=${localStorage.getItem("classId")}`);
+    const classId = getUrlParameter('classId') || localStorage.getItem("classId");
+    
+    if (!classId) {
+      console.error('No classId found for loading recita');
+      return;
+    }
+    
+    const response = await apiFetch(`/attendance?action=getRecitas&classId=${classId}`);
     
     if (response && Array.isArray(response)) {
       const currentRecita = response.find(r => r.id == recitaId);
@@ -1384,11 +1465,12 @@ async function loadExistingRecita(recitaId) {
         if (exportBtn) exportBtn.style.display = "block";
         if (pickSection) pickSection.style.display = "block";
         
-        // Store topic for future use
+        // Store topic and classId for future use
         localStorage.setItem("recitaTopic", currentRecita.topic);
+        localStorage.setItem("classId", classId);
         
-        // Load existing called students (if any)
-        updateCalledStudentsDisplay();
+        // Load existing attendance records for this recita
+        await loadExistingAttendanceRecords(recitaId);
         
         console.log("Loaded existing recita:", currentRecita.topic);
       }
@@ -1396,7 +1478,6 @@ async function loadExistingRecita(recitaId) {
   } catch (err) {
     console.error("Failed to load existing recita:", err);
     // If we can't load the recita details, still show the interface
-    // but in a state where user can start picking students
     const pickSection = document.getElementById("pickSection");
     const editBtn = document.getElementById("editRecitaBtn");
     const exportBtn = document.getElementById("exportRecitaBtn");
@@ -1406,6 +1487,8 @@ async function loadExistingRecita(recitaId) {
     if (exportBtn) exportBtn.style.display = "block";
   }
 }
+
+
 
 // -------------------
 // LOGO SYSTEM
@@ -1479,6 +1562,8 @@ function updateAllLogoImages() {
 // Call this function whenever you want to force refresh all logos
 window.refreshAllLogos = updateAllLogoImages;
 
+
+
 // -------------------
 // MAIN INITIALIZATION
 // -------------------
@@ -1545,3 +1630,4 @@ document.addEventListener("DOMContentLoaded", () => {
   
   console.log('App initialization complete');
 });
+
