@@ -85,8 +85,42 @@ export async function onRequestGet(context) {
     const url = new URL(context.request.url);
     const action = url.searchParams.get("action");
     const recitaId = url.searchParams.get("recitaId");
+    const classId = url.searchParams.get("classId");
 
-    console.log("GET attendance - action:", action, "recitaId:", recitaId);
+    console.log("GET attendance - action:", action, "recitaId:", recitaId, "classId:", classId);
+
+    // Handle getting recitas for a class
+    if (action === "getRecitas" || url.searchParams.get("getRecitas")) {
+      const teacher = await getTeacherFromSession(context.request, context.env);
+      if (!teacher) return new Response("Unauthorized", { status: 401 });
+
+      if (!classId) {
+        return new Response("Missing classId parameter", { status: 400 });
+      }
+
+      const ownership = await ensureClassOwnership(context, teacher.id, classId);
+      if (ownership !== true) return ownership;
+
+      console.log("Getting recitas for class:", classId);
+
+      // Get all recita sessions for this class with student count
+      const { results } = await context.env.DB.prepare(`
+        SELECT 
+          rs.id,
+          rs.class_id,
+          rs.topic,
+          rs.created_at,
+          COUNT(a.id) as student_count
+        FROM recita_sessions rs
+        LEFT JOIN attendance a ON rs.id = a.recita_id
+        WHERE rs.class_id = ?
+        GROUP BY rs.id, rs.class_id, rs.topic, rs.created_at
+        ORDER BY rs.created_at DESC
+      `).bind(classId).all();
+
+      console.log("Found recitas:", results);
+      return Response.json(results);
+    }
 
     // Handle /attendance/pick or /attendance?action=pick
     if (url.pathname.endsWith("/pick") || action === "pick") {
@@ -130,12 +164,68 @@ export async function onRequestGet(context) {
     // Default GET response
     return Response.json({ 
       message: "Attendance endpoint is working", 
-      availableActions: ["pick"],
-      usage: "Use ?action=pick&recitaId=X to pick a random student"
+      availableActions: ["pick", "getRecitas"],
+      usage: "Use ?action=pick&recitaId=X to pick a random student, or ?action=getRecitas&classId=X to get recita list"
     });
   } catch (error) {
     console.error("GET /attendance error:", error);
-    return new Response("Internal server error", { status: 500 });
+    return new Response(JSON.stringify({
+      error: "Internal server error",
+      message: error.message,
+      stack: error.stack
+    }), { 
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+}
+
+// DELETE method for deleting recita sessions
+export async function onRequestDelete(context) {
+  try {
+    const teacher = await getTeacherFromSession(context.request, context.env);
+    if (!teacher) return new Response("Unauthorized", { status: 401 });
+
+    const url = new URL(context.request.url);
+    const recitaId = url.searchParams.get("recitaId");
+
+    if (!recitaId) {
+      return new Response("Missing recitaId parameter", { status: 400 });
+    }
+
+    console.log("Deleting recita session:", recitaId);
+
+    // First, verify the recita exists and belongs to teacher's class
+    const { results: recitaCheck } = await context.env.DB.prepare(`
+      SELECT rs.id, rs.class_id
+      FROM recita_sessions rs
+      JOIN classes c ON rs.class_id = c.id
+      WHERE rs.id = ? AND c.teacher_id = ?
+    `).bind(recitaId, teacher.id).all();
+
+    if (!recitaCheck.length) {
+      return new Response("Recita session not found or access denied", { status: 404 });
+    }
+
+    // Delete attendance records first (foreign key constraint)
+    await context.env.DB.prepare("DELETE FROM attendance WHERE recita_id = ?").bind(recitaId).run();
+
+    // Then delete the recita session
+    await context.env.DB.prepare("DELETE FROM recita_sessions WHERE id = ?").bind(recitaId).run();
+
+    console.log("Successfully deleted recita session:", recitaId);
+    return Response.json({ success: true });
+
+  } catch (error) {
+    console.error("DELETE /attendance error:", error);
+    return new Response(JSON.stringify({
+      error: "Internal server error",
+      message: error.message,
+      stack: error.stack
+    }), { 
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
 }
 
