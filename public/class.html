@@ -5,53 +5,507 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Class Management</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f8fafc;
+      min-height: 100vh;
+      color: #334155;
+    }
+
+    /* Navigation */
+    nav {
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav h1 {
+      color: #2c3e50;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    nav .nav-right {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    nav #className {
+      font-size: 18px;
+      font-weight: 500;
+      color: #4b5563;
+    }
+
+    nav button {
+      background: #6b7280;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    nav button:hover {
+      background: #4b5563;
+    }
+
+    /* Main container */
+    main {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Grid layout */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card styling */
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 24px;
+    }
+
+    .card h2 {
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+
+    /* Form styling */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    textarea {
+      height: 120px;
+      resize: vertical;
+    }
+
+    /* Button styling */
+    .btn {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #2563eb;
+    }
+
+    .btn-success {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background: #059669;
+    }
+
+    .btn-purple {
+      background: #8b5cf6;
+      color: white;
+    }
+
+    .btn-purple:hover:not(:disabled) {
+      background: #7c3aed;
+    }
+
+    .btn-red {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-red:hover:not(:disabled) {
+      background: #dc2626;
+    }
+
+    .btn-gray {
+      background: #6b7280;
+      color: white;
+    }
+
+    .btn-gray:hover:not(:disabled) {
+      background: #4b5563;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* List styling */
+    .list-container {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .select-all {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .select-all input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+
+    .select-all label {
+      font-size: 14px;
+      color: #6b7280;
+      cursor: pointer;
+    }
+
+    /* Student item */
+    .student-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: background-color 0.2s;
+      group: true;
+    }
+
+    .student-item:hover {
+      background: #f1f5f9;
+    }
+
+    .student-item input[type="text"] {
+      background: transparent;
+      border: none;
+      padding: 4px 8px;
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .student-item input[type="text"]:focus {
+      background: white;
+      border: 1px solid #3b82f6;
+      border-radius: 4px;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .delete-btn {
+      opacity: 0;
+      background: none;
+      border: none;
+      color: #ef4444;
+      padding: 4px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: opacity 0.2s, color 0.2s;
+    }
+
+    .student-item:hover .delete-btn {
+      opacity: 1;
+    }
+
+    .delete-btn:hover {
+      color: #dc2626;
+    }
+
+    /* Recita item */
+    .recita-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      background: white;
+      margin-bottom: 12px;
+      transition: box-shadow 0.2s;
+    }
+
+    .recita-item:hover {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .recita-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .recita-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .recita-info input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+
+    .recita-details h3 {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+
+    .recita-meta {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 2px;
+    }
+
+    .recita-stats {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .recita-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: color 0.2s;
+    }
+
+    .icon-btn.edit {
+      color: #3b82f6;
+    }
+
+    .icon-btn.edit:hover {
+      color: #2563eb;
+    }
+
+    .icon-btn.delete {
+      color: #ef4444;
+    }
+
+    .icon-btn.delete:hover {
+      color: #dc2626;
+    }
+
+    .recita-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .recita-buttons .btn {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #6b7280;
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: #374151;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      color: #9ca3af;
+    }
+
+    /* Loading state */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 32px;
+      color: #6b7280;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #e5e7eb;
+      border-top: 2px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      margin: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 16px;
+    }
+
+    .modal p {
+      color: #6b7280;
+      margin-bottom: 24px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .count-display {
+      font-size: 14px;
+      color: #6b7280;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-  <nav class="bg-white shadow p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Recita</h1>
-    <div class="flex gap-4 items-center">
-      <span id="className" class="text-lg font-medium text-gray-700"></span>
-      <button onclick="window.location.href='dashboard.html'" class="text-blue-500 hover:underline">Back to Dashboard</button>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <h1>Recita</h1>
+    <div class="nav-right">
+      <span id="className"></span>
+      <button onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
     </div>
   </nav>
   
   <!-- Custom Confirmation Modal -->
-  <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-xl">
-      <h3 id="confirmTitle" class="text-lg font-semibold text-gray-800 mb-4">Confirm Action</h3>
-      <p id="confirmMessage" class="text-gray-600 mb-6">Are you sure you want to proceed?</p>
-      <div class="flex justify-end gap-3">
-        <button id="confirmCancel" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
-          Cancel
-        </button>
-        <button id="confirmOk" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-          Delete
-        </button>
+  <div id="confirmationModal" class="modal">
+    <div class="modal-content">
+      <h3 id="confirmTitle">Confirm Action</h3>
+      <p id="confirmMessage">Are you sure you want to proceed?</p>
+      <div class="modal-actions">
+        <button id="confirmCancel" class="btn btn-gray">Cancel</button>
+        <button id="confirmOk" class="btn btn-red">Delete</button>
       </div>
     </div>
   </div>
   
-  <main class="p-6 max-w-7xl mx-auto">
+  <main>
     <!-- Two Column Layout for Desktop, Stacked for Mobile -->
-    <div class="grid lg:grid-cols-2 gap-6">
+    <div class="main-grid">
       
-      <!-- Left Column: Recitas Management (Top on Mobile) -->
-      <div class="space-y-6 order-1 lg:order-1">
+      <!-- Left Column: Recitas Management -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
         <!-- Create New Recita -->
-        <div class="bg-white rounded-xl shadow p-6">
-          <h2 class="text-lg font-bold mb-4">Create New Recita</h2>
-          <form id="createRecitaForm" class="space-y-4">
-            <input id="recitaTopic" type="text" placeholder="Recita topic" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 outline-none" required>
-            <div class="flex gap-2">
-              <button type="submit" class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2">
+        <div class="card">
+          <h2>Create New Recita</h2>
+          <form id="createRecitaForm">
+            <div class="form-group">
+              <input id="recitaTopic" type="text" placeholder="Recita topic" required>
+            </div>
+            <div class="btn-group">
+              <button type="submit" class="btn btn-success btn-full">
                 <span id="createBtnText">Create Recita</span>
-                <svg id="createBtnSpinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                </svg>
+                <div id="createBtnSpinner" class="spinner" style="display: none; width: 16px; height: 16px;"></div>
               </button>
-              <button type="button" id="exportSelectedBtn" class="bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 disabled:opacity-50 transition" disabled>
+              <button type="button" id="exportSelectedBtn" class="btn btn-purple" disabled>
                 Export Selected
               </button>
             </div>
@@ -59,53 +513,46 @@
         </div>
 
         <!-- Recitas List -->
-        <div class="bg-white rounded-xl shadow p-6">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-bold">Recitas</h2>
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="selectAllRecitas" class="rounded">
-              <label for="selectAllRecitas" class="text-sm text-gray-600">Select All</label>
+        <div class="card">
+          <div class="list-header">
+            <h2>Recitas</h2>
+            <div class="select-all">
+              <input type="checkbox" id="selectAllRecitas">
+              <label for="selectAllRecitas">Select All</label>
             </div>
           </div>
-          <div id="recitasList" class="space-y-3 max-h-96 overflow-y-auto">
-            <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
-              <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-              </svg>
+          <div id="recitasList" class="list-container">
+            <div class="loading">
+              <div class="spinner"></div>
               <span>Loading recitas...</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Right Column: Students Management (Bottom on Mobile) -->
-      <div class="space-y-6 order-2 lg:order-2">
+      <!-- Right Column: Students Management -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
         <!-- Add Students Section -->
-        <div class="bg-white rounded-xl shadow p-6">
-          <h2 class="text-lg font-bold mb-4">Add Students</h2>
-          <textarea id="studentInput" placeholder="One student per line" class="w-full p-3 border border-gray-300 rounded-lg h-32 mb-4 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 outline-none"></textarea>
-          <button id="addStudentsBtn" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2">
+        <div class="card">
+          <h2>Add Students</h2>
+          <div class="form-group">
+            <textarea id="studentInput" placeholder="One student per line"></textarea>
+          </div>
+          <button id="addStudentsBtn" class="btn btn-primary btn-full">
             <span id="addBtnText">Add Students</span>
-            <svg id="addBtnSpinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-            </svg>
+            <div id="addBtnSpinner" class="spinner" style="display: none; width: 16px; height: 16px;"></div>
           </button>
         </div>
 
         <!-- Students List -->
-        <div class="bg-white rounded-xl shadow p-6">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-bold">Students</h2>
-            <span id="studentCount" class="text-sm text-gray-500">0 students</span>
+        <div class="card">
+          <div class="list-header">
+            <h2>Students</h2>
+            <span id="studentCount" class="count-display">0 students</span>
           </div>
-          <div id="studentList" class="space-y-2 max-h-96 overflow-y-auto">
-            <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
-              <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-              </svg>
+          <div id="studentList" class="list-container">
+            <div class="loading">
+              <div class="spinner"></div>
               <span>Loading students...</span>
             </div>
           </div>
@@ -138,8 +585,7 @@
       messageEl.textContent = message;
       confirmCallback = onConfirm;
       
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+      modal.classList.add('show');
     }
 
     // Get class ID from URL
@@ -189,11 +635,8 @@
       
       // Show loading state
       studentList.innerHTML = `
-        <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
-          <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-          </svg>
+        <div class="loading">
+          <div class="spinner"></div>
           <span>Loading students...</span>
         </div>
       `;
@@ -212,10 +655,11 @@
       } catch (error) {
         console.error('Error loading students:', error);
         studentList.innerHTML = `
-          <div class="text-center py-8">
-            <p class="text-red-500 mb-2">Failed to load students</p>
-            <p class="text-sm text-gray-500">${error.message}</p>
-            <button onclick="loadStudents()" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+          <div class="empty-state">
+            <div class="icon">⚠️</div>
+            <h3>Failed to load students</h3>
+            <p>${error.message}</p>
+            <button onclick="loadStudents()" class="btn btn-primary" style="margin-top: 12px;">
               Try Again
             </button>
           </div>
@@ -229,11 +673,8 @@
       
       // Show loading state
       recitasList.innerHTML = `
-        <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
-          <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8v4a4 4 0 00-4 4H4z"></path>
-          </svg>
+        <div class="loading">
+          <div class="spinner"></div>
           <span>Loading recitas...</span>
         </div>
       `;
@@ -268,26 +709,23 @@
       
       if (students.length === 0) {
         studentList.innerHTML = `
-          <div class="text-center py-12">
-            <div class="text-4xl mb-4">👥</div>
-            <p class="text-gray-500 text-lg mb-2">No students added yet</p>
-            <p class="text-sm text-gray-400">Add students using the form above</p>
+          <div class="empty-state">
+            <div class="icon">👥</div>
+            <h3>No students added yet</h3>
+            <p>Add students using the form above</p>
           </div>
         `;
         return;
       }
 
       studentList.innerHTML = students.map(student => `
-        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition">
-          <div class="flex items-center flex-1">
-            <input type="text" value="${escapeHtml(student.name)}" 
-                   class="bg-transparent border-none outline-none flex-1 font-medium focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
-                   onblur="updateStudentName(${student.id}, this.value)"
-                   onkeypress="if(event.key==='Enter') this.blur()">
-          </div>
+        <div class="student-item">
+          <input type="text" value="${escapeHtml(student.name)}" 
+                 onblur="updateStudentName(${student.id}, this.value)"
+                 onkeypress="if(event.key==='Enter') this.blur()">
           <button onclick="confirmDeleteStudent(${student.id}, '${escapeHtml(student.name)}')" 
-                  class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1 transition-opacity">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  class="delete-btn">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
             </svg>
           </button>
@@ -301,10 +739,10 @@
       
       if (recitas.length === 0) {
         recitasList.innerHTML = `
-          <div class="text-center py-12">
-            <div class="text-4xl mb-4">📝</div>
-            <p class="text-gray-500 text-lg mb-2">No recitas created yet</p>
-            <p class="text-sm text-gray-400">Create your first recita using the form above</p>
+          <div class="empty-state">
+            <div class="icon">📝</div>
+            <h3>No recitas created yet</h3>
+            <p>Create your first recita using the form above</p>
           </div>
         `;
         return;
@@ -316,41 +754,38 @@
         const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
         return `
-          <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-            <div class="flex items-start justify-between mb-2">
-              <div class="flex items-center gap-3">
-                <input type="checkbox" class="recita-checkbox rounded" value="${recita.id}" 
+          <div class="recita-item">
+            <div class="recita-header">
+              <div class="recita-info">
+                <input type="checkbox" class="recita-checkbox" value="${recita.id}" 
                        onchange="updateExportButton()">
-                <div>
-                  <h3 class="font-semibold text-gray-900">${escapeHtml(recita.topic)}</h3>
-                  <p class="text-sm text-gray-600">${dateStr} at ${timeStr}</p>
-                  <p class="text-xs text-gray-500">
+                <div class="recita-details">
+                  <h3>${escapeHtml(recita.topic)}</h3>
+                  <div class="recita-meta">${dateStr} at ${timeStr}</div>
+                  <div class="recita-stats">
                     ${recita.student_count || 0} student${(recita.student_count || 0) !== 1 ? 's' : ''} participated
-                  </p>
+                  </div>
                 </div>
               </div>
-              <div class="flex gap-2">
-                <button onclick="editRecita(${recita.id})" 
-                        class="text-blue-500 hover:text-blue-700 p-1 transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="recita-actions">
+                <button onclick="editRecita(${recita.id})" class="icon-btn edit">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                   </svg>
                 </button>
                 <button onclick="confirmDeleteRecita(${recita.id}, '${escapeHtml(recita.topic)}')" 
-                        class="text-red-500 hover:text-red-700 p-1 transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="icon-btn delete">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                   </svg>
                 </button>
               </div>
             </div>
-            <div class="flex gap-2 mt-3">
-              <button onclick="startRecita(${recita.id})" 
-                      class="flex-1 bg-green-500 text-white text-sm py-2 px-3 rounded hover:bg-green-600 transition">
+            <div class="recita-buttons">
+              <button onclick="startRecita(${recita.id})" class="btn btn-success">
                 Start Recita
               </button>
-              <button onclick="exportSingleRecita(${recita.id})" 
-                      class="bg-gray-500 text-white text-sm py-2 px-3 rounded hover:bg-gray-600 transition">
+              <button onclick="exportSingleRecita(${recita.id})" class="btn btn-gray">
                 Export
               </button>
             </div>
@@ -376,7 +811,7 @@
 
       // Show loading state
       addBtnText.textContent = 'Adding...';
-      addBtnSpinner.classList.remove('hidden');
+      addBtnSpinner.style.display = 'block';
       addBtn.disabled = true;
 
       try {
@@ -403,7 +838,7 @@
       } finally {
         // Reset button state
         addBtnText.textContent = 'Add Students';
-        addBtnSpinner.classList.add('hidden');
+        addBtnSpinner.style.display = 'none';
         addBtn.disabled = false;
       }
     }
@@ -477,7 +912,7 @@
 
       // Show loading state
       createBtnText.textContent = 'Creating...';
-      createBtnSpinner.classList.remove('hidden');
+      createBtnSpinner.style.display = 'block';
       createBtn.disabled = true;
 
       try {
@@ -506,12 +941,12 @@
       } finally {
         // Reset button state
         createBtnText.textContent = 'Create Recita';
-        createBtnSpinner.classList.add('hidden');
+        createBtnSpinner.style.display = 'none';
         createBtn.disabled = false;
       }
     }
 
-    // Edit recita (navigate to recita page) - FIXED WITH CLASSID
+    // Edit recita (navigate to recita page)
     function editRecita(recitaId) {
       const classId = currentClassId || getClassIdFromUrl();
       window.location.href = `recita.html?id=${recitaId}&classId=${classId}`;
@@ -548,7 +983,7 @@
       }
     }
 
-    // Start recita - FIXED WITH CLASSID
+    // Start recita
     function startRecita(recitaId) {
       const classId = currentClassId || getClassIdFromUrl();
       window.location.href = `recita.html?id=${recitaId}&classId=${classId}`;
@@ -657,13 +1092,11 @@
       
       // Modal event listeners
       document.getElementById('confirmCancel').addEventListener('click', () => {
-        document.getElementById('confirmationModal').classList.add('hidden');
-        document.getElementById('confirmationModal').classList.remove('flex');
+        document.getElementById('confirmationModal').classList.remove('show');
       });
       
       document.getElementById('confirmOk').addEventListener('click', () => {
-        document.getElementById('confirmationModal').classList.add('hidden');
-        document.getElementById('confirmationModal').classList.remove('flex');
+        document.getElementById('confirmationModal').classList.remove('show');
         if (confirmCallback) {
           confirmCallback();
           confirmCallback = null;
@@ -673,16 +1106,14 @@
       // Close modal when clicking outside
       document.getElementById('confirmationModal').addEventListener('click', (e) => {
         if (e.target === document.getElementById('confirmationModal')) {
-          document.getElementById('confirmationModal').classList.add('hidden');
-          document.getElementById('confirmationModal').classList.remove('flex');
+          document.getElementById('confirmationModal').classList.remove('show');
         }
       });
       
       // Close modal with Escape key
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !document.getElementById('confirmationModal').classList.contains('hidden')) {
-          document.getElementById('confirmationModal').classList.add('hidden');
-          document.getElementById('confirmationModal').classList.remove('flex');
+        if (e.key === 'Escape' && document.getElementById('confirmationModal').classList.contains('show')) {
+          document.getElementById('confirmationModal').classList.remove('show');
         }
       });
     });
