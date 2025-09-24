@@ -141,6 +141,58 @@ export async function onRequestGet(context) {
 
     console.log("GET attendance - action:", action, "recitaId:", recitaId, "classId:", classId);
 
+    // Handle getting recita details with attendance records
+    if (action === "getDetails" && recitaId) {
+      const teacher = await getTeacherFromSession(context.request, context.env);
+      if (!teacher) return new Response("Unauthorized", { status: 401 });
+
+      console.log("Getting recita details for ID:", recitaId);
+
+      // Get recita details with attendance records
+      const { results: recitaDetails } = await context.env.DB.prepare(`
+        SELECT 
+          rs.id,
+          rs.topic,
+          rs.class_id,
+          rs.created_at,
+          c.name as class_name
+        FROM recita_sessions rs
+        JOIN classes c ON rs.class_id = c.id
+        WHERE rs.id = ? AND c.teacher_id = ?
+      `).bind(recitaId, teacher.id).all();
+
+      if (!recitaDetails.length) {
+        return new Response("Recita session not found or access denied", { status: 404 });
+      }
+
+      const recita = recitaDetails[0];
+
+      // Get attendance records for this recita
+      const { results: attendanceRecords } = await context.env.DB.prepare(`
+        SELECT 
+          a.id,
+          a.student_id,
+          a.score,
+          a.created_at,
+          s.name as student_name
+        FROM attendance a
+        JOIN students s ON a.student_id = s.id
+        WHERE a.recita_id = ?
+        ORDER BY s.name
+      `).bind(recitaId).all();
+
+      const response = {
+        id: recita.id,
+        topic: recita.topic,
+        class_id: recita.class_id,
+        class_name: recita.class_name,
+        created_at: recita.created_at,
+        attendance: attendanceRecords
+      };
+
+      return Response.json(response);
+    }
+
     // Handle getting recitas for a class
     if (action === "getRecitas" || url.searchParams.get("getRecitas")) {
       const teacher = await getTeacherFromSession(context.request, context.env);
