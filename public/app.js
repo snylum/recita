@@ -1035,6 +1035,21 @@ window.viewRecitaDetails = async function(recitaId) {
   }
 };
 
+
+
+
+
+
+
+// Add this helper function to get URL parameters
+function getUrlParameter(name) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(name);
+}
+
+
+
+
 // -------------------
 // GENERAL EXPORT CSV FUNCTIONALITY
 // -------------------
@@ -1173,6 +1188,7 @@ function updateCalledStudentsDisplay() {
 }
 
 // Setup recita page functionality
+// Replace your existing setupRecitaPage function with this updated version
 function setupRecitaPage() {
   const saveRecitaBtn = document.getElementById("saveRecitaBtn");
   const editRecitaBtn = document.getElementById("editRecitaBtn");  
@@ -1241,7 +1257,7 @@ function setupRecitaPage() {
   // Export Button Handler with validation
   if (exportRecitaBtn) {
     exportRecitaBtn.addEventListener("click", () => {
-      const recitaId = localStorage.getItem("recitaId");
+      const recitaId = localStorage.getItem("recitaId") || getUrlParameter('id');
       const calledStudents = JSON.parse(localStorage.getItem("calledStudents") || "[]");
       
       if (!recitaId) {
@@ -1263,7 +1279,7 @@ function setupRecitaPage() {
     if (e.target && e.target.id === "pickStudentBtn") {
       e.preventDefault();
       
-      const recitaId = localStorage.getItem("recitaId");
+      const recitaId = localStorage.getItem("recitaId") || getUrlParameter('id');
       
       if (!recitaId || recitaId === 'null' || recitaId === 'undefined') {
         showRecitaInfoModal("No recita ID found. Please save a recita first.");
@@ -1319,32 +1335,72 @@ function setupRecitaPage() {
     }
   });
 
-  // Initialize existing recita if found
-  const existingRecitaId = localStorage.getItem("recitaId");
+  // **NEW: Initialize existing recita from URL parameter or localStorage**
+  const urlRecitaId = getUrlParameter('id');
+  const existingRecitaId = urlRecitaId || localStorage.getItem("recitaId");
+  
   if (existingRecitaId) {
+    // Store the recita ID in localStorage for consistency
+    if (urlRecitaId) {
+      localStorage.setItem("recitaId", urlRecitaId);
+    }
+    
+    // Load existing recita data
+    loadExistingRecita(existingRecitaId);
+  }
+}
+
+// **NEW: Add this function to load existing recita data**
+async function loadExistingRecita(recitaId) {
+  try {
+    // You'll need to add this endpoint to your attendance.js or create a new one
+    // For now, we'll try to get the recita info from your existing endpoint
+    const response = await apiFetch(`/attendance?action=getRecitas&classId=${localStorage.getItem("classId")}`);
+    
+    if (response && Array.isArray(response)) {
+      const currentRecita = response.find(r => r.id == recitaId);
+      
+      if (currentRecita) {
+        const pickSection = document.getElementById("pickSection");
+        const topicInput = document.getElementById("topicInput");
+        const editBtn = document.getElementById("editRecitaBtn");
+        const exportBtn = document.getElementById("exportRecitaBtn");
+        const saveBtn = document.getElementById("saveRecitaBtn");
+        
+        // Update UI to show this is an existing recita
+        if (topicInput) {
+          topicInput.value = currentRecita.topic;
+          topicInput.disabled = true;
+          topicInput.style.backgroundColor = "#f3f4f6";
+          topicInput.style.color = "#6b7280";
+        }
+        
+        // Hide save button, show edit and export
+        if (saveBtn) saveBtn.style.display = "none";
+        if (editBtn) editBtn.style.display = "block";
+        if (exportBtn) exportBtn.style.display = "block";
+        if (pickSection) pickSection.style.display = "block";
+        
+        // Store topic for future use
+        localStorage.setItem("recitaTopic", currentRecita.topic);
+        
+        // Load existing called students (if any)
+        updateCalledStudentsDisplay();
+        
+        console.log("Loaded existing recita:", currentRecita.topic);
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load existing recita:", err);
+    // If we can't load the recita details, still show the interface
+    // but in a state where user can start picking students
     const pickSection = document.getElementById("pickSection");
-    const topicInput = document.getElementById("topicInput");
     const editBtn = document.getElementById("editRecitaBtn");
     const exportBtn = document.getElementById("exportRecitaBtn");
     
     if (pickSection) pickSection.style.display = "block";
-    
-    // Set UI to saved state
-    if (topicInput) {
-      const savedTopic = localStorage.getItem("recitaTopic");
-      if (savedTopic) {
-        topicInput.value = savedTopic;
-        topicInput.disabled = true;
-        topicInput.style.backgroundColor = "#f3f4f6";
-        topicInput.style.color = "#6b7280";
-      }
-    }
-    
     if (editBtn) editBtn.style.display = "block";
     if (exportBtn) exportBtn.style.display = "block";
-    
-    // Load existing called students
-    updateCalledStudentsDisplay();
   }
 }
 
