@@ -25,8 +25,14 @@
         <!-- Add Students Section -->
         <div class="bg-white rounded-xl shadow p-6">
           <h2 class="text-lg font-bold mb-4">Add Students</h2>
-          <textarea id="studentInput" placeholder="One student per line" class="w-full p-3 border rounded-lg h-32 mb-4"></textarea>
-          <button id="addStudentsBtn" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Add Students</button>
+          <textarea id="studentInput" placeholder="One student per line" class="w-full p-3 border border-gray-300 rounded-lg h-32 mb-4 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 outline-none"></textarea>
+          <button id="addStudentsBtn" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2">
+            <span id="addBtnText">Add Students</span>
+            <svg id="addBtnSpinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+          </button>
         </div>
 
         <!-- Students List -->
@@ -36,7 +42,13 @@
             <span id="studentCount" class="text-sm text-gray-500">0 students</span>
           </div>
           <div id="studentList" class="space-y-2 max-h-96 overflow-y-auto">
-            <p class="text-gray-500 text-center py-8">No students added yet</p>
+            <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
+              <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+              <span>Loading students...</span>
+            </div>
           </div>
         </div>
       </div>
@@ -47,10 +59,16 @@
         <div class="bg-white rounded-xl shadow p-6">
           <h2 class="text-lg font-bold mb-4">Create New Recita</h2>
           <form id="createRecitaForm" class="space-y-4">
-            <input id="recitaTopic" type="text" placeholder="Recita topic" class="w-full p-3 border rounded-lg" required>
+            <input id="recitaTopic" type="text" placeholder="Recita topic" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 outline-none" required>
             <div class="flex gap-2">
-              <button type="submit" class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600">Create Recita</button>
-              <button type="button" id="exportSelectedBtn" class="bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 disabled:opacity-50" disabled>
+              <button type="submit" class="flex-1 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2">
+                <span id="createBtnText">Create Recita</span>
+                <svg id="createBtnSpinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+              </button>
+              <button type="button" id="exportSelectedBtn" class="bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 disabled:opacity-50 transition" disabled>
                 Export Selected
               </button>
             </div>
@@ -67,7 +85,13 @@
             </div>
           </div>
           <div id="recitasList" class="space-y-3 max-h-96 overflow-y-auto">
-            <p class="text-gray-500 text-center py-8">No recitas created yet</p>
+            <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
+              <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+              <span>Loading recitas...</span>
+            </div>
           </div>
         </div>
       </div>
@@ -79,6 +103,13 @@
     let currentClassId = null;
     let students = [];
     let recitas = [];
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
 
     // Get class ID from URL
     function getClassIdFromUrl() {
@@ -96,49 +127,101 @@
       }
 
       try {
-        // Load class details using your existing API
-        const response = await fetch(`/api/classes/${currentClassId}`, {
+        // Get class info from the classes endpoint (since your classes.js includes student data)
+        const response = await fetch('/classes', {
           credentials: 'same-origin'
         });
         
         if (response.ok) {
-          const classData = await response.json();
-          document.getElementById('className').textContent = classData.name;
+          const classes = await response.json();
+          const currentClass = classes.find(c => c.id == currentClassId);
+          
+          if (currentClass) {
+            document.getElementById('className').textContent = currentClass.name;
+          } else {
+            throw new Error('Class not found');
+          }
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
       } catch (error) {
         console.error('Error loading class info:', error);
+        alert('Error loading class information');
+        window.location.href = 'dashboard.html';
       }
     }
 
     // Load students using your existing API
     async function loadStudents() {
+      const studentList = document.getElementById('studentList');
+      const studentCount = document.getElementById('studentCount');
+      
+      // Show loading state
+      studentList.innerHTML = `
+        <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
+          <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <span>Loading students...</span>
+        </div>
+      `;
+
       try {
-        const response = await fetch(`/api/students?classId=${currentClassId}`, {
+        const response = await fetch(`/students?classId=${currentClassId}`, {
           credentials: 'same-origin'
         });
         
-        if (response.ok) {
-          students = await response.json();
-          renderStudents();
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+        
+        students = await response.json();
+        renderStudents();
       } catch (error) {
         console.error('Error loading students:', error);
+        studentList.innerHTML = `
+          <div class="text-center py-8">
+            <p class="text-red-500 mb-2">Failed to load students</p>
+            <p class="text-sm text-gray-500">${error.message}</p>
+            <button onclick="loadStudents()" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              Try Again
+            </button>
+          </div>
+        `;
       }
     }
 
     // Load recitas using your existing attendance API
     async function loadRecitas() {
+      const recitasList = document.getElementById('recitasList');
+      
+      // Show loading state
+      recitasList.innerHTML = `
+        <div class="flex flex-col items-center gap-2 text-gray-500 py-8">
+          <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <span>Loading recitas...</span>
+        </div>
+      `;
+
       try {
         // Use your attendance API to get recita sessions
-        const response = await fetch(`/api/attendance?action=getRecitas&classId=${currentClassId}`, {
+        const response = await fetch(`/attendance?action=getRecitas&classId=${currentClassId}`, {
           credentials: 'same-origin'
         });
         
         if (response.ok) {
           const data = await response.json();
           recitas = data || [];
-          renderRecitas();
+        } else {
+          // If the API doesn't support getRecitas yet, show empty state
+          console.log('Recitas API not available yet');
+          recitas = [];
         }
+        renderRecitas();
       } catch (error) {
         console.error('Error loading recitas:', error);
         // If the API doesn't support getRecitas yet, show empty state
@@ -155,15 +238,21 @@
       studentCount.textContent = `${students.length} student${students.length !== 1 ? 's' : ''}`;
       
       if (students.length === 0) {
-        studentList.innerHTML = '<p class="text-gray-500 text-center py-8">No students added yet</p>';
+        studentList.innerHTML = `
+          <div class="text-center py-12">
+            <div class="text-4xl mb-4">👥</div>
+            <p class="text-gray-500 text-lg mb-2">No students added yet</p>
+            <p class="text-sm text-gray-400">Add students using the form above</p>
+          </div>
+        `;
         return;
       }
 
       studentList.innerHTML = students.map(student => `
-        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100">
+        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition">
           <div class="flex items-center flex-1">
-            <input type="text" value="${student.name}" 
-                   class="bg-transparent border-none outline-none flex-1 font-medium"
+            <input type="text" value="${escapeHtml(student.name)}" 
+                   class="bg-transparent border-none outline-none flex-1 font-medium focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
                    onblur="updateStudentName(${student.id}, this.value)"
                    onkeypress="if(event.key==='Enter') this.blur()">
           </div>
@@ -182,7 +271,13 @@
       const recitasList = document.getElementById('recitasList');
       
       if (recitas.length === 0) {
-        recitasList.innerHTML = '<p class="text-gray-500 text-center py-8">No recitas created yet</p>';
+        recitasList.innerHTML = `
+          <div class="text-center py-12">
+            <div class="text-4xl mb-4">📝</div>
+            <p class="text-gray-500 text-lg mb-2">No recitas created yet</p>
+            <p class="text-sm text-gray-400">Create your first recita using the form above</p>
+          </div>
+        `;
         return;
       }
 
@@ -192,13 +287,13 @@
         const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
         return `
-          <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+          <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
             <div class="flex items-start justify-between mb-2">
               <div class="flex items-center gap-3">
                 <input type="checkbox" class="recita-checkbox rounded" value="${recita.id}" 
                        onchange="updateExportButton()">
                 <div>
-                  <h3 class="font-semibold text-gray-900">${recita.topic}</h3>
+                  <h3 class="font-semibold text-gray-900">${escapeHtml(recita.topic)}</h3>
                   <p class="text-sm text-gray-600">${dateStr} at ${timeStr}</p>
                   <p class="text-xs text-gray-500">
                     ${recita.student_count || 0} student${(recita.student_count || 0) !== 1 ? 's' : ''} participated
@@ -207,13 +302,13 @@
               </div>
               <div class="flex gap-2">
                 <button onclick="editRecita(${recita.id})" 
-                        class="text-blue-500 hover:text-blue-700 p-1">
+                        class="text-blue-500 hover:text-blue-700 p-1 transition">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                   </svg>
                 </button>
                 <button onclick="deleteRecita(${recita.id})" 
-                        class="text-red-500 hover:text-red-700 p-1">
+                        class="text-red-500 hover:text-red-700 p-1 transition">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                   </svg>
@@ -222,11 +317,11 @@
             </div>
             <div class="flex gap-2 mt-3">
               <button onclick="startRecita(${recita.id})" 
-                      class="flex-1 bg-green-500 text-white text-sm py-2 px-3 rounded hover:bg-green-600">
+                      class="flex-1 bg-green-500 text-white text-sm py-2 px-3 rounded hover:bg-green-600 transition">
                 Start Recita
               </button>
               <button onclick="exportSingleRecita(${recita.id})" 
-                      class="bg-gray-500 text-white text-sm py-2 px-3 rounded hover:bg-gray-600">
+                      class="bg-gray-500 text-white text-sm py-2 px-3 rounded hover:bg-gray-600 transition">
                 Export
               </button>
             </div>
@@ -238,15 +333,25 @@
     // Add students using your existing API
     async function addStudents() {
       const input = document.getElementById('studentInput');
+      const addBtnText = document.getElementById('addBtnText');
+      const addBtnSpinner = document.getElementById('addBtnSpinner');
+      const addBtn = document.getElementById('addStudentsBtn');
+      
       const names = input.value.trim().split('\n').filter(name => name.trim());
       
       if (names.length === 0) {
         alert('Please enter at least one student name');
+        input.focus();
         return;
       }
 
+      // Show loading state
+      addBtnText.textContent = 'Adding...';
+      addBtnSpinner.classList.remove('hidden');
+      addBtn.disabled = true;
+
       try {
-        const response = await fetch('/api/students', {
+        const response = await fetch('/students', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
@@ -256,15 +361,21 @@
           })
         });
 
-        if (response.ok) {
-          input.value = '';
-          await loadStudents();
-        } else {
-          alert('Failed to add students');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
+
+        input.value = '';
+        await loadStudents();
       } catch (error) {
         console.error('Error adding students:', error);
-        alert('Error adding students');
+        alert(`Failed to add students: ${error.message}`);
+      } finally {
+        // Reset button state
+        addBtnText.textContent = 'Add Students';
+        addBtnSpinner.classList.add('hidden');
+        addBtn.disabled = false;
       }
     }
 
@@ -273,15 +384,21 @@
       if (!newName.trim()) return;
       
       try {
-        const response = await fetch(`/api/students/${studentId}`, {
+        const response = await fetch('/students', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
-          body: JSON.stringify({ name: newName.trim() })
+          body: JSON.stringify({ 
+            studentId: studentId,
+            name: newName.trim(),
+            classId: currentClassId
+          })
         });
 
         if (response.ok) {
           await loadStudents();
+        } else {
+          console.error('Failed to update student name');
         }
       } catch (error) {
         console.error('Error updating student:', error);
@@ -293,13 +410,15 @@
       if (!confirm('Are you sure you want to delete this student?')) return;
       
       try {
-        const response = await fetch(`/api/students/${studentId}`, {
+        const response = await fetch(`/students?studentId=${studentId}&classId=${currentClassId}`, {
           method: 'DELETE',
           credentials: 'same-origin'
         });
 
         if (response.ok) {
           await loadStudents();
+        } else {
+          console.error('Failed to delete student');
         }
       } catch (error) {
         console.error('Error deleting student:', error);
@@ -311,10 +430,22 @@
       event.preventDefault();
       
       const topic = document.getElementById('recitaTopic').value.trim();
-      if (!topic) return;
+      const createBtnText = document.getElementById('createBtnText');
+      const createBtnSpinner = document.getElementById('createBtnSpinner');
+      const createBtn = event.target.querySelector('button[type="submit"]');
+      
+      if (!topic) {
+        document.getElementById('recitaTopic').focus();
+        return;
+      }
+
+      // Show loading state
+      createBtnText.textContent = 'Creating...';
+      createBtnSpinner.classList.remove('hidden');
+      createBtn.disabled = true;
 
       try {
-        const response = await fetch('/api/attendance', {
+        const response = await fetch('/attendance', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
@@ -328,11 +459,17 @@
           document.getElementById('recitaTopic').value = '';
           await loadRecitas();
         } else {
-          alert('Failed to create recita');
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
       } catch (error) {
         console.error('Error creating recita:', error);
-        alert('Error creating recita');
+        alert(`Failed to create recita: ${error.message}`);
+      } finally {
+        // Reset button state
+        createBtnText.textContent = 'Create Recita';
+        createBtnSpinner.classList.add('hidden');
+        createBtn.disabled = false;
       }
     }
 
@@ -346,13 +483,15 @@
       if (!confirm('Are you sure you want to delete this recita?')) return;
       
       try {
-        const response = await fetch(`/api/recitas/${recitaId}`, {
+        const response = await fetch(`/recitas?recitaId=${recitaId}`, {
           method: 'DELETE',
           credentials: 'same-origin'
         });
 
         if (response.ok) {
           await loadRecitas();
+        } else {
+          console.error('Failed to delete recita');
         }
       } catch (error) {
         console.error('Error deleting recita:', error);
@@ -367,7 +506,7 @@
     // Export single recita using your existing export API
     async function exportSingleRecita(recitaId) {
       try {
-        const response = await fetch(`/api/export?recitaId=${recitaId}`, {
+        const response = await fetch(`/export?recitaId=${recitaId}`, {
           credentials: 'same-origin'
         });
 
@@ -414,7 +553,7 @@
       }
 
       try {
-        const response = await fetch(`/api/export`, {
+        const response = await fetch(`/export`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
