@@ -80,6 +80,58 @@ export async function onRequestPost(context) {
   }
 }
 
+// NEW: PUT method for updating recita topics
+export async function onRequestPut(context) {
+  try {
+    const teacher = await getTeacherFromSession(context.request, context.env);
+    if (!teacher) return new Response("Unauthorized", { status: 401 });
+
+    const body = await context.request.json();
+    console.log("PUT /attendance received body:", body);
+
+    // Update recita topic
+    if (body.recitaId && body.topic) {
+      // First, verify the recita exists and belongs to teacher's class
+      const { results: recitaCheck } = await context.env.DB.prepare(`
+        SELECT rs.id, rs.class_id, rs.topic
+        FROM recita_sessions rs
+        JOIN classes c ON rs.class_id = c.id
+        WHERE rs.id = ? AND c.teacher_id = ?
+      `).bind(body.recitaId, teacher.id).all();
+
+      if (!recitaCheck.length) {
+        return new Response("Recita session not found or access denied", { status: 404 });
+      }
+
+      // Update the topic
+      await context.env.DB.prepare(
+        "UPDATE recita_sessions SET topic = ? WHERE id = ?"
+      ).bind(body.topic.trim(), body.recitaId).run();
+
+      console.log("Successfully updated recita topic:", { recitaId: body.recitaId, newTopic: body.topic });
+
+      return Response.json({ 
+        success: true,
+        id: body.recitaId,
+        topic: body.topic.trim(),
+        message: "Recita topic updated successfully"
+      });
+    }
+
+    return new Response("Bad request - missing recitaId or topic", { status: 400 });
+  } catch (error) {
+    console.error("PUT /attendance error:", error);
+    return new Response(JSON.stringify({
+      error: "Internal server error",
+      message: error.message,
+      stack: error.stack
+    }), { 
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+}
+
 export async function onRequestGet(context) {
   try {
     const url = new URL(context.request.url);
