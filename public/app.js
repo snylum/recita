@@ -1521,6 +1521,7 @@ async function loadExistingRecita(recitaId) {
 })();
 
 // Style Recita with logo (cache-busted version)
+// Style Recita with logo (cache-busted version)
 function addRecitaLogos() {
   if (document.body.dataset.recitaLogosProcessed === 'true') {
     return;
@@ -1535,11 +1536,22 @@ function addRecitaLogos() {
     }
 
     if (el.textContent.includes("Recita") && el.children.length === 0) {
-      const fontSize = window.getComputedStyle(el).fontSize;
+      const computedStyle = window.getComputedStyle(el);
+      const fontSize = computedStyle.fontSize;
+      
+      // Calculate logo size based on the cap height (uppercase letter height)
+      const fontSizeNum = parseFloat(fontSize);
+      const logoHeight = fontSizeNum * 0.75; // Size to match cap height, not full line height
       
       el.innerHTML = el.textContent.replace(
         /Recita/g,
-        `<img src="${logoUrl}" alt="Recita Logo" style="height:${fontSize}; width:auto; vertical-align:middle; margin-right:0.3em; display:inline-block;"><span style="color:#fe731f; font-weight:bold;">Recita</span>`
+        `<img src="${logoUrl}" alt="Recita Logo" style="` +
+        `height: ${logoHeight}px; ` +
+        `width: auto; ` +
+        `vertical-align: baseline; ` +
+        `margin-right: 0.2em; ` +
+        `display: inline;">` +
+        `<span style="color: #fe731f; font-weight: bold;">Recita</span>`
       );
       
       el.dataset.recitaProcessed = 'true';
@@ -1548,7 +1560,6 @@ function addRecitaLogos() {
 
   document.body.dataset.recitaLogosProcessed = 'true';
 }
-
 // Function to update all existing logo images with cache-busted version
 function updateAllLogoImages() {
   const cacheBuster = "v=" + Date.now();
