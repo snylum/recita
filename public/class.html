@@ -127,7 +127,7 @@
       }
 
       try {
-        // Get class info from the classes endpoint (since your classes.js includes student data)
+        // Get class info from the classes endpoint
         const response = await fetch('/classes', {
           credentials: 'same-origin'
         });
@@ -192,7 +192,7 @@
       }
     }
 
-    // Load recitas using your existing attendance API
+    // Load recitas using your attendance API
     async function loadRecitas() {
       const recitasList = document.getElementById('recitasList');
       
@@ -208,23 +208,21 @@
       `;
 
       try {
-        // Use your attendance API to get recita sessions
         const response = await fetch(`/attendance?action=getRecitas&classId=${currentClassId}`, {
           credentials: 'same-origin'
         });
         
         if (response.ok) {
           const data = await response.json();
-          recitas = data || [];
+          recitas = Array.isArray(data) ? data : [];
+          console.log('Loaded recitas:', recitas);
         } else {
-          // If the API doesn't support getRecitas yet, show empty state
-          console.log('Recitas API not available yet');
+          console.log('Error loading recitas:', response.status, response.statusText);
           recitas = [];
         }
         renderRecitas();
       } catch (error) {
         console.error('Error loading recitas:', error);
-        // If the API doesn't support getRecitas yet, show empty state
         recitas = [];
         renderRecitas();
       }
@@ -379,7 +377,7 @@
       }
     }
 
-    // Update student name using your individual student API
+    // Update student name
     async function updateStudentName(studentId, newName) {
       if (!newName.trim()) return;
       
@@ -405,7 +403,7 @@
       }
     }
 
-    // Delete student using your individual student API
+    // Delete student
     async function deleteStudent(studentId) {
       if (!confirm('Are you sure you want to delete this student?')) return;
       
@@ -425,7 +423,7 @@
       }
     }
 
-    // Create recita using your existing attendance API
+    // Create recita using your attendance API
     async function createRecita(event) {
       event.preventDefault();
       
@@ -456,6 +454,8 @@
         });
 
         if (response.ok) {
+          const result = await response.json();
+          console.log('Recita created:', result);
           document.getElementById('recitaTopic').value = '';
           await loadRecitas();
         } else {
@@ -478,23 +478,27 @@
       window.location.href = `recita.html?id=${recitaId}`;
     }
 
-    // Delete recita using your individual recita API
+    // Delete recita using your attendance API DELETE method
     async function deleteRecita(recitaId) {
-      if (!confirm('Are you sure you want to delete this recita?')) return;
+      if (!confirm('Are you sure you want to delete this recita? This will also delete all attendance records for this session.')) return;
       
       try {
-        const response = await fetch(`/recitas?recitaId=${recitaId}`, {
+        const response = await fetch(`/attendance?recitaId=${recitaId}`, {
           method: 'DELETE',
           credentials: 'same-origin'
         });
 
         if (response.ok) {
+          console.log('Recita deleted successfully');
           await loadRecitas();
         } else {
-          console.error('Failed to delete recita');
+          const errorText = await response.text();
+          console.error('Failed to delete recita:', errorText);
+          alert(`Failed to delete recita: ${errorText}`);
         }
       } catch (error) {
         console.error('Error deleting recita:', error);
+        alert('Error deleting recita');
       }
     }
 
@@ -503,7 +507,7 @@
       window.location.href = `recita.html?id=${recitaId}`;
     }
 
-    // Export single recita using your existing export API
+    // Export single recita
     async function exportSingleRecita(recitaId) {
       try {
         const response = await fetch(`/export?recitaId=${recitaId}`, {
@@ -528,6 +532,9 @@
           link.click();
           document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
+        } else {
+          console.error('Export failed:', response.status);
+          alert('Export failed');
         }
       } catch (error) {
         console.error('Export error:', error);
@@ -542,7 +549,7 @@
       exportBtn.disabled = checkboxes.length === 0;
     }
 
-    // Export selected recitas using your updated export API
+    // Export selected recitas
     async function exportSelectedRecitas() {
       const checkboxes = document.querySelectorAll('.recita-checkbox:checked');
       const selectedIds = Array.from(checkboxes).map(cb => cb.value);
@@ -570,6 +577,9 @@
           link.click();
           document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
+        } else {
+          console.error('Export failed:', response.status);
+          alert('Export failed');
         }
       } catch (error) {
         console.error('Export error:', error);
