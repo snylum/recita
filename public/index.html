@@ -150,9 +150,9 @@
             <li>Access your data from any device</li>
           </ul>
           <div style="text-align: center; margin-top: 20px;">
-            <button type="button" id="showSignupBtn" style="width: auto; display: inline-block; margin: 0; padding: 12px 24px; background: #2563eb; font-size: 15px; min-height: 44px;">
-              🚀 Get Started
-            </button>
+<button type="button" id="getStartedBtn" style="width: auto; display: inline-block; margin: 0; padding: 12px 24px; background: #2563eb; font-size: 15px; min-height: 44px;">
+  🚀 Get Started
+</button>
           </div>
         </div>
       </div>
@@ -207,6 +207,14 @@
       const showLoginBtn2 = document.getElementById('showLoginBtn2');
       const loginSection = document.getElementById('loginSection');
       const signupSection = document.getElementById('signupSection');
+
+const getStartedBtn = document.getElementById('getStartedBtn'); // Add this line
+// Add new handler for "Get Started" button
+getStartedBtn.addEventListener('click', () => {
+  loginModal.style.display = 'flex';
+  loginSection.style.display = 'none';
+  signupSection.style.display = 'block';
+});
       
       // Show login modal
       showLoginBtn.addEventListener('click', () => {
