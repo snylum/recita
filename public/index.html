@@ -5,569 +5,154 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Recita - Take Recitations</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    /* Reset and Base Styles */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background-color: #f8fafc;
-      color: #1e293b;
-      line-height: 1.6;
-      padding: 20px;
-    }
-
-    /* Container */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    /* Header Styles */
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .header h1 {
-      color: #1e40af;
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 15px;
-    }
-
-    /* Button Styles */
-    .btn {
-      display: inline-block;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      text-align: center;
-      min-height: 48px;
-      line-height: 1.2;
-    }
-
-    .btn-primary {
-      background: #3b82f6;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #2563eb;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-
-    .btn-success {
-      background: #10b981;
-      color: white;
-    }
-
-    .btn-success:hover {
-      background: #059669;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-
-    .btn-purple {
-      background: #8b5cf6;
-      color: white;
-    }
-
-    .btn-purple:hover {
-      background: #7c3aed;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-    }
-
-    .btn-danger {
-      background: #ef4444;
-      color: white;
-    }
-
-    .btn-danger:hover {
-      background: #dc2626;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-    }
-
-    .btn-secondary {
-      background: #6b7280;
-      color: white;
-    }
-
-    .btn-secondary:hover {
-      background: #4b5563;
-    }
-
-    .btn-link {
-      background: none;
-      border: none;
-      color: #4f46e5;
-      text-decoration: underline;
-      padding: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .btn-link:hover {
-      color: #3730a3;
-    }
-
-    /* Card Styles */
-    .card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-    }
-
-    .card-body {
-      padding: 30px;
-    }
-
-    /* Two Column Layout */
+    /* Mobile-first responsive styles */
     .two-column-layout {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 30px;
+      gap: 20px;
       align-items: start;
     }
-
+    
+    /* Desktop and tablet layouts */
     @media (min-width: 768px) {
       .two-column-layout {
         grid-template-columns: 2fr 1fr;
+        gap: 30px;
       }
     }
-
-    /* Form Styles */
-    .form-group {
-      margin-bottom: 25px;
-    }
-
-    .form-label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #374151;
-      font-size: 14px;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 12px 16px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 16px;
-      transition: all 0.2s ease;
-      background: white;
-    }
-
-    .form-control:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .form-control::placeholder {
-      color: #9ca3af;
-    }
-
-    textarea.form-control {
-      resize: vertical;
-      font-family: 'Courier New', monospace;
-      line-height: 1.4;
-      min-height: 140px;
-    }
-
-    /* Status Box */
-    .status-box {
-      background: #f0f9ff;
-      border: 1px solid #7dd3fc;
-      border-left: 4px solid #0ea5e9;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
-    }
-
-    .status-box.success {
-      background: #f0fdf4;
-      border-color: #86efac;
-      border-left-color: #22c55e;
-    }
-
-    .status-title {
-      font-weight: 600;
-      color: #1e293b;
-      margin-bottom: 4px;
-    }
-
-    .status-content {
-      color: #475569;
-    }
-
-    .status-date {
-      font-size: 14px;
-      color: #64748b;
-      margin-top: 4px;
-    }
-
-    /* Called Students Section */
-    .called-students-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-
-    .called-students-list {
-      min-height: 80px;
-      padding: 20px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-    }
-
-    .empty-state {
-      color: #64748b;
-      font-style: italic;
-      text-align: center;
-      margin: 0;
-    }
-
-    /* Feature Box */
-    .feature-box {
-      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-      border: 1px solid #93c5fd;
-      border-radius: 12px;
-      padding: 30px;
-    }
-
-    .feature-box h3 {
-      color: #1e40af;
-      margin-bottom: 20px;
-      font-size: 1.25rem;
-      font-weight: 600;
-    }
-
-    .feature-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .feature-list li {
-      color: #1e40af;
-      margin-bottom: 12px;
-      padding-left: 20px;
-      position: relative;
-      line-height: 1.5;
-    }
-
-    .feature-list li:before {
-      content: "✓";
-      position: absolute;
-      left: 0;
-      color: #059669;
-      font-weight: bold;
-    }
-
-    /* Modal Styles */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 400px;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 24px 24px 0;
-      margin-bottom: 24px;
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      color: #1e293b;
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
-
-    .modal-close {
-      width: 32px;
-      height: 32px;
-      border: 1px solid #d1d5db;
-      background: #f9fafb;
-      color: #6b7280;
-      border-radius: 6px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      line-height: 1;
-    }
-
-    .modal-close:hover {
-      background: #e5e7eb;
-    }
-
-    .modal-body {
-      padding: 0 24px 24px;
-    }
-
-    .form-section {
-      margin-bottom: 20px;
-    }
-
-    .form-text {
-      text-align: center;
-      font-size: 14px;
-      color: #6b7280;
-      margin: 16px 0 0;
-    }
-
-    /* Action Buttons */
-    .action-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 30px;
-      flex-wrap: wrap;
-    }
-
-    /* Welcome Section */
-    .welcome-section {
-      margin-bottom: 30px;
-    }
-
-    .welcome-section h2 {
-      color: #1e40af;
-      font-size: 2rem;
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
-
-    .welcome-section p {
-      color: #64748b;
-      font-size: 1.1rem;
-      line-height: 1.6;
-    }
-
-    /* Mobile Responsive */
+    
+    /* Ensure buttons and inputs are mobile-friendly */
     @media (max-width: 767px) {
       body {
-        padding: 15px;
-      }
-      
-      .header {
-        padding: 20px;
-      }
-      
-      .header h1 {
-        font-size: 2rem;
-      }
-      
-      .card-body {
-        padding: 20px;
-      }
-      
-      .feature-box {
-        padding: 20px;
-        margin-bottom: 20px;
+        padding: 10px;
       }
       
       .modal-content {
-        margin: 0;
+        width: 90% !important;
+        max-width: 350px;
+        margin: 20px;
       }
       
-      .modal-header, .modal-body {
-        padding-left: 20px;
-        padding-right: 20px;
+      input, textarea, button {
+        font-size: 16px; /* Prevents zoom on iOS */
       }
       
-      textarea.form-control {
-        min-height: 120px;
+      #guestStudentList {
+        height: 120px !important;
       }
       
-      .called-students-header {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      .action-buttons {
-        flex-direction: column;
-      }
-      
-      .btn {
-        width: 100%;
+      .feature-box {
+        margin-bottom: 20px;
       }
     }
-
-    /* Hide elements */
-    .hidden {
-      display: none !important;
+    
+    .feature-box {
+      background: #dbeafe; 
+      border: 1px solid #93c5fd; 
+      border-radius: 8px; 
+      padding: 20px;
     }
-
-    /* Utility Classes */
-    .text-center {
-      text-align: center;
-    }
-
-    .mt-4 {
-      margin-top: 20px;
-    }
-
-    .mb-0 {
-      margin-bottom: 0;
-    }
-
-    /* Button Size Variants */
-    .btn-sm {
-      padding: 8px 16px;
-      font-size: 14px;
-      min-height: 36px;
-    }
-
-    .btn-lg {
-      padding: 16px 32px;
-      font-size: 18px;
-      min-height: 52px;
+    
+    @media (min-width: 768px) {
+      .feature-box {
+        padding: 25px;
+      }
     }
   </style>
 </head>
 <body>
   <!-- Header -->
-  <div class="container">
-    <div class="header">
-      <h1>Recita</h1>
-      <button id="showLoginBtn" class="btn btn-primary">
-        Login / Sign Up
-      </button>
-    </div>
+  <div style="text-align: center; margin-bottom: 20px;">
+    <h1 style="color: #2c3e50; margin-bottom: 10px;">Recita</h1>
+    <button id="showLoginBtn" style="width: auto; display: inline-block; margin: 0; padding: 8px 16px;">
+      Login / Sign Up
+    </button>
+  </div>
 
-    <!-- Main Guest Mode Interface -->
-    <div id="app">
-      <div id="guestRecita">
-        <div class="card">
-          <div class="card-body">
-            <!-- Welcome Section -->
-            <div class="welcome-section">
-              <h2>Try Recita Free!</h2>
-              <p>The only tool you need to monitor, grade, and take recitations!</p>
-            </div>
+  <!-- Main Guest Mode Interface -->
+  <div id="app">
+    <div id="guestRecita">
+      <!-- Welcome Section -->
+      <h2>Try Recita Free!</h2>
+      <p style="margin-bottom: 25px; color: #666; line-height: 1.5;">The only tool you need to monitor, grade, and take recitations!</p>
+      
+      <!-- Two Column Layout (responsive) -->
+      <div class="two-column-layout">
+        
+        <!-- Left Column: Main Functionality -->
+        <div>
+          <!-- Topic Input -->
+          <div style="margin-bottom: 25px;">
+            <label for="guestTopic" style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">
+              Topic for today's recitation:
+            </label>
+            <input 
+              type="text" 
+              id="guestTopic" 
+              placeholder="e.g., Chapter 5: Photosynthesis"
+              style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
             
-            <!-- Two Column Layout (responsive) -->
-            <div class="two-column-layout">
-              
-              <!-- Left Column: Main Functionality -->
-              <div>
-                <!-- Topic Input -->
-                <div class="form-group">
-                  <label for="guestTopic" class="form-label">
-                    Topic for today's recitation:
-                  </label>
-                  <input 
-                    type="text" 
-                    id="guestTopic" 
-                    class="form-control"
-                    placeholder="e.g., Chapter 5: Photosynthesis">
-                  
-                  <div id="guestTopicStatus" class="status-box success hidden">
-                    <div class="status-title">Current Topic:</div>
-                    <div id="guestTopicDisplay" class="status-content"></div>
-                    <div id="guestDateDisplay" class="status-date"></div>
-                  </div>
-                </div>
-
-                <!-- Student Input -->
-                <div class="form-group">
-                  <label for="guestStudentList" class="form-label">
-                    Paste student names here (one per line):
-                  </label>
-                  <textarea 
-                    id="guestStudentList" 
-                    class="form-control"
-                    placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;Alex Thompson&#10;Emma Davis&#10;..."></textarea>
-                </div>
-                
-                <!-- Pick Button -->
-                <button id="guestPickBtn" class="btn btn-success btn-lg" style="width: 100%; margin-bottom: 30px;">
-                  🎲 Pick Random Student
-                </button>
-
-                <!-- Called Students Section -->
-                <div>
-                  <div class="called-students-header">
-                    <h3 class="mb-0">Called Students</h3>
-                    <button class="guestSaveBtn btn btn-purple btn-sm">
-                      💾 Save Data / Export CSV
-                    </button>
-                  </div>
-                  <div id="guestCalledStudents" class="called-students-list">
-                    <p class="empty-state">No students called yet</p>
-                  </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="action-buttons">
-                  <button id="guestClearBtn" class="btn btn-danger">
-                    🗑️ Clear All Data
-                  </button>
-                </div>
-              </div>
-
-              <!-- Right Column: Features Info -->
-              <div class="feature-box">
-                <h3>Why Create an Account?</h3>
-                <ul class="feature-list">
-                  <li>Save your class rosters permanently</li>
-                  <li>Export attendance data to CSV</li>
-                  <li>Track student participation over time</li>
-                  <li>Create multiple classes</li>
-                  <li>Access your data from any device</li>
-                </ul>
-                <div class="text-center mt-4">
-                  <button class="guestSaveBtn btn btn-primary btn-lg">
-                    🚀 Get Started
-                  </button>
-                </div>
-              </div>
+            <div id="guestTopicStatus" style="display: none; background: #e8f5e8; padding: 10px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #22c55e;">
+              <div style="font-weight: bold; color: #2c3e50;">Current Topic:</div>
+              <div id="guestTopicDisplay" style="color: #2c3e50;"></div>
+              <div id="guestDateDisplay" style="font-size: 0.9em; color: #666; margin-top: 5px;"></div>
             </div>
+          </div>
+
+          <!-- Student Input -->
+          <div style="margin-bottom: 25px;">
+            <label for="guestStudentList" style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+              Paste student names here (one per line):
+            </label>
+<textarea id="guestStudentList" style="width: 100%; height: 140px; resize: vertical; font-family: monospace; line-height: 1.4; padding: 12px; box-sizing: border-box;" placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;Alex Thompson&#10;Emma Davis&#10;..."></textarea>
+          </div>
+          
+          <!-- Pick Button -->
+          <button id="guestPickBtn" style="background: #10b981; font-size: 16px; padding: 12px; margin-bottom: 30px; width: 100%; min-height: 48px;">
+            🎲 Pick Random Student
+          </button>
+
+          <!-- Called Students Section -->
+          <div style="margin-top: 35px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+              <h3 style="margin: 0;">Called Students</h3>
+              <button 
+                class="guestSaveBtn" 
+                style="width: auto; display: inline-block; margin: 0; padding: 10px 16px; background: #8b5cf6; font-size: 14px; min-height: 40px;">
+                💾 Save Data / Export CSV
+              </button>
+            </div>
+            <div id="guestCalledStudents" style="min-height: 60px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+              <p style="color: #888; font-style: italic; margin: 0; text-align: center;">No students called yet</p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px; flex-wrap: wrap;">
+            <button 
+              id="guestClearBtn" 
+              style="width: auto; display: inline-block; margin: 0; padding: 10px 20px; background: #ef4444; font-size: 14px; min-height: 40px;">
+              🗑️ Clear All Data
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Column: Features Info (becomes second row on mobile) -->
+        <div class="feature-box">
+          <h3 style="color: #1e40af; margin-top: 0; margin-bottom: 15px;">Why Create an Account?</h3>
+          <ul style="color: #1e40af; margin: 15px 0; padding-left: 25px; line-height: 1.6;">
+            <li style="margin-bottom: 8px;">Save your class rosters permanently</li>
+            <li style="margin-bottom: 8px;">Export attendance data to CSV</li>
+            <li style="margin-bottom: 8px;">Track student participation over time</li>
+            <li style="margin-bottom: 8px;">Create multiple classes</li>
+            <li>Access your data from any device</li>
+          </ul>
+          <div style="text-align: center; margin-top: 20px;">
+            <button class="guestSaveBtn" style="width: auto; display: inline-block; margin: 0; padding: 12px 24px; background: #2563eb; font-size: 15px; min-height: 44px;">
+              🚀 Get Started
+            </button>
           </div>
         </div>
       </div>
@@ -575,94 +160,45 @@
   </div>
 
   <!-- Login Modal (Hidden by default) -->
-  <div id="loginModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Welcome, teacher!</h2>
-        <button id="closeLoginModal" class="modal-close">×</button>
+  <div id="loginModal" class="modal" style="display: none;">
+    <div class="modal-content" style="width: 350px; max-width: 90vw; margin: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">Welcome, teacher!</h2>
+        <button id="closeLoginModal" style="width: 30px; height: 30px; margin: 0; padding: 0; background: #f3f4f6; color: #666; border: 1px solid #d1d5db;">×</button>
       </div>
       
-      <div class="modal-body">
-        <!-- Login Form -->
-        <div id="loginSection" class="form-section">
-          <form id="loginForm">
-            <div class="form-group">
-              <input id="email" type="email" class="form-control" placeholder="Email" required>
-            </div>
-            <div class="form-group">
-              <input id="password" type="password" class="form-control" placeholder="Password" required>
-            </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
-          </form>
-          <p class="form-text">
-            New here? 
-            <button type="button" id="showSignupBtn" class="btn-link">Create Account</button>
-          </p>
-        </div>
+      <!-- Login Form -->
+      <div id="loginSection">
+        <form id="loginForm" style="margin-bottom: 15px;">
+          <input id="email" type="email" placeholder="Email" required style="min-height: 44px;">
+          <input id="password" type="password" placeholder="Password" required style="min-height: 44px;">
+          <button type="submit" style="min-height: 44px;">Login</button>
+        </form>
+        <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
+          New here? 
+          <button type="button" id="showSignupBtn" style="background: none; border: none; color: #4f46e5; text-decoration: underline; padding: 4px; width: auto; display: inline; cursor: pointer; min-height: auto;">Create Account</button>
+        </p>
+      </div>
 
-        <!-- Signup Form (Hidden by default) -->
-        <div id="signupSection" class="form-section hidden">
-          <form id="signupForm">
-            <div class="form-group">
-              <input id="signupName" type="text" class="form-control" placeholder="Full Name" required>
-            </div>
-            <div class="form-group">
-              <input id="signupEmail" type="email" class="form-control" placeholder="Email" required>
-            </div>
-            <div class="form-group">
-              <input id="signupPassword" type="password" class="form-control" placeholder="Password" required>
-            </div>
-            <button type="submit" class="btn btn-success" style="width: 100%;">Create Account</button>
-          </form>
-          <p class="form-text">
-            Already have an account? 
-            <button type="button" id="showLoginBtn2" class="btn-link">Login</button>
-          </p>
-        </div>
+      <!-- Signup Form (Hidden by default) -->
+      <div id="signupSection" style="display: none;">
+        <form id="signupForm" style="margin-bottom: 15px;">
+          <input id="signupName" type="text" placeholder="Full Name" required style="min-height: 44px;">
+          <input id="signupEmail" type="email" placeholder="Email" required style="min-height: 44px;">
+          <input id="signupPassword" type="password" placeholder="Password" required style="min-height: 44px;">
+          <button type="submit" style="background: #10b981; min-height: 44px;">Create Account</button>
+        </form>
+        <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
+          Already have an account? 
+          <button type="button" id="showLoginBtn2" style="background: none; border: none; color: #4f46e5; text-decoration: underline; padding: 4px; width: auto; display: inline; cursor: pointer; min-height: auto;">Login</button>
+        </p>
       </div>
     </div>
   </div>
 
   <script src="app.js"></script>
   <script>
-    // Guest mode data storage
-    let guestData = {
-      topic: '',
-      date: '',
-      students: [],
-      calledStudents: []
-    };
-
-    // API fetch function (fallback for guest mode)
-    window.apiFetch = window.apiFetch || function(url, options) {
-      // Mock API for guest mode
-      return Promise.resolve({ success: true });
-    };
-
-    // Utility functions
-    function shuffleArray(array) {
-      const shuffled = [...array];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      return shuffled;
-    }
-
-    function downloadCSV(data, filename) {
-      const csv = data.map(row => row.map(field => `"${field}"`).join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    }
-
-    // Modal controls and main functionality
+    // Modal controls
     document.addEventListener('DOMContentLoaded', () => {
       const loginModal = document.getElementById('loginModal');
       const showLoginBtn = document.getElementById('showLoginBtn');
@@ -672,22 +208,11 @@
       const loginSection = document.getElementById('loginSection');
       const signupSection = document.getElementById('signupSection');
       
-      // Guest mode elements
-      const guestTopic = document.getElementById('guestTopic');
-      const guestTopicStatus = document.getElementById('guestTopicStatus');
-      const guestTopicDisplay = document.getElementById('guestTopicDisplay');
-      const guestDateDisplay = document.getElementById('guestDateDisplay');
-      const guestStudentList = document.getElementById('guestStudentList');
-      const guestPickBtn = document.getElementById('guestPickBtn');
-      const guestCalledStudents = document.getElementById('guestCalledStudents');
-      const guestClearBtn = document.getElementById('guestClearBtn');
-      const guestSaveBtns = document.querySelectorAll('.guestSaveBtn');
-      
       // Show login modal
       showLoginBtn.addEventListener('click', () => {
         loginModal.style.display = 'flex';
-        loginSection.classList.remove('hidden');
-        signupSection.classList.add('hidden');
+        loginSection.style.display = 'block';
+        signupSection.style.display = 'none';
       });
       
       // Close modal
@@ -704,17 +229,17 @@
       
       // Switch to signup
       showSignupBtn.addEventListener('click', () => {
-        loginSection.classList.add('hidden');
-        signupSection.classList.remove('hidden');
+        loginSection.style.display = 'none';
+        signupSection.style.display = 'block';
       });
       
       // Switch to login
       showLoginBtn2.addEventListener('click', () => {
-        signupSection.classList.add('hidden');
-        loginSection.classList.remove('hidden');
+        signupSection.style.display = 'none';
+        loginSection.style.display = 'block';
       });
 
-      // Setup signup form handler
+      // Setup signup form handler with proper field names
       const signupForm = document.getElementById('signupForm');
       if (signupForm) {
         signupForm.addEventListener('submit', async (e) => {
@@ -738,6 +263,7 @@
             if (fromExport === 'true') {
               localStorage.removeItem('pendingExport');
               loginModal.style.display = 'none';
+              // The app.js will handle showing the export modal
             } else {
               window.location.href = "dashboard.html";
             }
@@ -748,170 +274,16 @@
         });
       }
 
-      // Setup login form handler
-      const loginForm = document.getElementById('loginForm');
-      if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const email = document.getElementById('email').value;
-          const password = document.getElementById('password').value;
-          
-          try {
-            const result = await apiFetch("/auth/login", {
-              method: "POST",
-              body: JSON.stringify({ email, password }),
-            });
-            
-            console.log('Login successful:', result);
-            window.location.href = "dashboard.html";
-          } catch (err) {
-            console.error('Login error:', err);
-            alert("Login failed: " + err.message);
-          }
+      // Add hover effects with JavaScript since CSS can't target dynamic buttons
+      const pickBtn = document.getElementById('guestPickBtn');
+      if (pickBtn) {
+        pickBtn.addEventListener('mouseenter', () => {
+          pickBtn.style.background = '#059669';
+        });
+        pickBtn.addEventListener('mouseleave', () => {
+          pickBtn.style.background = '#10b981';
         });
       }
-
-      // Topic input handler
-      if (guestTopic) {
-        guestTopic.addEventListener('input', (e) => {
-          const topic = e.target.value.trim();
-          if (topic) {
-            guestData.topic = topic;
-            guestData.date = new Date().toLocaleDateString();
-            guestTopicDisplay.textContent = topic;
-            guestDateDisplay.textContent = guestData.date;
-            guestTopicStatus.classList.remove('hidden');
-          } else {
-            guestTopicStatus.classList.add('hidden');
-            guestData.topic = '';
-            guestData.date = '';
-          }
-        });
-      }
-
-      // Pick random student button
-      if (guestPickBtn) {
-        guestPickBtn.addEventListener('click', () => {
-          const studentText = guestStudentList.value.trim();
-          if (!studentText) {
-            alert('Please enter student names first!');
-            return;
-          }
-
-          // Parse students from textarea
-          guestData.students = studentText
-            .split('\n')
-            .map(name => name.trim())
-            .filter(name => name.length > 0);
-
-          if (guestData.students.length === 0) {
-            alert('Please enter at least one student name!');
-            return;
-          }
-
-          // Get students not yet called
-          const availableStudents = guestData.students.filter(
-            student => !guestData.calledStudents.some(called => called.name === student)
-          );
-
-          if (availableStudents.length === 0) {
-            if (confirm('All students have been called! Reset the list?')) {
-              guestData.calledStudents = [];
-              updateCalledStudentsList();
-              return;
-            }
-            return;
-          }
-
-          // Pick random student
-          const randomIndex = Math.floor(Math.random() * availableStudents.length);
-          const selectedStudent = availableStudents[randomIndex];
-          
-          // Add to called students
-          guestData.calledStudents.push({
-            name: selectedStudent,
-            time: new Date().toLocaleTimeString(),
-            topic: guestData.topic || 'No topic set'
-          });
-
-          updateCalledStudentsList();
-          
-          // Show animation or highlight
-          guestPickBtn.style.transform = 'scale(0.95)';
-          setTimeout(() => {
-            guestPickBtn.style.transform = 'scale(1)';
-          }, 150);
-        });
-      }
-
-      // Clear all data button
-      if (guestClearBtn) {
-        guestClearBtn.addEventListener('click', () => {
-          if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
-            guestData = {
-              topic: '',
-              date: '',
-              students: [],
-              calledStudents: []
-            };
-            
-            guestTopic.value = '';
-            guestStudentList.value = '';
-            guestTopicStatus.classList.add('hidden');
-            updateCalledStudentsList();
-          }
-        });
-      }
-
-      // Save/Export buttons
-      guestSaveBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (guestData.calledStudents.length === 0) {
-            // If no data, show signup modal
-            loginModal.style.display = 'flex';
-            loginSection.classList.add('hidden');
-            signupSection.classList.remove('hidden');
-            localStorage.setItem('pendingExport', 'true');
-          } else {
-            // Export CSV
-            const csvData = [
-              ['Student Name', 'Time Called', 'Topic', 'Date'],
-              ...guestData.calledStudents.map(student => [
-                student.name,
-                student.time,
-                student.topic,
-                guestData.date || new Date().toLocaleDateString()
-              ])
-            ];
-            
-            const filename = `recitation-${guestData.date || 'data'}.csv`;
-            downloadCSV(csvData, filename);
-          }
-        });
-      });
-
-      // Function to update called students display
-      function updateCalledStudentsList() {
-        if (guestData.calledStudents.length === 0) {
-          guestCalledStudents.innerHTML = '<p class="empty-state">No students called yet</p>';
-          return;
-        }
-
-        const html = guestData.calledStudents.map((student, index) => `
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 6px; margin-bottom: 8px; border-left: 4px solid #3b82f6;">
-            <div>
-              <strong style="color: #1e293b;">${student.name}</strong>
-              <div style="font-size: 12px; color: #64748b;">Called at ${student.time}</div>
-            </div>
-            <div style="font-size: 14px; color: #6b7280;">#${index + 1}</div>
-          </div>
-        `).join('');
-
-        guestCalledStudents.innerHTML = html;
-      }
-
-      // Initialize
-      updateCalledStudentsList();
     });
   </script>
 </body>
