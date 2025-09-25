@@ -1,8 +1,3 @@
-/* ==========================================================================
-   RECITA - UNIFIED STYLESHEET (Based on recita.html styling approach)
-   ========================================================================== */
-
-/* Base Styling - Following recita.html approach */
 body {
   font-family: Arial, sans-serif;
   background: #f9fafb;
@@ -24,7 +19,6 @@ h2, h3 {
   color: #2c3e50;
 }
 
-/* Form Elements - recita.html style */
 input, button {
   display: block;
   margin: 8px 0;
@@ -44,42 +38,6 @@ button {
 button:hover {
   background: #4338ca;
 }
-
-/* Navigation - Simple styling for other pages */
-nav {
-  background: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0;
-}
-
-nav h1 {
-  color: #2c3e50;
-  margin: 0;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-nav button {
-  background: #6b7280;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  width: auto;
-  margin: 0;
-}
-
-nav button:hover {
-  background: #4b5563;
-}
-
-/* ==========================================================================
-   MODAL SYSTEM - EXACTLY FROM RECITA STYLE
-   ========================================================================== */
 
 /* MODAL SYSTEM - ALL MODALS WORK THE SAME WAY */
 .modal {
@@ -194,123 +152,4 @@ nav button:hover {
   pointer-events: auto !important;
   cursor: pointer !important;
   position: relative !important;
-}
-
-/* ==========================================================================
-   MINIMAL ADDITIONS FOR OTHER PAGES FUNCTIONALITY
-   ========================================================================== */
-
-/* Basic layout support for dashboard and class pages */
-main {
-  padding: 24px;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-/* Simple card styling */
-.card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  padding: 24px;
-  margin-bottom: 24px;
-}
-
-/* Basic grid for class management */
-.main-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-}
-
-/* Simple list styling */
-.list-container {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.student-item, .recita-item {
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Basic button variants - minimal */
-.btn-success {
-  background: #10b981;
-}
-
-.btn-success:hover {
-  background: #059669;
-}
-
-.btn-red {
-  background: #ef4444;
-}
-
-.btn-red:hover {
-  background: #dc2626;
-}
-
-.btn-gray {
-  background: #6b7280;
-}
-
-.btn-gray:hover {
-  background: #4b5563;
-}
-
-/* Loading spinner */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #e5e7eb;
-  border-top: 2px solid #4f46e5;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* ==========================================================================
-   RESPONSIVE - MOBILE FIRST FROM RECITA.HTML
-   ========================================================================== */
-
-/* Mobile adjustments */
-@media (max-width: 767px) {
-  body {
-    padding: 10px;
-  }
-  
-  .modal-content {
-    width: 90% !important;
-    max-width: 350px;
-    margin: 20px;
-  }
-  
-  input, textarea, button {
-    font-size: 16px; /* Prevents zoom on iOS */
-  }
-  
-  .main-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Desktop adjustments */
-@media (min-width: 768px) {
-  body {
-    padding: 0;
-  }
-  
-  .main-grid {
-    grid-template-columns: 1fr 1fr;
-  }
 }
