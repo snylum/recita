@@ -5,193 +5,673 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Recita - Take Recitations</title>
-  <link rel="stylesheet" href="style.css">
   <style>
-    /* Mobile-first responsive styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f8fafc;
+      min-height: 100vh;
+      color: #334155;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      color: #2c3e50;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .login-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .login-btn:hover:not(:disabled) {
+      background: #2563eb;
+    }
+
+    /* Main Content */
+    main {
+      flex: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+      width: 100%;
+    }
+
+    /* Welcome Section */
+    .welcome-section {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .welcome-section h2 {
+      color: #2c3e50;
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .welcome-section p {
+      color: #666;
+      font-size: 18px;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Two Column Layout */
     .two-column-layout {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 20px;
+      gap: 30px;
       align-items: start;
+      max-width: 1200px;
+      margin: 0 auto;
     }
-    
-    /* Desktop and tablet layouts */
+
     @media (min-width: 768px) {
       .two-column-layout {
         grid-template-columns: 2fr 1fr;
-        gap: 30px;
+        gap: 40px;
       }
     }
-    
-    /* Ensure buttons and inputs are mobile-friendly */
+
+    /* Main Functionality Card */
+    .main-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 32px;
+      border: 1px solid #e5e7eb;
+    }
+
+    /* Form Groups */
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-group textarea {
+      font-family: monospace;
+      line-height: 1.4;
+      resize: vertical;
+      height: 140px;
+    }
+
+    /* Topic Status */
+    #guestTopicStatus {
+      display: none;
+      background: #ecfdf5;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 12px;
+      border-left: 4px solid #22c55e;
+    }
+
+    #guestTopicStatus .topic-label {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    #guestTopicStatus .topic-value {
+      color: #2c3e50;
+      margin-top: 4px;
+    }
+
+    #guestTopicStatus .topic-date {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      min-height: 48px;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #10b981;
+      color: white;
+      width: 100%;
+      font-size: 16px;
+      margin-bottom: 32px;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #059669;
+    }
+
+    .btn-secondary {
+      background: #8b5cf6;
+      color: white;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #7c3aed;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #dc2626;
+    }
+
+    .btn-blue {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-blue:hover:not(:disabled) {
+      background: #1d4ed8;
+    }
+
+    /* Called Students Section */
+    .called-students-section {
+      margin-top: 32px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .section-header h3 {
+      margin: 0;
+      color: #1f2937;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .called-students-container {
+      min-height: 80px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+
+    .called-students-container.empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .action-buttons .btn {
+      width: auto;
+      min-width: 140px;
+    }
+
+    /* Feature Box */
+    .feature-box {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 32px;
+      border: 1px solid #e5e7eb;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    }
+
+    .feature-box h3 {
+      color: #1e40af;
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .feature-box ul {
+      color: #1e40af;
+      margin: 20px 0;
+      padding-left: 24px;
+      line-height: 1.8;
+    }
+
+    .feature-box li {
+      margin-bottom: 8px;
+    }
+
+    .feature-box .cta-section {
+      text-align: center;
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      margin: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      animation: modalSlideIn 0.2s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        transform: scale(0.95) translateY(-10px);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal h2 {
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+      color: #6b7280;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .modal input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .modal input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .auth-switch {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-top: 16px;
+    }
+
+    .auth-switch button {
+      background: none;
+      border: none;
+      color: #4f46e5;
+      text-decoration: underline;
+      padding: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .auth-switch button:hover {
+      color: #3730a3;
+    }
+
+    /* Mobile Optimizations */
     @media (max-width: 767px) {
-      body {
-        padding: 10px;
+      .header-container {
+        padding: 12px 16px;
       }
-      
+
+      main {
+        padding: 16px;
+      }
+
+      .welcome-section h2 {
+        font-size: 24px;
+      }
+
+      .welcome-section p {
+        font-size: 16px;
+      }
+
+      .main-card,
+      .feature-box {
+        padding: 24px;
+      }
+
       .modal-content {
-        width: 90% !important;
+        margin: 16px;
         max-width: 350px;
-        margin: 20px;
       }
-      
+
+      .section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+
+      .action-buttons .btn {
+        width: 100%;
+      }
+
       input, textarea, button {
         font-size: 16px; /* Prevents zoom on iOS */
       }
-      
-      #guestStudentList {
-        height: 120px !important;
-      }
-      
-      .feature-box {
-        margin-bottom: 20px;
-      }
     }
-    
-    .feature-box {
-      background: #dbeafe; 
-      border: 1px solid #93c5fd; 
-      border-radius: 8px; 
-      padding: 20px;
+
+    /* Focus states for accessibility */
+    .btn:focus-visible {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
     }
-    
-    @media (min-width: 768px) {
-      .feature-box {
-        padding: 25px;
-      }
+
+    /* Loading states */
+    .btn-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
   <!-- Header -->
-  <div style="text-align: center; margin-bottom: 20px;">
-    <h1 style="color: #2c3e50; margin-bottom: 10px;">Recita</h1>
-    <button id="showLoginBtn" style="width: auto; display: inline-block; margin: 0; padding: 8px 16px;">
-      Login / Sign Up
-    </button>
-  </div>
+  <header>
+    <div class="header-container">
+      <h1>Recita</h1>
+      <nav class="header-nav">
+        <button id="showLoginBtn" class="login-btn">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m4 4H3"></path>
+          </svg>
+          Login / Sign Up
+        </button>
+      </nav>
+    </div>
+  </header>
 
-  <!-- Main Guest Mode Interface -->
-  <div id="app">
-    <div id="guestRecita">
-      <!-- Welcome Section -->
+  <!-- Main Content -->
+  <main>
+    <!-- Welcome Section -->
+    <div class="welcome-section">
       <h2>Try Recita Free!</h2>
-      <p style="margin-bottom: 25px; color: #666; line-height: 1.5;">The only tool you need to monitor, grade, and take recitations!</p>
+      <p>The only tool you need to monitor, grade, and take recitations!</p>
+    </div>
+    
+    <!-- Two Column Layout -->
+    <div class="two-column-layout">
       
-      <!-- Two Column Layout (responsive) -->
-      <div class="two-column-layout">
-        
-        <!-- Left Column: Main Functionality -->
-        <div>
-          <!-- Topic Input -->
-          <div style="margin-bottom: 25px;">
-            <label for="guestTopic" style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">
-              Topic for today's recitation:
-            </label>
-            <input 
-              type="text" 
-              id="guestTopic" 
-              placeholder="e.g., Chapter 5: Photosynthesis"
-              style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
-            
-            <div id="guestTopicStatus" style="display: none; background: #e8f5e8; padding: 10px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #22c55e;">
-              <div style="font-weight: bold; color: #2c3e50;">Current Topic:</div>
-              <div id="guestTopicDisplay" style="color: #2c3e50;"></div>
-              <div id="guestDateDisplay" style="font-size: 0.9em; color: #666; margin-top: 5px;"></div>
-            </div>
-          </div>
-
-          <!-- Student Input -->
-          <div style="margin-bottom: 25px;">
-            <label for="guestStudentList" style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
-              Paste student names here (one per line):
-            </label>
-<textarea id="guestStudentList" style="width: 100%; height: 140px; resize: vertical; font-family: monospace; line-height: 1.4; padding: 12px; box-sizing: border-box;" placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;Alex Thompson&#10;Emma Davis&#10;..."></textarea>
-          </div>
+      <!-- Left Column: Main Functionality -->
+      <div class="main-card">
+        <!-- Topic Input -->
+        <div class="form-group">
+          <label for="guestTopic">Topic for today's recitation:</label>
+          <input 
+            type="text" 
+            id="guestTopic" 
+            placeholder="e.g., Chapter 5: Photosynthesis">
           
-          <!-- Pick Button -->
-          <button id="guestPickBtn" style="background: #10b981; font-size: 16px; padding: 12px; margin-bottom: 30px; width: 100%; min-height: 48px;">
-            🎲 Pick Random Student
-          </button>
-
-          <!-- Called Students Section -->
-          <div style="margin-top: 35px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-              <h3 style="margin: 0;">Called Students</h3>
-              <button 
-                class="guestSaveBtn" 
-                style="width: auto; display: inline-block; margin: 0; padding: 10px 16px; background: #8b5cf6; font-size: 14px; min-height: 40px;">
-                💾 Save Data / Export CSV
-              </button>
-            </div>
-            <div id="guestCalledStudents" style="min-height: 60px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
-              <p style="color: #888; font-style: italic; margin: 0; text-align: center;">No students called yet</p>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px; flex-wrap: wrap;">
-            <button 
-              id="guestClearBtn" 
-              style="width: auto; display: inline-block; margin: 0; padding: 10px 20px; background: #ef4444; font-size: 14px; min-height: 40px;">
-              🗑️ Clear All Data
-            </button>
+          <div id="guestTopicStatus">
+            <div class="topic-label">Current Topic:</div>
+            <div id="guestTopicDisplay" class="topic-value"></div>
+            <div id="guestDateDisplay" class="topic-date"></div>
           </div>
         </div>
 
-        <!-- Right Column: Features Info (becomes second row on mobile) -->
-        <div class="feature-box">
-          <h3 style="color: #1e40af; margin-top: 0; margin-bottom: 15px;">Why Create an Account?</h3>
-          <ul style="color: #1e40af; margin: 15px 0; padding-left: 25px; line-height: 1.6;">
-            <li style="margin-bottom: 8px;">Save your class rosters permanently</li>
-            <li style="margin-bottom: 8px;">Export attendance data to CSV</li>
-            <li style="margin-bottom: 8px;">Track student participation over time</li>
-            <li style="margin-bottom: 8px;">Create multiple classes</li>
-            <li>Access your data from any device</li>
-          </ul>
-          <div style="text-align: center; margin-top: 20px;">
-            <button class="guestSaveBtn" style="width: auto; display: inline-block; margin: 0; padding: 12px 24px; background: #2563eb; font-size: 15px; min-height: 44px;">
-              🚀 Get Started
+        <!-- Student Input -->
+        <div class="form-group">
+          <label for="guestStudentList">Paste student names here (one per line):</label>
+          <textarea id="guestStudentList" placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;Alex Thompson&#10;Emma Davis&#10;..."></textarea>
+        </div>
+        
+        <!-- Pick Button -->
+        <button id="guestPickBtn" class="btn btn-primary">
+          🎲 Pick Random Student
+        </button>
+
+        <!-- Called Students Section -->
+        <div class="called-students-section">
+          <div class="section-header">
+            <h3>Called Students</h3>
+            <button class="btn btn-secondary guestSaveBtn">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
+              </svg>
+              Save Data / Export CSV
             </button>
           </div>
+          <div id="guestCalledStudents" class="called-students-container empty">
+            <p>No students called yet</p>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button id="guestClearBtn" class="btn btn-danger">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            Clear All Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Features Info -->
+      <div class="feature-box">
+        <h3>Why Create an Account?</h3>
+        <ul>
+          <li>Save your class rosters permanently</li>
+          <li>Export attendance data to CSV</li>
+          <li>Track student participation over time</li>
+          <li>Create multiple classes</li>
+          <li>Access your data from any device</li>
+        </ul>
+        <div class="cta-section">
+          <button class="btn btn-blue guestSaveBtn">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            Get Started
+          </button>
         </div>
       </div>
     </div>
-  </div>
+  </main>
 
-  <!-- Login Modal (Hidden by default) -->
-  <div id="loginModal" class="modal" style="display: none;">
-    <div class="modal-content" style="width: 350px; max-width: 90vw; margin: 20px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">Welcome, teacher!</h2>
-        <button id="closeLoginModal" style="width: 30px; height: 30px; margin: 0; padding: 0; background: #f3f4f6; color: #666; border: 1px solid #d1d5db;">×</button>
+
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Welcome, teacher!</h2>
+        <button id="closeLoginModal" class="modal-close">×</button>
       </div>
       
       <!-- Login Form -->
       <div id="loginSection">
-        <form id="loginForm" style="margin-bottom: 15px;">
-          <input id="email" type="email" placeholder="Email" required style="min-height: 44px;">
-          <input id="password" type="password" placeholder="Password" required style="min-height: 44px;">
-          <button type="submit" style="min-height: 44px;">Login</button>
+        <form id="loginForm">
+          <input id="email" type="email" placeholder="Email" required>
+          <input id="password" type="password" placeholder="Password" required>
+          <button type="submit" class="btn btn-primary">
+            <span id="loginBtnText">Login</span>
+            <div id="loginBtnSpinner" class="btn-spinner" style="display: none;"></div>
+          </button>
         </form>
-        <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
+        <div class="auth-switch">
           New here? 
-          <button type="button" id="showSignupBtn" style="background: none; border: none; color: #4f46e5; text-decoration: underline; padding: 4px; width: auto; display: inline; cursor: pointer; min-height: auto;">Create Account</button>
-        </p>
+          <button type="button" id="showSignupBtn">Create Account</button>
+        </div>
       </div>
 
-      <!-- Signup Form (Hidden by default) -->
+      <!-- Signup Form -->
       <div id="signupSection" style="display: none;">
-        <form id="signupForm" style="margin-bottom: 15px;">
-          <input id="signupName" type="text" placeholder="Full Name" required style="min-height: 44px;">
-          <input id="signupEmail" type="email" placeholder="Email" required style="min-height: 44px;">
-          <input id="signupPassword" type="password" placeholder="Password" required style="min-height: 44px;">
-          <button type="submit" style="background: #10b981; min-height: 44px;">Create Account</button>
+        <form id="signupForm">
+          <input id="signupName" type="text" placeholder="Full Name" required>
+          <input id="signupEmail" type="email" placeholder="Email" required>
+          <input id="signupPassword" type="password" placeholder="Password" required>
+          <button type="submit" class="btn btn-primary">
+            <span id="signupBtnText">Create Account</span>
+            <div id="signupBtnSpinner" class="btn-spinner" style="display: none;"></div>
+          </button>
         </form>
-        <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
+        <div class="auth-switch">
           Already have an account? 
-          <button type="button" id="showLoginBtn2" style="background: none; border: none; color: #4f46e5; text-decoration: underline; padding: 4px; width: auto; display: inline; cursor: pointer; min-height: auto;">Login</button>
-        </p>
+          <button type="button" id="showLoginBtn2">Login</button>
+        </div>
       </div>
     </div>
   </div>
@@ -210,20 +690,32 @@
       
       // Show login modal
       showLoginBtn.addEventListener('click', () => {
-        loginModal.style.display = 'flex';
+        loginModal.classList.add('show');
         loginSection.style.display = 'block';
         signupSection.style.display = 'none';
       });
       
       // Close modal
       closeLoginModal.addEventListener('click', () => {
-        loginModal.style.display = 'none';
+        loginModal.classList.remove('show');
       });
       
       // Close modal when clicking outside
       loginModal.addEventListener('click', (e) => {
         if (e.target === loginModal) {
-          loginModal.style.display = 'none';
+          loginModal.classList.remove('show');
+        }
+      });
+
+      // Close modal with Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (loginModal.classList.contains('show')) {
+            loginModal.classList.remove('show');
+          }
+          if (exportModal.classList.contains('show')) {
+            exportModal.classList.remove('show');
+          }
         }
       });
       
@@ -239,7 +731,95 @@
         loginSection.style.display = 'block';
       });
 
-      // Setup signup form handler with proper field names
+      // Export modal elements
+      const exportModal = document.getElementById('exportModal');
+      const createAccountExportBtn = document.getElementById('createAccountExportBtn');
+      const loginExportBtn = document.getElementById('loginExportBtn');
+      const cancelExportBtn = document.getElementById('cancelExportBtn');
+      const studentCountEl = document.getElementById('studentCount');
+
+      // Function to count students from textarea
+      function getStudentCount() {
+        const textarea = document.getElementById('guestStudentList');
+        const students = textarea.value.trim().split('\n').filter(name => name.trim() !== '');
+        return students.length;
+      }
+
+      // Add all guestSaveBtn click handlers to show export modal
+      document.querySelectorAll('.guestSaveBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const count = getStudentCount();
+          studentCountEl.textContent = `${count} student${count !== 1 ? 's' : ''}`;
+          exportModal.classList.add('show');
+        });
+      });
+
+      // Export modal handlers
+      createAccountExportBtn.addEventListener('click', () => {
+        localStorage.setItem('pendingExport', 'true');
+        exportModal.classList.remove('show');
+        loginModal.classList.add('show');
+        loginSection.style.display = 'none';
+        signupSection.style.display = 'block';
+      });
+
+      loginExportBtn.addEventListener('click', () => {
+        localStorage.setItem('pendingExport', 'true');
+        exportModal.classList.remove('show');
+        loginModal.classList.add('show');
+        loginSection.style.display = 'block';
+        signupSection.style.display = 'none';
+      });
+
+      cancelExportBtn.addEventListener('click', () => {
+        exportModal.classList.remove('show');
+      });
+
+      // Close export modal when clicking outside
+      exportModal.addEventListener('click', (e) => {
+        if (e.target === exportModal) {
+          exportModal.classList.remove('show');
+        }
+      });
+
+      // Login form handler
+      const loginForm = document.getElementById('loginForm');
+      if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+          
+          const loginBtnText = document.getElementById('loginBtnText');
+          const loginBtnSpinner = document.getElementById('loginBtnSpinner');
+          const submitBtn = loginForm.querySelector('button[type="submit"]');
+          
+          // Show loading state
+          loginBtnText.textContent = 'Logging in...';
+          loginBtnSpinner.style.display = 'block';
+          submitBtn.disabled = true;
+          
+          try {
+            const result = await apiFetch("/auth/login", {
+              method: "POST",
+              body: JSON.stringify({ email, password }),
+            });
+            
+            console.log('Login successful:', result);
+            window.location.href = "dashboard.html";
+          } catch (err) {
+            console.error('Login error:', err);
+            alert("Login failed: " + err.message);
+          } finally {
+            // Reset button state
+            loginBtnText.textContent = 'Login';
+            loginBtnSpinner.style.display = 'none';
+            submitBtn.disabled = false;
+          }
+        });
+      }
+
+      // Signup form handler
       const signupForm = document.getElementById('signupForm');
       if (signupForm) {
         signupForm.addEventListener('submit', async (e) => {
@@ -248,7 +828,14 @@
           const email = document.getElementById('signupEmail').value;
           const password = document.getElementById('signupPassword').value;
           
-          console.log('Attempting signup for:', email);
+          const signupBtnText = document.getElementById('signupBtnText');
+          const signupBtnSpinner = document.getElementById('signupBtnSpinner');
+          const submitBtn = signupForm.querySelector('button[type="submit"]');
+          
+          // Show loading state
+          signupBtnText.textContent = 'Creating Account...';
+          signupBtnSpinner.style.display = 'block';
+          submitBtn.disabled = true;
           
           try {
             const result = await apiFetch("/auth/signup", {
@@ -262,7 +849,7 @@
             const fromExport = localStorage.getItem('pendingExport');
             if (fromExport === 'true') {
               localStorage.removeItem('pendingExport');
-              loginModal.style.display = 'none';
+              loginModal.classList.remove('show');
               // The app.js will handle showing the export modal
             } else {
               window.location.href = "dashboard.html";
@@ -270,20 +857,33 @@
           } catch (err) {
             console.error('Signup error:', err);
             alert("Signup failed: " + err.message);
+          } finally {
+            // Reset button state
+            signupBtnText.textContent = 'Create Account';
+            signupBtnSpinner.style.display = 'none';
+            submitBtn.disabled = false;
           }
         });
       }
 
-      // Add hover effects with JavaScript since CSS can't target dynamic buttons
-      const pickBtn = document.getElementById('guestPickBtn');
-      if (pickBtn) {
-        pickBtn.addEventListener('mouseenter', () => {
-          pickBtn.style.background = '#059669';
+      // Utility function for API calls (you'll need to implement this)
+      window.apiFetch = async (url, options) => {
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+          credentials: 'same-origin'
         });
-        pickBtn.addEventListener('mouseleave', () => {
-          pickBtn.style.background = '#10b981';
-        });
-      }
+        
+        if (!response.ok) {
+          const errorData = await response.text();
+          throw new Error(errorData || `HTTP ${response.status}`);
+        }
+        
+        return response.json();
+      };
     });
   </script>
 </body>
