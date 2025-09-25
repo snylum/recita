@@ -625,7 +625,44 @@
 
   <script src="app.js"></script>
   <script>
-    // Modal controls
+    // Guest mode data storage
+    let guestData = {
+      topic: '',
+      date: '',
+      students: [],
+      calledStudents: []
+    };
+
+    // API fetch function (fallback for guest mode)
+    window.apiFetch = window.apiFetch || function(url, options) {
+      // Mock API for guest mode
+      return Promise.resolve({ success: true });
+    };
+
+    // Utility functions
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function downloadCSV(data, filename) {
+      const csv = data.map(row => row.map(field => `"${field}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }
+
+    // Modal controls and main functionality
     document.addEventListener('DOMContentLoaded', () => {
       const loginModal = document.getElementById('loginModal');
       const showLoginBtn = document.getElementById('showLoginBtn');
@@ -634,6 +671,17 @@
       const showLoginBtn2 = document.getElementById('showLoginBtn2');
       const loginSection = document.getElementById('loginSection');
       const signupSection = document.getElementById('signupSection');
+      
+      // Guest mode elements
+      const guestTopic = document.getElementById('guestTopic');
+      const guestTopicStatus = document.getElementById('guestTopicStatus');
+      const guestTopicDisplay = document.getElementById('guestTopicDisplay');
+      const guestDateDisplay = document.getElementById('guestDateDisplay');
+      const guestStudentList = document.getElementById('guestStudentList');
+      const guestPickBtn = document.getElementById('guestPickBtn');
+      const guestCalledStudents = document.getElementById('guestCalledStudents');
+      const guestClearBtn = document.getElementById('guestClearBtn');
+      const guestSaveBtns = document.querySelectorAll('.guestSaveBtn');
       
       // Show login modal
       showLoginBtn.addEventListener('click', () => {
@@ -666,7 +714,7 @@
         loginSection.classList.remove('hidden');
       });
 
-      // Setup signup form handler with proper field names
+      // Setup signup form handler
       const signupForm = document.getElementById('signupForm');
       if (signupForm) {
         signupForm.addEventListener('submit', async (e) => {
@@ -690,7 +738,6 @@
             if (fromExport === 'true') {
               localStorage.removeItem('pendingExport');
               loginModal.style.display = 'none';
-              // The app.js will handle showing the export modal
             } else {
               window.location.href = "dashboard.html";
             }
@@ -701,24 +748,170 @@
         });
       }
 
-      // Show/hide topic status when topic is entered
-      const guestTopic = document.getElementById('guestTopic');
-      const guestTopicStatus = document.getElementById('guestTopicStatus');
-      const guestTopicDisplay = document.getElementById('guestTopicDisplay');
-      const guestDateDisplay = document.getElementById('guestDateDisplay');
-      
+      // Setup login form handler
+      const loginForm = document.getElementById('loginForm');
+      if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+          
+          try {
+            const result = await apiFetch("/auth/login", {
+              method: "POST",
+              body: JSON.stringify({ email, password }),
+            });
+            
+            console.log('Login successful:', result);
+            window.location.href = "dashboard.html";
+          } catch (err) {
+            console.error('Login error:', err);
+            alert("Login failed: " + err.message);
+          }
+        });
+      }
+
+      // Topic input handler
       if (guestTopic) {
         guestTopic.addEventListener('input', (e) => {
           const topic = e.target.value.trim();
           if (topic) {
+            guestData.topic = topic;
+            guestData.date = new Date().toLocaleDateString();
             guestTopicDisplay.textContent = topic;
-            guestDateDisplay.textContent = new Date().toLocaleDateString();
+            guestDateDisplay.textContent = guestData.date;
             guestTopicStatus.classList.remove('hidden');
           } else {
             guestTopicStatus.classList.add('hidden');
+            guestData.topic = '';
+            guestData.date = '';
           }
         });
       }
+
+      // Pick random student button
+      if (guestPickBtn) {
+        guestPickBtn.addEventListener('click', () => {
+          const studentText = guestStudentList.value.trim();
+          if (!studentText) {
+            alert('Please enter student names first!');
+            return;
+          }
+
+          // Parse students from textarea
+          guestData.students = studentText
+            .split('\n')
+            .map(name => name.trim())
+            .filter(name => name.length > 0);
+
+          if (guestData.students.length === 0) {
+            alert('Please enter at least one student name!');
+            return;
+          }
+
+          // Get students not yet called
+          const availableStudents = guestData.students.filter(
+            student => !guestData.calledStudents.some(called => called.name === student)
+          );
+
+          if (availableStudents.length === 0) {
+            if (confirm('All students have been called! Reset the list?')) {
+              guestData.calledStudents = [];
+              updateCalledStudentsList();
+              return;
+            }
+            return;
+          }
+
+          // Pick random student
+          const randomIndex = Math.floor(Math.random() * availableStudents.length);
+          const selectedStudent = availableStudents[randomIndex];
+          
+          // Add to called students
+          guestData.calledStudents.push({
+            name: selectedStudent,
+            time: new Date().toLocaleTimeString(),
+            topic: guestData.topic || 'No topic set'
+          });
+
+          updateCalledStudentsList();
+          
+          // Show animation or highlight
+          guestPickBtn.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            guestPickBtn.style.transform = 'scale(1)';
+          }, 150);
+        });
+      }
+
+      // Clear all data button
+      if (guestClearBtn) {
+        guestClearBtn.addEventListener('click', () => {
+          if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+            guestData = {
+              topic: '',
+              date: '',
+              students: [],
+              calledStudents: []
+            };
+            
+            guestTopic.value = '';
+            guestStudentList.value = '';
+            guestTopicStatus.classList.add('hidden');
+            updateCalledStudentsList();
+          }
+        });
+      }
+
+      // Save/Export buttons
+      guestSaveBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (guestData.calledStudents.length === 0) {
+            // If no data, show signup modal
+            loginModal.style.display = 'flex';
+            loginSection.classList.add('hidden');
+            signupSection.classList.remove('hidden');
+            localStorage.setItem('pendingExport', 'true');
+          } else {
+            // Export CSV
+            const csvData = [
+              ['Student Name', 'Time Called', 'Topic', 'Date'],
+              ...guestData.calledStudents.map(student => [
+                student.name,
+                student.time,
+                student.topic,
+                guestData.date || new Date().toLocaleDateString()
+              ])
+            ];
+            
+            const filename = `recitation-${guestData.date || 'data'}.csv`;
+            downloadCSV(csvData, filename);
+          }
+        });
+      });
+
+      // Function to update called students display
+      function updateCalledStudentsList() {
+        if (guestData.calledStudents.length === 0) {
+          guestCalledStudents.innerHTML = '<p class="empty-state">No students called yet</p>';
+          return;
+        }
+
+        const html = guestData.calledStudents.map((student, index) => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: white; border-radius: 6px; margin-bottom: 8px; border-left: 4px solid #3b82f6;">
+            <div>
+              <strong style="color: #1e293b;">${student.name}</strong>
+              <div style="font-size: 12px; color: #64748b;">Called at ${student.time}</div>
+            </div>
+            <div style="font-size: 14px; color: #6b7280;">#${index + 1}</div>
+          </div>
+        `).join('');
+
+        guestCalledStudents.innerHTML = html;
+      }
+
+      // Initialize
+      updateCalledStudentsList();
     });
   </script>
 </body>
