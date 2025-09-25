@@ -48,16 +48,17 @@
       font-size: 14px;
       font-weight: 500;
       transition: all 0.2s;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       width: 100%;
       min-height: 48px;
       font-family: inherit;
+      box-sizing: border-box;
     }
 
-    button:hover {
+    button:hover:not(:disabled) {
       background: #2563eb;
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
@@ -83,30 +84,30 @@
     }
 
     #guestPickBtn {
-      background: #10b981;
+      background: #10b981 !important;
       font-size: 16px;
       padding: 14px;
       margin-bottom: 30px;
     }
 
-    #guestPickBtn:hover {
-      background: #059669;
+    #guestPickBtn:hover:not(:disabled) {
+      background: #059669 !important;
     }
 
     .guestSaveBtn {
-      background: #8b5cf6;
+      background: #8b5cf6 !important;
     }
 
-    .guestSaveBtn:hover {
-      background: #7c3aed;
+    .guestSaveBtn:hover:not(:disabled) {
+      background: #7c3aed !important;
     }
 
     #guestClearBtn {
-      background: #ef4444;
+      background: #ef4444 !important;
     }
 
-    #guestClearBtn:hover {
-      background: #dc2626;
+    #guestClearBtn:hover:not(:disabled) {
+      background: #dc2626 !important;
     }
 
     /* Main App Container */
@@ -334,8 +335,8 @@
       min-height: 44px;
     }
 
-    .feature-box .guestSaveBtn:hover {
-      background: #1d4ed8;
+    .feature-box .guestSaveBtn:hover:not(:disabled) {
+      background: #1d4ed8 !important;
     }
 
     /* Form Sections */
@@ -408,9 +409,11 @@
       min-height: auto;
     }
 
-    .close-modal-btn:hover {
+    .close-modal-btn:hover:not(:disabled) {
       background: #e5e7eb;
       color: #374151;
+      transform: none;
+      box-shadow: none;
     }
 
     .modal form {
@@ -443,10 +446,12 @@
       display: inline !important;
       cursor: pointer;
       min-height: auto !important;
-      font-size: inherit;
+      font-size: inherit !important;
+      transform: none !important;
+      box-shadow: none !important;
     }
 
-    .text-link-btn:hover {
+    .text-link-btn:hover:not(:disabled) {
       color: #3730a3 !important;
       background: none !important;
       transform: none !important;
@@ -457,7 +462,7 @@
       background: #10b981 !important;
     }
 
-    .signup-btn:hover {
+    .signup-btn:hover:not(:disabled) {
       background: #059669 !important;
     }
 
