@@ -53,6 +53,13 @@ main {
   width: 100%;
 }
 
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
 #app {
   max-width: 800px;
   margin: 0 auto;
