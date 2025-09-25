@@ -5,68 +5,539 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Recita - Take Recitations</title>
-  <link rel="stylesheet" href="style.css">
   <style>
-    /* Mobile-first responsive styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f8fafc;
+      min-height: 100vh;
+      color: #334155;
+      padding: 24px;
+    }
+
+    /* Header Section */
+    .header-section {
+      text-align: center;
+      margin-bottom: 32px;
+      padding: 24px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .header-section h1 {
+      color: #2c3e50;
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    /* Buttons */
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 48px;
+      font-family: inherit;
+    }
+
+    button:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Specific button styles */
+    #showLoginBtn {
+      width: auto;
+      display: inline-flex;
+      margin: 0;
+      padding: 10px 20px;
+      min-height: 40px;
+    }
+
+    #guestPickBtn {
+      background: #10b981;
+      font-size: 16px;
+      padding: 14px;
+      margin-bottom: 30px;
+    }
+
+    #guestPickBtn:hover {
+      background: #059669;
+    }
+
+    .guestSaveBtn {
+      background: #8b5cf6;
+    }
+
+    .guestSaveBtn:hover {
+      background: #7c3aed;
+    }
+
+    #guestClearBtn {
+      background: #ef4444;
+    }
+
+    #guestClearBtn:hover {
+      background: #dc2626;
+    }
+
+    /* Main App Container */
+    #app {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    #guestRecita {
+      background: white;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    #guestRecita h2 {
+      color: #2c3e50;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    #guestRecita > p {
+      color: #6b7280;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    /* Two Column Layout */
     .two-column-layout {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 20px;
+      gap: 32px;
       align-items: start;
     }
-    
-    /* Desktop and tablet layouts */
+
     @media (min-width: 768px) {
       .two-column-layout {
         grid-template-columns: 2fr 1fr;
-        gap: 30px;
       }
     }
-    
-    /* Ensure buttons and inputs are mobile-friendly */
+
+    /* Form Elements */
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: white;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #9ca3af;
+    }
+
+    #guestTopic {
+      margin-bottom: 16px;
+    }
+
+    #guestStudentList {
+      height: 140px;
+      resize: vertical;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      line-height: 1.5;
+    }
+
+    /* Status Display */
+    #guestTopicStatus {
+      background: #ecfdf5;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border-left: 4px solid #10b981;
+      border: 1px solid #d1fae5;
+    }
+
+    #guestTopicStatus .topic-label {
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    #guestTopicDisplay {
+      color: #2c3e50;
+      margin-top: 4px;
+      font-size: 15px;
+    }
+
+    #guestDateDisplay {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+
+    /* Called Students Section */
+    .called-students-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .called-students-header h3 {
+      margin: 0;
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .called-students-header .guestSaveBtn {
+      width: auto;
+      display: inline-flex;
+      margin: 0;
+      padding: 10px 16px;
+      font-size: 14px;
+      min-height: 40px;
+    }
+
+    #guestCalledStudents {
+      min-height: 80px;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    #guestCalledStudents p {
+      color: #9ca3af;
+      font-style: italic;
+      margin: 0;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    /* Action Buttons Container */
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+
+    .action-buttons button {
+      width: auto;
+      display: inline-flex;
+      margin: 0;
+      padding: 12px 20px;
+      font-size: 14px;
+      min-height: 44px;
+    }
+
+    /* Feature Box */
+    .feature-box {
+      background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+      border: 1px solid #93c5fd;
+      border-radius: 12px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    }
+
+    .feature-box h3 {
+      color: #1e40af;
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .feature-box ul {
+      color: #1e40af;
+      margin: 16px 0;
+      padding-left: 20px;
+      line-height: 1.6;
+    }
+
+    .feature-box li {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .feature-box .cta-container {
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .feature-box .guestSaveBtn {
+      width: auto;
+      display: inline-flex;
+      margin: 0;
+      padding: 12px 24px;
+      background: #2563eb;
+      font-size: 15px;
+      min-height: 44px;
+    }
+
+    .feature-box .guestSaveBtn:hover {
+      background: #1d4ed8;
+    }
+
+    /* Form Sections */
+    .form-section {
+      margin-bottom: 32px;
+    }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      width: 90%;
+      max-width: 400px;
+      margin: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      animation: modalSlideIn 0.2s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        transform: scale(0.95) translateY(-10px);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal h2 {
+      color: #2c3e50;
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .close-modal-btn {
+      width: 32px;
+      height: 32px;
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+      color: #6b7280;
+      border: 1px solid #d1d5db;
+      font-size: 18px;
+      line-height: 1;
+      min-height: auto;
+    }
+
+    .close-modal-btn:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .modal form {
+      margin-bottom: 16px;
+    }
+
+    .modal input {
+      margin-bottom: 16px;
+      min-height: 44px;
+    }
+
+    .modal button[type="submit"] {
+      min-height: 44px;
+    }
+
+    .modal p {
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .text-link-btn {
+      background: none !important;
+      border: none !important;
+      color: #4f46e5 !important;
+      text-decoration: underline;
+      padding: 4px !important;
+      width: auto !important;
+      display: inline !important;
+      cursor: pointer;
+      min-height: auto !important;
+      font-size: inherit;
+    }
+
+    .text-link-btn:hover {
+      color: #3730a3 !important;
+      background: none !important;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .signup-btn {
+      background: #10b981 !important;
+    }
+
+    .signup-btn:hover {
+      background: #059669 !important;
+    }
+
+    /* Mobile Responsiveness */
     @media (max-width: 767px) {
       body {
-        padding: 10px;
+        padding: 16px;
       }
-      
+
+      .header-section {
+        padding: 20px;
+        margin-bottom: 24px;
+      }
+
+      .header-section h1 {
+        font-size: 24px;
+      }
+
+      #guestRecita {
+        padding: 24px;
+      }
+
+      #guestRecita h2 {
+        font-size: 20px;
+      }
+
+      .two-column-layout {
+        gap: 24px;
+      }
+
       .modal-content {
-        width: 90% !important;
+        width: 90%;
         max-width: 350px;
         margin: 20px;
       }
-      
+
       input, textarea, button {
         font-size: 16px; /* Prevents zoom on iOS */
       }
-      
+
       #guestStudentList {
-        height: 120px !important;
+        height: 120px;
       }
-      
+
       .feature-box {
         margin-bottom: 20px;
+        padding: 20px;
+      }
+
+      .called-students-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+      }
+
+      .called-students-header .guestSaveBtn {
+        width: 100%;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+
+      .action-buttons button {
+        width: 100%;
       }
     }
-    
-    .feature-box {
-      background: #dbeafe; 
-      border: 1px solid #93c5fd; 
-      border-radius: 8px; 
-      padding: 20px;
-    }
-    
+
     @media (min-width: 768px) {
       .feature-box {
-        padding: 25px;
+        padding: 28px;
       }
     }
   </style>
 </head>
 <body>
   <!-- Header -->
-  <div style="text-align: center; margin-bottom: 20px;">
-    <h1 style="color: #2c3e50; margin-bottom: 10px;">Recita</h1>
-    <button id="showLoginBtn" style="width: auto; display: inline-block; margin: 0; padding: 8px 16px;">
+  <div class="header-section">
+    <h1>Recita</h1>
+    <button id="showLoginBtn">
       Login / Sign Up
     </button>
   </div>
@@ -76,7 +547,7 @@
     <div id="guestRecita">
       <!-- Welcome Section -->
       <h2>Try Recita Free!</h2>
-      <p style="margin-bottom: 25px; color: #666; line-height: 1.5;">The only tool you need to monitor, grade, and take recitations!</p>
+      <p>The only tool you need to monitor, grade, and take recitations!</p>
       
       <!-- Two Column Layout (responsive) -->
       <div class="two-column-layout">
@@ -84,56 +555,51 @@
         <!-- Left Column: Main Functionality -->
         <div>
           <!-- Topic Input -->
-          <div style="margin-bottom: 25px;">
-            <label for="guestTopic" style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">
+          <div class="form-section">
+            <label for="guestTopic">
               Topic for today's recitation:
             </label>
             <input 
               type="text" 
               id="guestTopic" 
-              placeholder="e.g., Chapter 5: Photosynthesis"
-              style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
+              placeholder="e.g., Chapter 5: Photosynthesis">
             
-            <div id="guestTopicStatus" style="display: none; background: #e8f5e8; padding: 10px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #22c55e;">
-              <div style="font-weight: bold; color: #2c3e50;">Current Topic:</div>
-              <div id="guestTopicDisplay" style="color: #2c3e50;"></div>
-              <div id="guestDateDisplay" style="font-size: 0.9em; color: #666; margin-top: 5px;"></div>
+            <div id="guestTopicStatus" style="display: none;">
+              <div class="topic-label">Current Topic:</div>
+              <div id="guestTopicDisplay"></div>
+              <div id="guestDateDisplay"></div>
             </div>
           </div>
 
           <!-- Student Input -->
-          <div style="margin-bottom: 25px;">
-            <label for="guestStudentList" style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
+          <div class="form-section">
+            <label for="guestStudentList">
               Paste student names here (one per line):
             </label>
-<textarea id="guestStudentList" style="width: 100%; height: 140px; resize: vertical; font-family: monospace; line-height: 1.4; padding: 12px; box-sizing: border-box;" placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;Alex Thompson&#10;Emma Davis&#10;..."></textarea>
+            <textarea id="guestStudentList" placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;Alex Thompson&#10;Emma Davis&#10;..."></textarea>
           </div>
           
           <!-- Pick Button -->
-          <button id="guestPickBtn" style="background: #10b981; font-size: 16px; padding: 12px; margin-bottom: 30px; width: 100%; min-height: 48px;">
+          <button id="guestPickBtn">
             🎲 Pick Random Student
           </button>
 
           <!-- Called Students Section -->
-          <div style="margin-top: 35px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-              <h3 style="margin: 0;">Called Students</h3>
-              <button 
-                class="guestSaveBtn" 
-                style="width: auto; display: inline-block; margin: 0; padding: 10px 16px; background: #8b5cf6; font-size: 14px; min-height: 40px;">
+          <div style="margin-top: 40px;">
+            <div class="called-students-header">
+              <h3>Called Students</h3>
+              <button class="guestSaveBtn">
                 💾 Save Data / Export CSV
               </button>
             </div>
-            <div id="guestCalledStudents" style="min-height: 60px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
-              <p style="color: #888; font-style: italic; margin: 0; text-align: center;">No students called yet</p>
+            <div id="guestCalledStudents">
+              <p>No students called yet</p>
             </div>
           </div>
 
           <!-- Action Buttons -->
-          <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px; flex-wrap: wrap;">
-            <button 
-              id="guestClearBtn" 
-              style="width: auto; display: inline-block; margin: 0; padding: 10px 20px; background: #ef4444; font-size: 14px; min-height: 40px;">
+          <div class="action-buttons">
+            <button id="guestClearBtn">
               🗑️ Clear All Data
             </button>
           </div>
@@ -141,16 +607,16 @@
 
         <!-- Right Column: Features Info (becomes second row on mobile) -->
         <div class="feature-box">
-          <h3 style="color: #1e40af; margin-top: 0; margin-bottom: 15px;">Why Create an Account?</h3>
-          <ul style="color: #1e40af; margin: 15px 0; padding-left: 25px; line-height: 1.6;">
-            <li style="margin-bottom: 8px;">Save your class rosters permanently</li>
-            <li style="margin-bottom: 8px;">Export attendance data to CSV</li>
-            <li style="margin-bottom: 8px;">Track student participation over time</li>
-            <li style="margin-bottom: 8px;">Create multiple classes</li>
+          <h3>Why Create an Account?</h3>
+          <ul>
+            <li>Save your class rosters permanently</li>
+            <li>Export attendance data to CSV</li>
+            <li>Track student participation over time</li>
+            <li>Create multiple classes</li>
             <li>Access your data from any device</li>
           </ul>
-          <div style="text-align: center; margin-top: 20px;">
-            <button class="guestSaveBtn" style="width: auto; display: inline-block; margin: 0; padding: 12px 24px; background: #2563eb; font-size: 15px; min-height: 44px;">
+          <div class="cta-container">
+            <button class="guestSaveBtn">
               🚀 Get Started
             </button>
           </div>
@@ -160,37 +626,37 @@
   </div>
 
   <!-- Login Modal (Hidden by default) -->
-  <div id="loginModal" class="modal" style="display: none;">
-    <div class="modal-content" style="width: 350px; max-width: 90vw; margin: 20px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">Welcome, teacher!</h2>
-        <button id="closeLoginModal" style="width: 30px; height: 30px; margin: 0; padding: 0; background: #f3f4f6; color: #666; border: 1px solid #d1d5db;">×</button>
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Welcome, teacher!</h2>
+        <button id="closeLoginModal" class="close-modal-btn">×</button>
       </div>
       
       <!-- Login Form -->
       <div id="loginSection">
-        <form id="loginForm" style="margin-bottom: 15px;">
-          <input id="email" type="email" placeholder="Email" required style="min-height: 44px;">
-          <input id="password" type="password" placeholder="Password" required style="min-height: 44px;">
-          <button type="submit" style="min-height: 44px;">Login</button>
+        <form id="loginForm">
+          <input id="email" type="email" placeholder="Email" required>
+          <input id="password" type="password" placeholder="Password" required>
+          <button type="submit">Login</button>
         </form>
-        <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
+        <p>
           New here? 
-          <button type="button" id="showSignupBtn" style="background: none; border: none; color: #4f46e5; text-decoration: underline; padding: 4px; width: auto; display: inline; cursor: pointer; min-height: auto;">Create Account</button>
+          <button type="button" id="showSignupBtn" class="text-link-btn">Create Account</button>
         </p>
       </div>
 
       <!-- Signup Form (Hidden by default) -->
       <div id="signupSection" style="display: none;">
-        <form id="signupForm" style="margin-bottom: 15px;">
-          <input id="signupName" type="text" placeholder="Full Name" required style="min-height: 44px;">
-          <input id="signupEmail" type="email" placeholder="Email" required style="min-height: 44px;">
-          <input id="signupPassword" type="password" placeholder="Password" required style="min-height: 44px;">
-          <button type="submit" style="background: #10b981; min-height: 44px;">Create Account</button>
+        <form id="signupForm">
+          <input id="signupName" type="text" placeholder="Full Name" required>
+          <input id="signupEmail" type="email" placeholder="Email" required>
+          <input id="signupPassword" type="password" placeholder="Password" required>
+          <button type="submit" class="signup-btn">Create Account</button>
         </form>
-        <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
+        <p>
           Already have an account? 
-          <button type="button" id="showLoginBtn2" style="background: none; border: none; color: #4f46e5; text-decoration: underline; padding: 4px; width: auto; display: inline; cursor: pointer; min-height: auto;">Login</button>
+          <button type="button" id="showLoginBtn2" class="text-link-btn">Login</button>
         </p>
       </div>
     </div>
@@ -271,17 +737,6 @@
             console.error('Signup error:', err);
             alert("Signup failed: " + err.message);
           }
-        });
-      }
-
-      // Add hover effects with JavaScript since CSS can't target dynamic buttons
-      const pickBtn = document.getElementById('guestPickBtn');
-      if (pickBtn) {
-        pickBtn.addEventListener('mouseenter', () => {
-          pickBtn.style.background = '#059669';
-        });
-        pickBtn.addEventListener('mouseleave', () => {
-          pickBtn.style.background = '#10b981';
         });
       }
     });
