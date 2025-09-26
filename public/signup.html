@@ -4,27 +4,116 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-
   <title>Recita Sign Up</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 16px;
+    }
+
+    .signup-container {
+      background: white;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .signup-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 24px;
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    .signup-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .signup-btn {
+      width: 100%;
+      background: #4f46e5;
+      color: white;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .signup-btn:hover {
+      background: #4338ca;
+    }
+
+    .login-link-text {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .login-link {
+      color: #4f46e5;
+      text-decoration: none;
+      transition: text-decoration 0.2s;
+    }
+
+    .login-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .signup-container {
+        padding: 24px;
+        margin: 16px;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-  <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-sm">
-    <h1 class="text-2xl font-bold mb-6 text-center">Create Account</h1>
-    <form id="signupForm" class="space-y-4">
-      <input id="name" type="text" placeholder="Name" class="w-full p-3 border rounded-lg" required>
-      <input id="email" type="email" placeholder="Email" class="w-full p-3 border rounded-lg" required>
-      <input id="password" type="password" placeholder="Password" class="w-full p-3 border rounded-lg" required>
-      <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
+<body>
+  <div class="signup-container">
+    <h1 class="signup-title">Create Account</h1>
+    <form id="signupForm" class="signup-form">
+      <input id="name" type="text" placeholder="Name" class="form-input" required>
+      <input id="email" type="email" placeholder="Email" class="form-input" required>
+      <input id="password" type="password" placeholder="Password" class="form-input" required>
+      <button type="submit" class="signup-btn">
         Sign Up
       </button>
     </form>
-    <p class="mt-4 text-center text-sm">
+    <p class="login-link-text">
       Already have an account? 
-      <a href="index.html" class="text-blue-500 hover:underline">Login</a>
+      <a href="index.html" class="login-link">Login</a>
     </p>
   </div>
-
   <!-- IMPORTANT: load app.js as an ES module -->
   <script type="module" src="app.js"></script>
 </body>
