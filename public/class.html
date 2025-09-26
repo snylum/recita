@@ -5,72 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Class Management</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: #f8fafc;
-      min-height: 100vh;
-      color: #334155;
-    }
-
-    /* Navigation */
-    nav {
-      background: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    nav h1 {
-      color: #2c3e50;
-      font-size: 20px;
-      font-weight: bold;
-    }
-
-    nav .nav-right {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-    }
-
-    nav #className {
-      font-size: 18px;
-      font-weight: 500;
-      color: #4b5563;
-    }
-
-    nav button {
-      background: #6b7280;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
-
-    nav button:hover {
-      background: #4b5563;
-    }
-
-    /* Main container */
-    main {
-      padding: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    /* Grid layout */
+    /* Main grid layout */
     .main-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -83,19 +20,11 @@
       }
     }
 
-    /* Card styling */
-    .card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      padding: 24px;
-    }
-
-    .card h2 {
-      color: #2c3e50;
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 16px;
+    /* Column containers */
+    .column-container {
+      display: flex; 
+      flex-direction: column; 
+      gap: 24px;
     }
 
     /* Form styling */
@@ -103,46 +32,29 @@
       margin-bottom: 16px;
     }
 
-    input[type="text"], textarea {
+    .form-input {
       width: 100%;
       padding: 12px;
       border: 1px solid #d1d5db;
       border-radius: 8px;
       font-size: 14px;
       transition: border-color 0.2s, box-shadow 0.2s;
+      box-sizing: border-box;
     }
 
-    input[type="text"]:focus, textarea:focus {
+    .form-input:focus {
       outline: none;
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
-    textarea {
+    .form-textarea {
       height: 120px;
       resize: vertical;
+      font-family: monospace;
     }
 
-    /* Button styling */
-    .btn {
-      padding: 12px 16px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
+    /* Button variants */
     .btn-primary {
       background: #3b82f6;
       color: white;
@@ -192,6 +104,11 @@
       width: 100%;
     }
 
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .btn-group {
       display: flex;
       gap: 8px;
@@ -210,6 +127,10 @@
       margin-bottom: 16px;
     }
 
+    .list-header h2 {
+      margin: 0;
+    }
+
     .select-all {
       display: flex;
       align-items: center;
@@ -225,6 +146,12 @@
       font-size: 14px;
       color: #6b7280;
       cursor: pointer;
+      margin: 0;
+    }
+
+    .count-display {
+      font-size: 14px;
+      color: #6b7280;
     }
 
     /* Student item */
@@ -237,7 +164,6 @@
       border-radius: 8px;
       margin-bottom: 8px;
       transition: background-color 0.2s;
-      group: true;
     }
 
     .student-item:hover {
@@ -314,6 +240,7 @@
       font-weight: 600;
       color: #1f2937;
       margin-bottom: 4px;
+      margin-top: 0;
     }
 
     .recita-meta {
@@ -411,34 +338,25 @@
       animation: spin 1s linear infinite;
     }
 
+    .btn-spinner {
+      width: 16px;
+      height: 16px;
+    }
+
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
 
-    /* Modal */
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
+    /* Modal extensions */
     .modal.show {
       display: flex;
     }
 
-    .modal-content {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      width: 100%;
-      max-width: 400px;
-      margin: 16px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
     }
 
     .modal h3 {
@@ -453,25 +371,27 @@
       margin-bottom: 24px;
     }
 
-    .modal-actions {
+    /* Navigation extensions */
+    .nav-right {
       display: flex;
-      justify-content: flex-end;
-      gap: 12px;
+      gap: 16px;
+      align-items: center;
     }
 
-    .count-display {
-      font-size: 14px;
-      color: #6b7280;
+    #className {
+      font-size: 18px;
+      font-weight: 500;
+      color: #4b5563;
     }
   </style>
 </head>
 <body>
   <!-- Navigation -->
-  <nav>
+  <nav class="nav">
     <h1>Recita</h1>
     <div class="nav-right">
       <span id="className"></span>
-      <button onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+      <button onclick="window.location.href='dashboard.html'" class="nav-back-btn">Back to Dashboard</button>
     </div>
   </nav>
   
@@ -487,23 +407,23 @@
     </div>
   </div>
   
-  <main>
+  <main class="main-content">
     <!-- Two Column Layout for Desktop, Stacked for Mobile -->
     <div class="main-grid">
       
       <!-- Left Column: Recitas Management -->
-      <div style="display: flex; flex-direction: column; gap: 24px;">
+      <div class="column-container">
         <!-- Create New Recita -->
         <div class="card">
           <h2>Create New Recita</h2>
           <form id="createRecitaForm">
             <div class="form-group">
-              <input id="recitaTopic" type="text" placeholder="Recita topic" required>
+              <input id="recitaTopic" type="text" placeholder="Recita topic" required class="form-input">
             </div>
             <div class="btn-group">
               <button type="submit" class="btn btn-success btn-full">
                 <span id="createBtnText">Create Recita</span>
-                <div id="createBtnSpinner" class="spinner" style="display: none; width: 16px; height: 16px;"></div>
+                <div id="createBtnSpinner" class="spinner btn-spinner" style="display: none;"></div>
               </button>
               <button type="button" id="exportSelectedBtn" class="btn btn-purple" disabled>
                 Export Selected
@@ -531,16 +451,16 @@
       </div>
 
       <!-- Right Column: Students Management -->
-      <div style="display: flex; flex-direction: column; gap: 24px;">
+      <div class="column-container">
         <!-- Add Students Section -->
         <div class="card">
           <h2>Add Students</h2>
           <div class="form-group">
-            <textarea id="studentInput" placeholder="One student per line"></textarea>
+            <textarea id="studentInput" placeholder="One student per line" class="form-input form-textarea"></textarea>
           </div>
           <button id="addStudentsBtn" class="btn btn-primary btn-full">
             <span id="addBtnText">Add Students</span>
-            <div id="addBtnSpinner" class="spinner" style="display: none; width: 16px; height: 16px;"></div>
+            <div id="addBtnSpinner" class="spinner btn-spinner" style="display: none;"></div>
           </button>
         </div>
 
