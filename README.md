@@ -8,4 +8,4 @@ However, you can create an account to keep track of classes, students, and multi
 I would like to have a "sections" feature but that's too complicated. 
 I'll try that out next time.
 
-There is still some inconsistencies regarding style.css.
+There is still some inconsistencies regarding style.css. I'll update it as soon as I have the time.
