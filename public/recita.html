@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="style.css"> 
+  <title>Add Recita</title>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav style="background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
+    <h1 style="color: #2c3e50; margin: 0; font-size: 20px; font-weight: bold;">Recita</h1>
+    <button id="backToClassBtn" style="background: #6b7280; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s;max-width: 200px">Back to Class</button>
+  </nav>
+  <!-- Main Content -->
+  <main style="padding: 24px; max-width: 800px; margin: 0 auto;">
+    <!-- Recita Creation Section -->
+    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 24px;">
+      <h2 style="color: #2c3e50; font-size: 18px; font-weight: bold; margin-bottom: 16px;">New Recita</h2>
+      <p style="margin-bottom: 8px; font-size: 14px; color: #666;">
+        Date: <span id="recitaDate" style="font-weight: 500;"></span>
+      </p>
+      <input 
+        id="topicInput" 
+        type="text" 
+        placeholder="Enter recitation topic (e.g., Chapter 5: Photosynthesis)" 
+        style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px;">
+      
+      <!-- Three Button Row -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+        <button 
+          id="editRecitaBtn" 
+          style="background: #0D3B66; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; display: none;">
+          Edit Recita
+        </button>
+        <button 
+          id="exportRecitaBtn" 
+          style="background: #10b981; color: white; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; display: none;">
+          Export CSV
+        </button>
+      </div>
+    </div>
+    <!-- Pick Student Section -->
+    <div id="pickSection" style="display: none;">
+      <div style="background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 24px;">
+        <button 
+          id="pickStudentBtn" 
+          style="width: 100%; background: #F97316; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px; margin-bottom: 20px;">
+          🎲 Pick Random Student
+        </button>
+        
+        <!-- Called Students Table will be inserted here by JavaScript -->
+        <div id="calledStudentsTableContainer"></div>
+      </div>
+    </div>
+  </main>
+  <script src="app.js"></script>
+  <script>
+    // Set current date and handle back navigation
+    document.addEventListener('DOMContentLoaded', () => {
+      const dateSpan = document.getElementById('recitaDate');
+      if (dateSpan) {
+        dateSpan.textContent = new Date().toLocaleDateString();
+      }
+      
+      // Handle back to class navigation with proper classId
+      const backBtn = document.getElementById('backToClassBtn');
+      if (backBtn) {
+        // Add hover effect
+        backBtn.addEventListener('mouseenter', () => {
+          backBtn.style.background = '#4b5563';
+        });
+        backBtn.addEventListener('mouseleave', () => {
+          backBtn.style.background = '#6b7280';
+        });
+        
+        backBtn.addEventListener('click', () => {
+          const classId = getUrlParameter('classId') || localStorage.getItem('classId');
+          if (classId) {
+            window.location.href = `class.html?id=${classId}`;
+          } else {
+            window.location.href = 'class.html';
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
