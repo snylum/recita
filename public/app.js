@@ -1502,7 +1502,7 @@ async function loadExistingRecita(recitaId) {
 
 
 // -------------------
-// FIXED LOGO SYSTEM (No duplicates)
+// SIMPLE LOGO SYSTEM (No Observer - No Duplicates)
 // -------------------
 (function() {
   // Generate cache-busting parameter once
@@ -1520,29 +1520,23 @@ async function loadExistingRecita(recitaId) {
   window.RECITA_LOGO_URL = logoUrl;
 })();
 
-// Fixed addRecitaLogos function that prevents duplicates
+// Simple addRecitaLogos function that prevents duplicates
 function addRecitaLogos() {
   // Use the cache-busted logo URL
   const logoUrl = window.RECITA_LOGO_URL || "/favicon.png?" + Date.now();
 
   document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button, label, .nav-item").forEach(el => {
     // Skip if already processed or contains an existing logo
-    if (el.dataset.recitaProcessed === 'true' || el.querySelector('img[alt="Recita Logo"]')) {
+    if (el.dataset.recitaProcessed === 'true' || 
+        el.querySelector('img[alt="Recita Logo"]') || 
+        el.innerHTML.includes('alt="Recita Logo"') || 
+        el.innerHTML.includes('#f43773')) {
       return;
     }
 
-    // Only process elements that contain "Recita" text as direct text content
-    // Check that it's not already processed and doesn't have complex children
+    // Only process elements that contain "Recita" text and don't have complex children
     const textContent = el.textContent || '';
-    const innerHTML = el.innerHTML || '';
     
-    // Skip if it already contains logo HTML or if it's already processed
-    if (innerHTML.includes('alt="Recita Logo"') || innerHTML.includes('#f43773')) {
-      el.dataset.recitaProcessed = 'true';
-      return;
-    }
-    
-    // Only process if it contains "Recita" and doesn't have form elements or complex structure
     if (textContent.includes("Recita") && 
         !el.querySelector('input, select, textarea, img') &&
         el.children.length <= 1) {
@@ -1555,7 +1549,7 @@ function addRecitaLogos() {
       const logoHeight = fontSizeNum * 0.75;
       
       // Replace only the first occurrence of "Recita" to prevent duplicates
-      el.innerHTML = innerHTML.replace(
+      el.innerHTML = el.innerHTML.replace(
         /Recita/,
         `<img src="${logoUrl}" alt="Recita Logo" style="` +
         `height: ${logoHeight}px; ` +
@@ -1593,71 +1587,24 @@ function updateAllLogoImages() {
   window.RECITA_LOGO_URL = newLogoUrl;
 }
 
-// Simplified initialization function
+// SIMPLE initialization - no observer
 function initializeRecitaLogos() {
-  // Initial logo setup
+  // Run initial logo setup
   addRecitaLogos();
   
-  // Run once more after a short delay to catch any late-loading content
-  setTimeout(addRecitaLogos, 500);
-  
-  // Much more conservative MutationObserver that only triggers on significant changes
-  let isProcessing = false;
-  
-  const observer = new MutationObserver(function(mutations) {
-    // Prevent recursive calls
-    if (isProcessing) return;
-    
-    let shouldRunLogos = false;
-    
-    mutations.forEach(function(mutation) {
-      // Only check for added nodes, not all mutations
-      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-        mutation.addedNodes.forEach(function(node) {
-          // Only process element nodes that contain "Recita" and don't already have logos
-          if (node.nodeType === Node.ELEMENT_NODE && 
-              node.textContent && 
-              node.textContent.includes('Recita') &&
-              !node.innerHTML.includes('alt="Recita Logo"') &&
-              !node.dataset.recitaProcessed) {
-            shouldRunLogos = true;
-          }
-        });
-      }
-    });
-    
-    if (shouldRunLogos) {
-      isProcessing = true;
-      setTimeout(() => {
-        addRecitaLogos();
-        isProcessing = false;
-      }, 100);
-    }
-  });
-  
-  // Start observing with more limited scope
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-    // Removed characterData to prevent excessive triggering
-  });
-  
-  // Store observer reference for cleanup if needed
-  window.recitaLogoObserver = observer;
+  // Run a few more times to catch any dynamically loaded content
+  setTimeout(addRecitaLogos, 200);
+  setTimeout(addRecitaLogos, 800);
+  setTimeout(addRecitaLogos, 2000);
 }
 
-// Call this function whenever you want to force refresh all logos
-window.refreshAllLogos = updateAllLogoImages;
-
-// Global function to manually trigger logo processing (useful after dynamic content loads)
+// Manual trigger function for specific cases
 window.processRecitaLogos = function() {
-  // Clear all processed flags and re-run
-  document.querySelectorAll('[data-recita-processed]').forEach(el => {
-    delete el.dataset.recitaProcessed;
-  });
   addRecitaLogos();
 };
 
+// Global refresh function
+window.refreshAllLogos = updateAllLogoImages;
 
 // -------------------
 // MAIN INITIALIZATION
