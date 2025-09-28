@@ -688,7 +688,7 @@ function downloadGuestCSV() {
   const a = document.createElement('a');
   a.href = url;
   const safeTopic = topic.replace(/[^a-zA-Z0-9]/g, '-');
-  a.download = `Recita-${safeTopic}-${date.replace(/\//g, '-')}.csv`;
+  a.download = `recita-${safeTopic}-${date.replace(/\//g, '-')}.csv`;
   a.click();
   window.URL.revokeObjectURL(url);
 }
@@ -930,7 +930,7 @@ async function loadRecitaHistory(classId) {
               <p style="font-size: 14px; color: #9ca3af; margin: 0;">${attendanceCount} students called</p>
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button onclick="exportRecitaCSV(${recita.id}, '${Recita.topic.replace(/'/g, "\\'")}')" 
+              <button onclick="exportRecitaCSV(${recita.id}, '${recita.topic.replace(/'/g, "\\'")}')" 
                       style="background: #10b981; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; border: none; cursor: pointer;">
                 Export CSV
               </button>
@@ -1499,8 +1499,10 @@ async function loadExistingRecita(recitaId) {
   }
 }
 
+
+
 // -------------------
-// SIMPLE LOGO SYSTEM - Run Once Only
+// LOGO SYSTEM
 // -------------------
 (function() {
   // Generate cache-busting parameter once
@@ -1514,54 +1516,87 @@ async function loadExistingRecita(recitaId) {
   link.href = logoUrl;
   document.head.appendChild(link);
   
-  // Store the cache-busted URL globally
+  // Store the cache-busted URL globally for use in other functions
   window.RECITA_LOGO_URL = logoUrl;
 })();
 
+// Style Recita with logo (cache-busted version)
+// Style Recita with logo (cache-busted version)
 function addRecitaLogos() {
+  if (document.body.dataset.recitaLogosProcessed === 'true') {
+    return;
+  }
+
+  // Use the cache-busted logo URL
   const logoUrl = window.RECITA_LOGO_URL || "/favicon.png?" + Date.now();
 
-  document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button, label, .nav-item").forEach(el => {
-    // Skip if already processed
-    if (el.dataset.recitaProcessed === 'true' || 
-        el.querySelector('img[alt="Recita Logo"]') ||
-        el.innerHTML.includes('class="recita-logo-img"')) {
+  document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button").forEach(el => {
+    if (el.dataset.recitaProcessed === 'true' || el.querySelector('img[alt="Recita Logo"]')) {
       return;
     }
 
-    const textContent = el.textContent || '';
-
-    // Only process elements that contain "Recita" as plain text and have no child elements
-    if (textContent.includes("Recita") &&
-        !el.innerHTML.includes('<img') &&
-        !el.querySelector('input, select, textarea') &&
-        el.children.length === 0) {
-
+    if (el.textContent.includes("Recita") && el.children.length === 0) {
       const computedStyle = window.getComputedStyle(el);
       const fontSize = computedStyle.fontSize;
+      
+      // Calculate logo size based on the cap height (uppercase letter height)
       const fontSizeNum = parseFloat(fontSize);
-      const logoHeight = fontSizeNum * 0.75;
-
-      // Replace "Recita" with logo + styled span
-      el.innerHTML = el.innerHTML.replace(
+      const logoHeight = fontSizeNum * 0.75; // Size to match cap height, not full line height
+      
+      el.innerHTML = el.textContent.replace(
         /Recita/g,
-        `<img src="${logoUrl}" alt="Recita Logo"
-              class="recita-logo-img"
-              style="height: ${logoHeight}px; width: auto; vertical-align: baseline; margin-right: 0.2em; display: inline;">
-         <span class="recita-text" style="color: #f43773; font-weight: bold;">Recita</span>`
+        `<img src="${logoUrl}" alt="Recita Logo" style="` +
+        `height: ${logoHeight}px; ` +
+        `width: auto; ` +
+        `vertical-align: baseline; ` +
+        `margin-right: 0.2em; ` +
+        `display: inline;">` +
+        `<span style="color: #f43773; font-weight: bold;">Recita</span>`
       );
-
-      // Mark element as processed immediately
+      
       el.dataset.recitaProcessed = 'true';
     }
   });
+
+  document.body.dataset.recitaLogosProcessed = 'true';
 }
+// Function to update all existing logo images with cache-busted version
+function updateAllLogoImages() {
+  const cacheBuster = "v=" + Date.now();
+  const newLogoUrl = "/favicon.png?" + cacheBuster;
+  
+  // Update favicon
+  const favicon = document.querySelector('link[rel="icon"]');
+  if (favicon) {
+    favicon.href = newLogoUrl;
+  }
+  
+  // Update all Recita logo images
+  const logoImages = document.querySelectorAll('img[alt="Recita Logo"]');
+  logoImages.forEach(img => {
+    img.src = newLogoUrl;
+  });
+  
+  // Update global reference
+  window.RECITA_LOGO_URL = newLogoUrl;
+}
+
+// Call this function whenever you want to force refresh all logos
+window.refreshAllLogos = updateAllLogoImages;
+
+
 
 // -------------------
 // MAIN INITIALIZATION
 // -------------------
 document.addEventListener("DOMContentLoaded", () => {
   console.log('DOM loaded, initializing app...');
+  
+  // Initialize logo system
+  addRecitaLogos();
+  setTimeout(addRecitaLogos, 100);
+  setTimeout(addRecitaLogos, 500);
+  setTimeout(updateAllLogoImages, 1000);
   
   // Initialize guest mode
   const guestRecitaContainer = document.getElementById("guestRecita");
@@ -1572,7 +1607,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setupGuestPickButton();
     setupGuestClearButton();
     setupGuestExportButtons();
-    // Remove this line: setTimeout(addRecitaLogos, 200);
   }
   
   // Setup authentication with post-auth callback
@@ -1618,4 +1652,3 @@ document.addEventListener("DOMContentLoaded", () => {
   
   console.log('App initialization complete');
 });
-
