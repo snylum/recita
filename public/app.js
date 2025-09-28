@@ -1502,7 +1502,7 @@ async function loadExistingRecita(recitaId) {
 
 
 // -------------------
-// ENHANCED LOGO SYSTEM (Works on all pages)
+// FIXED LOGO SYSTEM (No duplicates)
 // -------------------
 (function() {
   // Generate cache-busting parameter once
@@ -1520,7 +1520,7 @@ async function loadExistingRecita(recitaId) {
   window.RECITA_LOGO_URL = logoUrl;
 })();
 
-// Enhanced addRecitaLogos function that works on all pages
+// Fixed addRecitaLogos function that prevents duplicates
 function addRecitaLogos() {
   // Use the cache-busted logo URL
   const logoUrl = window.RECITA_LOGO_URL || "/favicon.png?" + Date.now();
@@ -1531,17 +1531,32 @@ function addRecitaLogos() {
       return;
     }
 
-    // Only process elements that contain "Recita" text and don't have complex children
-    if (el.textContent.includes("Recita") && !el.querySelector('input, select, textarea')) {
+    // Only process elements that contain "Recita" text as direct text content
+    // Check that it's not already processed and doesn't have complex children
+    const textContent = el.textContent || '';
+    const innerHTML = el.innerHTML || '';
+    
+    // Skip if it already contains logo HTML or if it's already processed
+    if (innerHTML.includes('alt="Recita Logo"') || innerHTML.includes('#f43773')) {
+      el.dataset.recitaProcessed = 'true';
+      return;
+    }
+    
+    // Only process if it contains "Recita" and doesn't have form elements or complex structure
+    if (textContent.includes("Recita") && 
+        !el.querySelector('input, select, textarea, img') &&
+        el.children.length <= 1) {
+      
       const computedStyle = window.getComputedStyle(el);
       const fontSize = computedStyle.fontSize;
       
-      // Calculate logo size based on the cap height (uppercase letter height)
+      // Calculate logo size based on the cap height
       const fontSizeNum = parseFloat(fontSize);
-      const logoHeight = fontSizeNum * 0.75; // Size to match cap height, not full line height
+      const logoHeight = fontSizeNum * 0.75;
       
-      el.innerHTML = el.textContent.replace(
-        /Recita/g,
+      // Replace only the first occurrence of "Recita" to prevent duplicates
+      el.innerHTML = innerHTML.replace(
+        /Recita/,
         `<img src="${logoUrl}" alt="Recita Logo" style="` +
         `height: ${logoHeight}px; ` +
         `width: auto; ` +
@@ -1551,6 +1566,7 @@ function addRecitaLogos() {
         `<span style="color: #f43773; font-weight: bold;">Recita</span>`
       );
       
+      // Mark as processed to prevent future processing
       el.dataset.recitaProcessed = 'true';
     }
   });
@@ -1577,28 +1593,33 @@ function updateAllLogoImages() {
   window.RECITA_LOGO_URL = newLogoUrl;
 }
 
-// Enhanced initialization function that runs logos on all pages
+// Simplified initialization function
 function initializeRecitaLogos() {
   // Initial logo setup
   addRecitaLogos();
   
-  // Run again after a short delay to catch dynamically loaded content
-  setTimeout(addRecitaLogos, 100);
+  // Run once more after a short delay to catch any late-loading content
   setTimeout(addRecitaLogos, 500);
   
-  // Set up a MutationObserver to watch for new content
+  // Much more conservative MutationObserver that only triggers on significant changes
+  let isProcessing = false;
+  
   const observer = new MutationObserver(function(mutations) {
+    // Prevent recursive calls
+    if (isProcessing) return;
+    
     let shouldRunLogos = false;
     
     mutations.forEach(function(mutation) {
-      // Check if new nodes were added
+      // Only check for added nodes, not all mutations
       if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-        // Check if any added nodes contain text content with "Recita"
         mutation.addedNodes.forEach(function(node) {
+          // Only process element nodes that contain "Recita" and don't already have logos
           if (node.nodeType === Node.ELEMENT_NODE && 
               node.textContent && 
               node.textContent.includes('Recita') &&
-              !node.querySelector('img[alt="Recita Logo"]')) {
+              !node.innerHTML.includes('alt="Recita Logo"') &&
+              !node.dataset.recitaProcessed) {
             shouldRunLogos = true;
           }
         });
@@ -1606,15 +1627,19 @@ function initializeRecitaLogos() {
     });
     
     if (shouldRunLogos) {
-      setTimeout(addRecitaLogos, 50);
+      isProcessing = true;
+      setTimeout(() => {
+        addRecitaLogos();
+        isProcessing = false;
+      }, 100);
     }
   });
   
-  // Start observing the document with the configured parameters
+  // Start observing with more limited scope
   observer.observe(document.body, {
     childList: true,
-    subtree: true,
-    characterData: true
+    subtree: true
+    // Removed characterData to prevent excessive triggering
   });
   
   // Store observer reference for cleanup if needed
@@ -1625,8 +1650,13 @@ function initializeRecitaLogos() {
 window.refreshAllLogos = updateAllLogoImages;
 
 // Global function to manually trigger logo processing (useful after dynamic content loads)
-window.processRecitaLogos = addRecitaLogos;
-
+window.processRecitaLogos = function() {
+  // Clear all processed flags and re-run
+  document.querySelectorAll('[data-recita-processed]').forEach(el => {
+    delete el.dataset.recitaProcessed;
+  });
+  addRecitaLogos();
+};
 
 
 // -------------------
