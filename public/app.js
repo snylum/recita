@@ -1519,12 +1519,32 @@ async function loadExistingRecita(recitaId) {
 })();
 
 // Simple addRecitaLogos function that prevents duplicates
+// SIMPLE initialization - run once, with one safety retry
+function initializeRecitaLogos() {
+  // Run immediately
+  addRecitaLogos();
+  
+  // Single retry after a delay, only if no logos were added
+  setTimeout(() => {
+    const existingLogos = document.querySelectorAll('img[alt="Recita Logo"]').length;
+    if (existingLogos === 0) {
+      console.log('No logos found, retrying once...');
+      addRecitaLogos();
+    } else {
+      console.log(`Found ${existingLogos} logos, skipping retry`);
+    }
+  }, 500);
+}
+
+// Enhanced addRecitaLogos with better duplicate prevention
 function addRecitaLogos() {
   const logoUrl = window.RECITA_LOGO_URL || "/favicon.png?" + Date.now();
 
   document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button, label, .nav-item").forEach(el => {
-    // Skip if already processed
-    if (el.dataset.recitaProcessed === 'true') {
+    // Enhanced duplicate prevention checks
+    if (el.dataset.recitaProcessed === 'true' || 
+        el.querySelector('img[alt="Recita Logo"]') ||
+        el.innerHTML.includes('class="recita-logo-img"')) {
       return;
     }
 
@@ -1543,59 +1563,18 @@ function addRecitaLogos() {
 
       // Replace "Recita" with logo + styled span
       el.innerHTML = el.innerHTML.replace(
-        'Recita',
+        /Recita/g, // Use global flag to replace all instances
         `<img src="${logoUrl}" alt="Recita Logo"
               class="recita-logo-img"
               style="height: ${logoHeight}px; width: auto; vertical-align: baseline; margin-right: 0.2em; display: inline;">
          <span class="recita-text" style="color: #f43773; font-weight: bold;">Recita</span>`
       );
 
-      // Mark element as processed
+      // Mark element as processed immediately
       el.dataset.recitaProcessed = 'true';
     }
   });
 }
-
-
-// Function to update all existing logo images with cache-busted version
-function updateAllLogoImages() {
-  const cacheBuster = "v=" + Date.now();
-  const newLogoUrl = "/favicon.png?" + cacheBuster;
-  
-  // Update favicon
-  const favicon = document.querySelector('link[rel="icon"]');
-  if (favicon) {
-    favicon.href = newLogoUrl;
-  }
-  
-  // Update all Recita logo images
-  const logoImages = document.querySelectorAll('img[alt="Recita Logo"]');
-  logoImages.forEach(img => {
-    img.src = newLogoUrl;
-  });
-  
-  // Update global reference
-  window.RECITA_LOGO_URL = newLogoUrl;
-}
-
-// SIMPLE initialization - no observer
-function initializeRecitaLogos() {
-  // Run initial logo setup
-  addRecitaLogos();
-  
-  // Run a few more times to catch any dynamically loaded content
-  setTimeout(addRecitaLogos, 200);
-  setTimeout(addRecitaLogos, 800);
-  setTimeout(addRecitaLogos, 2000);
-}
-
-// Manual trigger function for specific cases
-window.processRecitaLogos = function() {
-  addRecitaLogos();
-};
-
-// Global refresh function
-window.refreshAllLogos = updateAllLogoImages;
 
 // -------------------
 // MAIN INITIALIZATION
