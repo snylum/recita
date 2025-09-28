@@ -1547,10 +1547,7 @@ function addRecitaLogos() {
 // -------------------
 document.addEventListener("DOMContentLoaded", () => {
   console.log('DOM loaded, initializing app...');
-  
-// Initialize enhanced logo system that works on all pages
-initializeRecitaLogos();
-  
+
   // Initialize guest mode
 const guestRecitaContainer = document.getElementById("guestRecita");
 if (guestRecitaContainer) {
