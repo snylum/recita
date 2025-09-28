@@ -1523,17 +1523,6 @@ async function loadExistingRecita(recitaId) {
 function initializeRecitaLogos() {
   // Run immediately
   addRecitaLogos();
-  
-  // Single retry after a delay, only if no logos were added
-  setTimeout(() => {
-    const existingLogos = document.querySelectorAll('img[alt="Recita Logo"]').length;
-    if (existingLogos === 0) {
-      console.log('No logos found, retrying once...');
-      addRecitaLogos();
-    } else {
-      console.log(`Found ${existingLogos} logos, skipping retry`);
-    }
-  }, 500);
 }
 
 // Enhanced addRecitaLogos with better duplicate prevention
