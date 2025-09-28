@@ -1499,10 +1499,8 @@ async function loadExistingRecita(recitaId) {
   }
 }
 
-
-
 // -------------------
-// SIMPLE LOGO SYSTEM (No Observer - No Duplicates)
+// SIMPLE LOGO SYSTEM (No Observer - No Duplicates)  
 // -------------------
 (function() {
   // Generate cache-busting parameter once
