@@ -153,3 +153,14 @@ button:hover {
   cursor: pointer !important;
   position: relative !important;
 }
+
+/* Force all Recita text to be pink */
+span[style*="#f43773"] {
+    color: #f43773 !important;
+    font-weight: bold !important;
+}
+
+/* Override any orange colors on Recita text */
+*:contains("Recita") {
+    color: #f43773 !important;
+}
