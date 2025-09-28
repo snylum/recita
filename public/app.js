@@ -1502,23 +1502,6 @@ async function loadExistingRecita(recitaId) {
 // -------------------
 // SIMPLE LOGO SYSTEM (No Observer - No Duplicates)  
 // -------------------
-(function() {
-  // Generate cache-busting parameter once
-  const cacheBuster = "v=" + Date.now();
-  const logoUrl = "/favicon.png?" + cacheBuster;
-  
-  // Insert favicon dynamically with cache busting
-  const link = document.createElement("link");
-  link.rel = "icon";
-  link.type = "image/png";
-  link.href = logoUrl;
-  document.head.appendChild(link);
-  
-  // Store the cache-busted URL globally for use in other functions
-  window.RECITA_LOGO_URL = logoUrl;
-})();
-
-// Simple addRecitaLogos function that prevents duplicates
 // SIMPLE initialization - run once, with one safety retry
 function initializeRecitaLogos() {
   // Run immediately
