@@ -1542,6 +1542,14 @@ function addRecitaLogos() {
   });
 }
 
+// MINIMAL initialization - run exactly once
+function initializeRecitaLogos() {
+  // Wait a brief moment for DOM to settle, then run once
+  setTimeout(() => {
+    addRecitaLogos();
+  }, 100);
+}
+
 // -------------------
 // MAIN INITIALIZATION
 // -------------------
