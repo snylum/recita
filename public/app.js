@@ -1502,7 +1502,7 @@ async function loadExistingRecita(recitaId) {
 
 
 // -------------------
-// LOGO SYSTEM
+// ENHANCED LOGO SYSTEM (Works on all pages)
 // -------------------
 (function() {
   // Generate cache-busting parameter once
@@ -1520,22 +1520,19 @@ async function loadExistingRecita(recitaId) {
   window.RECITA_LOGO_URL = logoUrl;
 })();
 
-// Style Recita with logo (cache-busted version)
-// Style Recita with logo (cache-busted version)
+// Enhanced addRecitaLogos function that works on all pages
 function addRecitaLogos() {
-  if (document.body.dataset.recitaLogosProcessed === 'true') {
-    return;
-  }
-
   // Use the cache-busted logo URL
   const logoUrl = window.RECITA_LOGO_URL || "/favicon.png?" + Date.now();
 
-  document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button").forEach(el => {
+  document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button, label, .nav-item").forEach(el => {
+    // Skip if already processed or contains an existing logo
     if (el.dataset.recitaProcessed === 'true' || el.querySelector('img[alt="Recita Logo"]')) {
       return;
     }
 
-    if (el.textContent.includes("Recita") && el.children.length === 0) {
+    // Only process elements that contain "Recita" text and don't have complex children
+    if (el.textContent.includes("Recita") && !el.querySelector('input, select, textarea')) {
       const computedStyle = window.getComputedStyle(el);
       const fontSize = computedStyle.fontSize;
       
@@ -1551,15 +1548,14 @@ function addRecitaLogos() {
         `vertical-align: baseline; ` +
         `margin-right: 0.2em; ` +
         `display: inline;">` +
-        `<span style="color: #fe731f; font-weight: bold;">Recita</span>`
+        `<span style="color: #f43773; font-weight: bold;">Recita</span>`
       );
       
       el.dataset.recitaProcessed = 'true';
     }
   });
-
-  document.body.dataset.recitaLogosProcessed = 'true';
 }
+
 // Function to update all existing logo images with cache-busted version
 function updateAllLogoImages() {
   const cacheBuster = "v=" + Date.now();
@@ -1581,8 +1577,55 @@ function updateAllLogoImages() {
   window.RECITA_LOGO_URL = newLogoUrl;
 }
 
+// Enhanced initialization function that runs logos on all pages
+function initializeRecitaLogos() {
+  // Initial logo setup
+  addRecitaLogos();
+  
+  // Run again after a short delay to catch dynamically loaded content
+  setTimeout(addRecitaLogos, 100);
+  setTimeout(addRecitaLogos, 500);
+  
+  // Set up a MutationObserver to watch for new content
+  const observer = new MutationObserver(function(mutations) {
+    let shouldRunLogos = false;
+    
+    mutations.forEach(function(mutation) {
+      // Check if new nodes were added
+      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+        // Check if any added nodes contain text content with "Recita"
+        mutation.addedNodes.forEach(function(node) {
+          if (node.nodeType === Node.ELEMENT_NODE && 
+              node.textContent && 
+              node.textContent.includes('Recita') &&
+              !node.querySelector('img[alt="Recita Logo"]')) {
+            shouldRunLogos = true;
+          }
+        });
+      }
+    });
+    
+    if (shouldRunLogos) {
+      setTimeout(addRecitaLogos, 50);
+    }
+  });
+  
+  // Start observing the document with the configured parameters
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
+  
+  // Store observer reference for cleanup if needed
+  window.recitaLogoObserver = observer;
+}
+
 // Call this function whenever you want to force refresh all logos
 window.refreshAllLogos = updateAllLogoImages;
+
+// Global function to manually trigger logo processing (useful after dynamic content loads)
+window.processRecitaLogos = addRecitaLogos;
 
 
 
@@ -1592,22 +1635,21 @@ window.refreshAllLogos = updateAllLogoImages;
 document.addEventListener("DOMContentLoaded", () => {
   console.log('DOM loaded, initializing app...');
   
-  // Initialize logo system
-  addRecitaLogos();
-  setTimeout(addRecitaLogos, 100);
-  setTimeout(addRecitaLogos, 500);
-  setTimeout(updateAllLogoImages, 1000);
+// Initialize enhanced logo system that works on all pages
+initializeRecitaLogos();
   
   // Initialize guest mode
-  const guestRecitaContainer = document.getElementById("guestRecita");
-  if (guestRecitaContainer) {
-    console.log("Guest mode detected - initializing guest functionality");
-    initGuestMode();
-    setupGuestTopicSaving();
-    setupGuestPickButton();
-    setupGuestClearButton();
-    setupGuestExportButtons();
-  }
+const guestRecitaContainer = document.getElementById("guestRecita");
+if (guestRecitaContainer) {
+  console.log("Guest mode detected - initializing guest functionality");
+  initGuestMode();
+  setupGuestTopicSaving();
+  setupGuestPickButton();
+  setupGuestClearButton();
+  setupGuestExportButtons();
+  // Ensure logos are processed for guest mode content
+  setTimeout(addRecitaLogos, 200);
+}
   
   // Setup authentication with post-auth callback
   setupLogin(apiFetch, (url) => {
