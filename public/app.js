@@ -1523,32 +1523,34 @@ function addRecitaLogos() {
   const logoUrl = window.RECITA_LOGO_URL || "/favicon.png?" + Date.now();
 
   document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button, label, .nav-item").forEach(el => {
-    // Skip if already has logo or processed
-    if (el.dataset.recitaProcessed === 'true' || 
-        el.innerHTML.includes('alt="Recita Logo"') || 
-        el.innerHTML.includes('#f43773')) {
+    // Skip if already processed
+    if (el.dataset.recitaProcessed === 'true') {
       return;
     }
 
     const textContent = el.textContent || '';
     
-    // Only process elements with plain "Recita" text
+    // Only process elements that contain "Recita" as plain text and have no child elements
     if (textContent.includes("Recita") && 
         !el.innerHTML.includes('<img') && 
-        !el.innerHTML.includes('<span') &&
         !el.querySelector('input, select, textarea') &&
-        el.children.length === 0) {  // Only elements with NO child elements
+        el.children.length === 0) {
       
       const computedStyle = window.getComputedStyle(el);
       const fontSize = computedStyle.fontSize;
       const fontSizeNum = parseFloat(fontSize);
       const logoHeight = fontSizeNum * 0.75;
-      
+
+      // Replace "Recita" with logo + styled span
       el.innerHTML = el.innerHTML.replace(
-        'Recita',  // Replace just the first literal occurrence
-        `<img src="${logoUrl}" alt="Recita Logo" style="height: ${logoHeight}px; width: auto; vertical-align: baseline; margin-right: 0.2em; display: inline;"><span style="color: #f43773; font-weight: bold;">Recita</span>`
+        'Recita',
+        `<img src="${logoUrl}" alt="Recita Logo" 
+              class="recita-logo-img"
+              style="height: ${logoHeight}px; width: auto; vertical-align: baseline; margin-right: 0.2em; display: inline;">
+         <span class="recita-text">Recita</span>`
       );
-      
+
+      // Mark as processed so it won’t be touched again
       el.dataset.recitaProcessed = 'true';
     }
   });
