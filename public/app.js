@@ -1563,9 +1563,6 @@ function addRecitaLogos() {
 document.addEventListener("DOMContentLoaded", () => {
   console.log('DOM loaded, initializing app...');
   
-  // Run logo processing exactly once after DOM settles
-  setTimeout(addRecitaLogos, 100);
-  
   // Initialize guest mode
   const guestRecitaContainer = document.getElementById("guestRecita");
   if (guestRecitaContainer) {
