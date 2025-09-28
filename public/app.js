@@ -1500,11 +1500,34 @@ async function loadExistingRecita(recitaId) {
 }
 
 // -------------------
-// SIMPLE LOGO SYSTEM (No Observer - No Duplicates)  
-// ------------------
-// Enhanced addRecitaLogos with better duplicate prevention
+// SIMPLE LOGO SYSTEM - Run Once Only
+// -------------------
+(function() {
+  // Generate cache-busting parameter once
+  const cacheBuster = "v=" + Date.now();
+  const logoUrl = "/favicon.png?" + cacheBuster;
+  
+  // Insert favicon dynamically with cache busting
+  const link = document.createElement("link");
+  link.rel = "icon";
+  link.type = "image/png";
+  link.href = logoUrl;
+  document.head.appendChild(link);
+  
+  // Store the cache-busted URL globally
+  window.RECITA_LOGO_URL = logoUrl;
+})();
+
 function addRecitaLogos() {
   const logoUrl = window.RECITA_LOGO_URL || "/favicon.png?" + Date.now();
+
+  document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button, label, .nav-item").forEach(el => {
+    // Skip if already processed
+    if (el.dataset.recitaProcessed === 'true' || 
+        el.querySelector('img[alt="Recita Logo"]') ||
+        el.innerHTML.includes('class="recita-logo-img"')) {
+      return;
+    }
 
     const textContent = el.textContent || '';
 
@@ -1521,7 +1544,7 @@ function addRecitaLogos() {
 
       // Replace "Recita" with logo + styled span
       el.innerHTML = el.innerHTML.replace(
-        /Recita/g, // Use global flag to replace all instances
+        /Recita/g,
         `<img src="${logoUrl}" alt="Recita Logo"
               class="recita-logo-img"
               style="height: ${logoHeight}px; width: auto; vertical-align: baseline; margin-right: 0.2em; display: inline;">
@@ -1534,25 +1557,26 @@ function addRecitaLogos() {
   });
 }
 
-// MINIMAL initialization - run exactly once
-setTimeout(addRecitaLogos, 100);
-
 // -------------------
 // MAIN INITIALIZATION
 // -------------------
 document.addEventListener("DOMContentLoaded", () => {
   console.log('DOM loaded, initializing app...');
-
+  
+  // Run logo processing exactly once after DOM settles
+  setTimeout(addRecitaLogos, 100);
+  
   // Initialize guest mode
-const guestRecitaContainer = document.getElementById("guestRecita");
-if (guestRecitaContainer) {
-  console.log("Guest mode detected - initializing guest functionality");
-  initGuestMode();
-  setupGuestTopicSaving();
-  setupGuestPickButton();
-  setupGuestClearButton();
-  setupGuestExportButtons();
-}
+  const guestRecitaContainer = document.getElementById("guestRecita");
+  if (guestRecitaContainer) {
+    console.log("Guest mode detected - initializing guest functionality");
+    initGuestMode();
+    setupGuestTopicSaving();
+    setupGuestPickButton();
+    setupGuestClearButton();
+    setupGuestExportButtons();
+    // Remove this line: setTimeout(addRecitaLogos, 200);
+  }
   
   // Setup authentication with post-auth callback
   setupLogin(apiFetch, (url) => {
