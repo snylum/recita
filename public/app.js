@@ -1506,14 +1506,6 @@ async function loadExistingRecita(recitaId) {
 function addRecitaLogos() {
   const logoUrl = window.RECITA_LOGO_URL || "/favicon.png?" + Date.now();
 
-  document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button, label, .nav-item").forEach(el => {
-    // Enhanced duplicate prevention checks
-    if (el.dataset.recitaProcessed === 'true' || 
-        el.querySelector('img[alt="Recita Logo"]') ||
-        el.innerHTML.includes('class="recita-logo-img"')) {
-      return;
-    }
-
     const textContent = el.textContent || '';
 
     // Only process elements that contain "Recita" as plain text and have no child elements
@@ -1543,12 +1535,7 @@ function addRecitaLogos() {
 }
 
 // MINIMAL initialization - run exactly once
-function initializeRecitaLogos() {
-  // Wait a brief moment for DOM to settle, then run once
-  setTimeout(() => {
-    addRecitaLogos();
-  }, 100);
-}
+setTimeout(addRecitaLogos, 100);
 
 // -------------------
 // MAIN INITIALIZATION
