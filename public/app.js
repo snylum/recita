@@ -1501,13 +1501,7 @@ async function loadExistingRecita(recitaId) {
 
 // -------------------
 // SIMPLE LOGO SYSTEM (No Observer - No Duplicates)  
-// -------------------
-// SIMPLE initialization - run once, with one safety retry
-function initializeRecitaLogos() {
-  // Run immediately
-  addRecitaLogos();
-}
-
+// ------------------
 // Enhanced addRecitaLogos with better duplicate prevention
 function addRecitaLogos() {
   const logoUrl = window.RECITA_LOGO_URL || "/favicon.png?" + Date.now();
