@@ -1560,8 +1560,6 @@ if (guestRecitaContainer) {
   setupGuestPickButton();
   setupGuestClearButton();
   setupGuestExportButtons();
-  // Ensure logos are processed for guest mode content
-  setTimeout(addRecitaLogos, 200);
 }
   
   // Setup authentication with post-auth callback
