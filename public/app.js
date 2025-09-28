@@ -688,7 +688,7 @@ function downloadGuestCSV() {
   const a = document.createElement('a');
   a.href = url;
   const safeTopic = topic.replace(/[^a-zA-Z0-9]/g, '-');
-  a.download = `recita-${safeTopic}-${date.replace(/\//g, '-')}.csv`;
+  a.download = `Recita-${safeTopic}-${date.replace(/\//g, '-')}.csv`;
   a.click();
   window.URL.revokeObjectURL(url);
 }
@@ -930,7 +930,7 @@ async function loadRecitaHistory(classId) {
               <p style="font-size: 14px; color: #9ca3af; margin: 0;">${attendanceCount} students called</p>
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button onclick="exportRecitaCSV(${recita.id}, '${recita.topic.replace(/'/g, "\\'")}')" 
+              <button onclick="exportRecitaCSV(${recita.id}, '${Recita.topic.replace(/'/g, "\\'")}')" 
                       style="background: #10b981; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; border: none; cursor: pointer;">
                 Export CSV
               </button>
