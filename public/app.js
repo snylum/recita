@@ -1520,45 +1520,35 @@ async function loadExistingRecita(recitaId) {
 
 // Simple addRecitaLogos function that prevents duplicates
 function addRecitaLogos() {
-  // Use the cache-busted logo URL
   const logoUrl = window.RECITA_LOGO_URL || "/favicon.png?" + Date.now();
 
   document.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, div, a, button, label, .nav-item").forEach(el => {
-    // Skip if already processed or contains an existing logo
+    // Skip if already has logo or processed
     if (el.dataset.recitaProcessed === 'true' || 
-        el.querySelector('img[alt="Recita Logo"]') || 
         el.innerHTML.includes('alt="Recita Logo"') || 
         el.innerHTML.includes('#f43773')) {
       return;
     }
 
-    // Only process elements that contain "Recita" text and don't have complex children
     const textContent = el.textContent || '';
     
+    // Only process elements with plain "Recita" text
     if (textContent.includes("Recita") && 
-        !el.querySelector('input, select, textarea, img') &&
-        el.children.length <= 1) {
+        !el.innerHTML.includes('<img') && 
+        !el.innerHTML.includes('<span') &&
+        !el.querySelector('input, select, textarea') &&
+        el.children.length === 0) {  // Only elements with NO child elements
       
       const computedStyle = window.getComputedStyle(el);
       const fontSize = computedStyle.fontSize;
-      
-      // Calculate logo size based on the cap height
       const fontSizeNum = parseFloat(fontSize);
       const logoHeight = fontSizeNum * 0.75;
       
-      // Replace only the first occurrence of "Recita" to prevent duplicates
       el.innerHTML = el.innerHTML.replace(
-        /Recita/,
-        `<img src="${logoUrl}" alt="Recita Logo" style="` +
-        `height: ${logoHeight}px; ` +
-        `width: auto; ` +
-        `vertical-align: baseline; ` +
-        `margin-right: 0.2em; ` +
-        `display: inline;">` +
-        `<span style="color: #f43773; font-weight: bold;">Recita</span>`
+        'Recita',  // Replace just the first literal occurrence
+        `<img src="${logoUrl}" alt="Recita Logo" style="height: ${logoHeight}px; width: auto; vertical-align: baseline; margin-right: 0.2em; display: inline;"><span style="color: #f43773; font-weight: bold;">Recita</span>`
       );
       
-      // Mark as processed to prevent future processing
       el.dataset.recitaProcessed = 'true';
     }
   });
