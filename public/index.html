@@ -25,7 +25,7 @@
     
     /* Ensure buttons and inputs are mobile-friendly */
     @media (max-width: 767px) {
-      body {
+      .recita-main {
         padding: 10px;
       }
       
@@ -36,7 +36,7 @@
       }
       
       input, textarea, button {
-        font-size: 16px; /* Prevents zoom on iOS */
+        font-size: 16px;
       }
       
       #guestStudentList {
@@ -49,33 +49,46 @@
     }
     
     .feature-box {
-      background: #dbeafe; 
-      border: 1px solid #93c5fd; 
-      border-radius: 8px; 
-      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 24px;
     }
     
-    @media (min-width: 768px) {
-      .feature-box {
-        padding: 25px;
-      }
+    .feature-box h3 {
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+    
+    .feature-box ul {
+      color: #2c3e50;
+      margin: 15px 0;
+      padding-left: 25px;
+      line-height: 1.6;
+    }
+    
+    .feature-box li {
+      margin-bottom: 8px;
     }
   </style>
 </head>
 <body>
   <!-- Header -->
-  <div style="text-align: center; margin-bottom: 20px;">
-    <h1 style="color: #2c3e50; margin-bottom: 10px;">Recita</h1>
-    <button id="showLoginBtn" style="width: auto; display: inline-block; margin: 0; padding: 8px 16px;">
+  <div class="recita-nav">
+    <h1>Recita</h1>
+    <button id="showLoginBtn" style="background: #6b7280; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
       Login / Sign Up
     </button>
   </div>
 
   <!-- Main Guest Mode Interface -->
-  <div id="app">
+  <div class="recita-main">
     <div id="guestRecita">
       <!-- Welcome Section -->
-      <h2>Try Recita Free!</h2>
+      <h2 style="color: #2c3e50; font-size: 18px; font-weight: bold;">Try Recita Free!</h2>
       <p style="margin-bottom: 25px; color: #666; line-height: 1.5;">The only tool you need to monitor, grade, and take recitations!</p>
       
       <!-- Two Column Layout (responsive) -->
@@ -84,15 +97,13 @@
         <!-- Left Column: Main Functionality -->
         <div>
           <!-- Topic Input -->
-          <div style="margin-bottom: 25px;">
-            <label for="guestTopic" style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">
-              Topic for today's recitation:
-            </label>
+          <div class="recita-card">
+            <h2>Topic for today's recitation:</h2>
             <input 
               type="text" 
               id="guestTopic" 
               placeholder="e.g., Chapter 5: Photosynthesis"
-              style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
+              style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px;">
             
             <div id="guestTopicStatus" style="display: none; background: #e8f5e8; padding: 10px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #22c55e;">
               <div style="font-weight: bold; color: #2c3e50;">Current Topic:</div>
@@ -102,25 +113,23 @@
           </div>
 
           <!-- Student Input -->
-          <div style="margin-bottom: 25px;">
-            <label for="guestStudentList" style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">
-              Paste student names here (one per line):
-            </label>
-<textarea id="guestStudentList" style="width: 100%; height: 140px; resize: vertical; font-family: monospace; line-height: 1.4; padding: 12px; box-sizing: border-box;" placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;Alex Thompson&#10;Emma Davis&#10;..."></textarea>
+          <div class="recita-card">
+            <h2>Paste student names here (one per line):</h2>
+            <textarea id="guestStudentList" style="width: 100%; height: 140px; resize: vertical; font-family: monospace; line-height: 1.4; padding: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;" placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;Alex Thompson&#10;Emma Davis&#10;..."></textarea>
           </div>
           
           <!-- Pick Button -->
-          <button id="guestPickBtn" style="background: #10b981; font-size: 16px; padding: 12px; margin-bottom: 30px; width: 100%; min-height: 48px;">
+          <button id="guestPickBtn" style="width: 100%; background: #F97316; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px; margin-bottom: 20px;">
             🎲 Pick Random Student
           </button>
 
           <!-- Called Students Section -->
-          <div style="margin-top: 35px;">
+          <div class="recita-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-              <h3 style="margin: 0;">Called Students</h3>
+              <h2 style="margin: 0;">Called Students</h2>
               <button 
                 class="guestSaveBtn" 
-                style="width: auto; display: inline-block; margin: 0; padding: 10px 16px; background: #8b5cf6; font-size: 14px; min-height: 40px;">
+                style="background: #10b981; color: white; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px;">
                 💾 Save Data / Export CSV
               </button>
             </div>
@@ -133,7 +142,7 @@
           <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px; flex-wrap: wrap;">
             <button 
               id="guestClearBtn" 
-              style="width: auto; display: inline-block; margin: 0; padding: 10px 20px; background: #ef4444; font-size: 14px; min-height: 40px;">
+              style="background: #ef4444; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px;">
               🗑️ Clear All Data
             </button>
           </div>
@@ -141,18 +150,18 @@
 
         <!-- Right Column: Features Info (becomes second row on mobile) -->
         <div class="feature-box">
-          <h3 style="color: #1e40af; margin-top: 0; margin-bottom: 15px;">Why Create an Account?</h3>
-          <ul style="color: #1e40af; margin: 15px 0; padding-left: 25px; line-height: 1.6;">
-            <li style="margin-bottom: 8px;">Save your class rosters permanently</li>
-            <li style="margin-bottom: 8px;">Export attendance data to CSV</li>
-            <li style="margin-bottom: 8px;">Track student participation over time</li>
-            <li style="margin-bottom: 8px;">Create multiple classes</li>
+          <h3>Why Create an Account?</h3>
+          <ul>
+            <li>Save your class rosters permanently</li>
+            <li>Export attendance data to CSV</li>
+            <li>Track student participation over time</li>
+            <li>Create multiple classes</li>
             <li>Access your data from any device</li>
           </ul>
           <div style="text-align: center; margin-top: 20px;">
-<button type="button" id="getStartedBtn" style="width: auto; display: inline-block; margin: 0; padding: 12px 24px; background: #2563eb; font-size: 15px; min-height: 44px;">
-  🚀 Get Started
-</button>
+            <button type="button" id="getStartedBtn" style="width: 100%; background: #F97316; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px;">
+              🚀 Get Started
+            </button>
           </div>
         </div>
       </div>
@@ -163,34 +172,34 @@
   <div id="loginModal" class="modal" style="display: none;">
     <div class="modal-content" style="width: 350px; max-width: 90vw; margin: 20px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">Welcome, teacher!</h2>
-        <button id="closeLoginModal" style="width: 30px; height: 30px; margin: 0; padding: 0; background: #f3f4f6; color: #666; border: 1px solid #d1d5db;">×</button>
+        <h2 style="margin: 0; color: #2c3e50; font-size: 18px; font-weight: bold;">Welcome, teacher!</h2>
+        <button id="closeLoginModal" style="width: 30px; height: 30px; margin: 0; padding: 0; background: #f3f4f6; color: #666; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">×</button>
       </div>
       
       <!-- Login Form -->
       <div id="loginSection">
         <form id="loginForm" style="margin-bottom: 15px;">
-          <input id="email" type="email" placeholder="Email" required style="min-height: 44px;">
-          <input id="password" type="password" placeholder="Password" required style="min-height: 44px;">
-          <button type="submit" style="min-height: 44px;">Login</button>
+          <input id="email" type="email" placeholder="Email" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 12px; box-sizing: border-box; font-size: 14px;">
+          <input id="password" type="password" placeholder="Password" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px;">
+          <button type="submit" style="width: 100%; background: #F97316; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px;">Login</button>
         </form>
         <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
           New here? 
-          <button type="button" id="showSignupBtn" style="background: none; border: none; color: #4f46e5; text-decoration: underline; padding: 4px; width: auto; display: inline; cursor: pointer; min-height: auto;">Create Account</button>
+          <button type="button" id="showSignupBtn" style="background: none; border: none; color: #F97316; text-decoration: underline; padding: 4px; cursor: pointer; font-size: 14px;">Create Account</button>
         </p>
       </div>
 
       <!-- Signup Form (Hidden by default) -->
       <div id="signupSection" style="display: none;">
         <form id="signupForm" style="margin-bottom: 15px;">
-          <input id="signupName" type="text" placeholder="Full Name" required style="min-height: 44px;">
-          <input id="signupEmail" type="email" placeholder="Email" required style="min-height: 44px;">
-          <input id="signupPassword" type="password" placeholder="Password" required style="min-height: 44px;">
-          <button type="submit" style="background: #10b981; min-height: 44px;">Create Account</button>
+          <input id="signupName" type="text" placeholder="Full Name" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 12px; box-sizing: border-box; font-size: 14px;">
+          <input id="signupEmail" type="email" placeholder="Email" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 12px; box-sizing: border-box; font-size: 14px;">
+          <input id="signupPassword" type="password" placeholder="Password" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px;">
+          <button type="submit" style="width: 100%; background: #10b981; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px;">Create Account</button>
         </form>
         <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
           Already have an account? 
-          <button type="button" id="showLoginBtn2" style="background: none; border: none; color: #4f46e5; text-decoration: underline; padding: 4px; width: auto; display: inline; cursor: pointer; min-height: auto;">Login</button>
+          <button type="button" id="showLoginBtn2" style="background: none; border: none; color: #F97316; text-decoration: underline; padding: 4px; cursor: pointer; font-size: 14px;">Login</button>
         </p>
       </div>
     </div>
@@ -207,14 +216,14 @@
       const showLoginBtn2 = document.getElementById('showLoginBtn2');
       const loginSection = document.getElementById('loginSection');
       const signupSection = document.getElementById('signupSection');
+      const getStartedBtn = document.getElementById('getStartedBtn');
 
-const getStartedBtn = document.getElementById('getStartedBtn'); // Add this line
-// Add new handler for "Get Started" button
-getStartedBtn.addEventListener('click', () => {
-  loginModal.style.display = 'flex';
-  loginSection.style.display = 'none';
-  signupSection.style.display = 'block';
-});
+      // Add new handler for "Get Started" button
+      getStartedBtn.addEventListener('click', () => {
+        loginModal.style.display = 'flex';
+        loginSection.style.display = 'none';
+        signupSection.style.display = 'block';
+      });
       
       // Show login modal
       showLoginBtn.addEventListener('click', () => {
@@ -282,14 +291,14 @@ getStartedBtn.addEventListener('click', () => {
         });
       }
 
-      // Add hover effects with JavaScript since CSS can't target dynamic buttons
+      // Add hover effects
       const pickBtn = document.getElementById('guestPickBtn');
       if (pickBtn) {
         pickBtn.addEventListener('mouseenter', () => {
-          pickBtn.style.background = '#059669';
+          pickBtn.style.background = '#ea580c';
         });
         pickBtn.addEventListener('mouseleave', () => {
-          pickBtn.style.background = '#10b981';
+          pickBtn.style.background = '#F97316';
         });
       }
     });
