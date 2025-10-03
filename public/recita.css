@@ -125,3 +125,26 @@
   font-size: 16px;
   margin-bottom: 20px;
 }
+
+.modal {
+  display: none;             /* hidden by default */
+  position: fixed;           /* sit on top of page */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);  /* semi-transparent background */
+  justify-content: center;   /* center horizontally */
+  align-items: center;       /* center vertically */
+  z-index: 9999;             /* stay on top */
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
