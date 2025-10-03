@@ -1,265 +1,307 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
   <title>Recita - Take Recitations</title>
-  <link rel="stylesheet" href="recita.css"/>
+  <link rel="stylesheet" href="recita.css">
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f9fafb; }
-    .recita-nav {
-      display: flex; justify-content: space-between; align-items: center;
-      background: #fff; padding: 10px 20px; border-bottom: 1px solid #e5e7eb;
+    /* Mobile-first responsive styles */
+    .two-column-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
     }
-    .recita-nav h1 { margin: 0; color: #f43773; font-size: 20px; }
-    .recita-main { padding: 20px; max-width: 900px; margin: auto; }
-    .recita-card {
-      background: #fff; padding: 16px; border-radius: 10px;
-      margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-    .feature-box { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .two-column-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    
+    /* Desktop and tablet layouts */
     @media (min-width: 768px) {
-      .two-column-layout { grid-template-columns: 2fr 1fr; }
+      .two-column-layout {
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+      }
     }
-    button { cursor: pointer; }
-    /* Popup */
-    #studentPopup {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      display: none; align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.4); z-index: 999;
+    
+    /* Ensure buttons and inputs are mobile-friendly */
+    @media (max-width: 767px) {
+      .recita-main {
+        padding: 10px;
+      }
+      
+      .modal-content {
+        width: 90% !important;
+        max-width: 350px;
+        margin: 20px;
+      }
+      
+      input, textarea, button {
+        font-size: 16px;
+      }
+      
+      #guestStudentList {
+        height: 120px !important;
+      }
+      
+      .feature-box {
+        margin-bottom: 20px;
+      }
     }
-    #studentPopup .popup-content {
-      background: #fff; padding: 20px; border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      text-align: center; width: 300px;
+    
+    .feature-box {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 24px;
     }
-    #studentPopup h3 { margin: 0 0 15px 0; }
-    #studentPopup button {
-      margin: 5px; padding: 10px 15px; border-radius: 8px;
-      border: none; font-weight: bold;
+    
+    .feature-box h3 {
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 0;
+      margin-bottom: 16px;
     }
-    #studentPopup .called { background: #10b981; color: white; }
-    #studentPopup .skip { background: #ef4444; color: white; }
-    #studentPopup .custom { background: #F97316; color: white; }
+    
+    .feature-box ul {
+      color: #2c3e50;
+      margin: 15px 0;
+      padding-left: 25px;
+      line-height: 1.6;
+    }
+    
+    .feature-box li {
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 <body>
   <!-- Header -->
   <div class="recita-nav">
     <h1>Recita</h1>
-    <button id="showLoginBtn" style="background:#6b7280;color:white;border:none;padding:8px 16px;border-radius:6px;">
+    <button id="showLoginBtn" style="background: #6b7280; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
       Login / Sign Up
     </button>
   </div>
 
-  <!-- Main Guest Mode -->
+  <!-- Main Guest Mode Interface -->
   <div class="recita-main">
-    <h2 style="color: #2c3e50;">Try Recita Free!</h2>
-    <p style="margin-bottom: 20px; color: #666;">The only tool you need to monitor, grade, and take recitations!</p>
-
-    <div class="two-column-layout">
-      <!-- Left column -->
-      <div>
-        <div class="recita-card">
-          <h3>Topic for today's recitation:</h3>
-          <input id="guestTopic" type="text" placeholder="e.g., Chapter 5: Photosynthesis"
-            style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;">
-          <div id="guestTopicStatus" style="display:none;margin-top:10px;background:#e8f5e8;padding:8px;border-radius:6px;">
-            <b>Current Topic:</b> <span id="guestTopicDisplay"></span><br>
-            <span id="guestDateDisplay" style="font-size:0.9em;color:#555;"></span>
+    <div id="guestRecita">
+      <!-- Welcome Section -->
+      <h2 style="color: #2c3e50; font-size: 18px; font-weight: bold;">Try Recita Free!</h2>
+      <p style="margin-bottom: 25px; color: #666; line-height: 1.5;">The only tool you need to monitor, grade, and take recitations!</p>
+      
+      <!-- Two Column Layout (responsive) -->
+      <div class="two-column-layout">
+        
+        <!-- Left Column: Main Functionality -->
+        <div>
+          <!-- Topic Input -->
+          <div class="recita-card">
+            <h2>Topic for today's recitation:</h2>
+            <input 
+              type="text" 
+              id="guestTopic" 
+              placeholder="e.g., Chapter 5: Photosynthesis"
+              style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px;">
+            
+            <div id="guestTopicStatus" style="display: none; background: #e8f5e8; padding: 10px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #22c55e;">
+              <div style="font-weight: bold; color: #2c3e50;">Current Topic:</div>
+              <div id="guestTopicDisplay" style="color: #2c3e50;"></div>
+              <div id="guestDateDisplay" style="font-size: 0.9em; color: #666; margin-top: 5px;"></div>
+            </div>
           </div>
-        </div>
 
-        <div class="recita-card">
-          <h3>Paste student names here (one per line):</h3>
-          <textarea id="guestStudentList"
-            style="width:100%;height:140px;resize:vertical;font-family:monospace;"></textarea>
-        </div>
+          <!-- Student Input -->
+          <div class="recita-card">
+            <h2>Paste student names here (one per line):</h2>
+            <textarea id="guestStudentList" style="width: 100%; height: 140px; resize: vertical; font-family: monospace; line-height: 1.4; padding: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;" placeholder="John Smith&#10;Jane Doe&#10;Mike Johnson&#10;Sarah Wilson&#10;Alex Thompson&#10;Emma Davis&#10;..."></textarea>
+          </div>
+          
+          <!-- Pick Button -->
+          <button id="guestPickBtn" style="width: 100%; background: #F97316; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px; margin-bottom: 20px;">
+            🎲 Pick Random Student
+          </button>
 
-        <button id="guestPickBtn"
-          style="width:100%;background:#F97316;color:#fff;padding:12px;border-radius:8px;font-weight:bold;font-size:16px;margin-bottom:20px;">
-          🎲 Pick Random Student
-        </button>
+          <!-- Called Students Section -->
+          <div class="recita-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+              <h2 style="margin: 0;">Called Students</h2>
+              <button 
+                class="guestSaveBtn" 
+                style="background: #10b981; color: white; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px;">
+                💾 Save Data / Export CSV
+              </button>
+            </div>
+            <div id="guestCalledStudents" style="min-height: 60px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+              <p style="color: #888; font-style: italic; margin: 0; text-align: center;">No students called yet</p>
+            </div>
+          </div>
 
-        <div class="recita-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <h3>Called Students</h3>
-            <button class="guestSaveBtn"
-              style="background:#10b981;color:white;padding:8px 12px;border-radius:8px;">
-              💾 Save Data / Export CSV
+          <!-- Action Buttons -->
+          <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px; flex-wrap: wrap;">
+            <button 
+              id="guestClearBtn" 
+              style="background: #ef4444; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 14px;">
+              🗑️ Clear All Data
             </button>
           </div>
-          <div id="guestCalledStudents" style="min-height:60px;margin-top:10px;padding:10px;background:#f8f9fa;border:1px solid #ddd;border-radius:8px;">
-            <p style="color:#888;text-align:center;font-style:italic;margin:0;">No students called yet</p>
+        </div>
+
+        <!-- Right Column: Features Info (becomes second row on mobile) -->
+        <div class="feature-box">
+          <h3>Why Create an Account?</h3>
+          <ul>
+            <li>Save your class rosters permanently</li>
+            <li>Export attendance data to CSV</li>
+            <li>Track student participation over time</li>
+            <li>Create multiple classes</li>
+            <li>Access your data from any device</li>
+          </ul>
+          <div style="text-align: center; margin-top: 20px;">
+            <button type="button" id="getStartedBtn" style="width: 100%; background: #F97316; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px;">
+              🚀 Get Started
+            </button>
           </div>
         </div>
-
-        <div style="text-align:center;">
-          <button id="guestClearBtn"
-            style="background:#ef4444;color:#fff;padding:10px 20px;border-radius:8px;font-weight:bold;">
-            🗑️ Clear All Data
-          </button>
-        </div>
-      </div>
-
-      <!-- Right column -->
-      <div class="feature-box">
-        <h3>Why Create an Account?</h3>
-        <ul>
-          <li>Save your class rosters permanently</li>
-          <li>Export attendance data to CSV</li>
-          <li>Track student participation</li>
-          <li>Create multiple classes</li>
-          <li>Access your data anywhere</li>
-        </ul>
-        <button id="getStartedBtn"
-          style="width:100%;margin-top:10px;background:#F97316;color:#fff;padding:12px;border-radius:8px;font-weight:bold;">
-          🚀 Get Started
-        </button>
       </div>
     </div>
   </div>
 
-  <!-- Student Action Popup -->
-  <div id="studentPopup">
-    <div class="popup-content">
-      <h3 id="popupStudentName"></h3>
-      <button class="called">✅ Called</button>
-      <button class="skip">↩️ Skip</button>
-      <button class="custom">✍️ Custom</button>
+  <!-- Login Modal (Hidden by default) -->
+  <div id="loginModal" class="modal" style="display: none;">
+    <div class="modal-content" style="width: 350px; max-width: 90vw; margin: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0; color: #2c3e50; font-size: 18px; font-weight: bold;">Welcome, teacher!</h2>
+        <button id="closeLoginModal" style="width: 30px; height: 30px; margin: 0; padding: 0; background: #f3f4f6; color: #666; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">×</button>
+      </div>
+      
+      <!-- Login Form -->
+      <div id="loginSection">
+        <form id="loginForm" style="margin-bottom: 15px;">
+          <input id="email" type="email" placeholder="Email" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 12px; box-sizing: border-box; font-size: 14px;">
+          <input id="password" type="password" placeholder="Password" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px;">
+          <button type="submit" style="width: 100%; background: #F97316; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px;">Login</button>
+        </form>
+        <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
+          New here? 
+          <button type="button" id="showSignupBtn" style="background: none; border: none; color: #F97316; text-decoration: underline; padding: 4px; cursor: pointer; font-size: 14px;">Create Account</button>
+        </p>
+      </div>
+
+      <!-- Signup Form (Hidden by default) -->
+      <div id="signupSection" style="display: none;">
+        <form id="signupForm" style="margin-bottom: 15px;">
+          <input id="signupName" type="text" placeholder="Full Name" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 12px; box-sizing: border-box; font-size: 14px;">
+          <input id="signupEmail" type="email" placeholder="Email" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 12px; box-sizing: border-box; font-size: 14px;">
+          <input id="signupPassword" type="password" placeholder="Password" required style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px;">
+          <button type="submit" style="width: 100%; background: #10b981; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 16px;">Create Account</button>
+        </form>
+        <p style="text-align: center; font-size: 14px; color: #666; margin: 0;">
+          Already have an account? 
+          <button type="button" id="showLoginBtn2" style="background: none; border: none; color: #F97316; text-decoration: underline; padding: 4px; cursor: pointer; font-size: 14px;">Login</button>
+        </p>
+      </div>
     </div>
   </div>
 
-  <!-- Guest Logic -->
+  <script src="app.js"></script>
   <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const topicInput = document.getElementById("guestTopic");
-    const topicStatus = document.getElementById("guestTopicStatus");
-    const topicDisplay = document.getElementById("guestTopicDisplay");
-    const dateDisplay = document.getElementById("guestDateDisplay");
-    const studentTextarea = document.getElementById("guestStudentList");
-    const pickBtn = document.getElementById("guestPickBtn");
-    const calledContainer = document.getElementById("guestCalledStudents");
-    const clearBtn = document.getElementById("guestClearBtn");
-    const saveBtn = document.querySelector(".guestSaveBtn");
+    // Modal controls
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginModal = document.getElementById('loginModal');
+      const showLoginBtn = document.getElementById('showLoginBtn');
+      const closeLoginModal = document.getElementById('closeLoginModal');
+      const showSignupBtn = document.getElementById('showSignupBtn');
+      const showLoginBtn2 = document.getElementById('showLoginBtn2');
+      const loginSection = document.getElementById('loginSection');
+      const signupSection = document.getElementById('signupSection');
+      const getStartedBtn = document.getElementById('getStartedBtn');
 
-    const popup = document.getElementById("studentPopup");
-    const popupName = document.getElementById("popupStudentName");
-    const btnCalled = popup.querySelector(".called");
-    const btnSkip = popup.querySelector(".skip");
-    const btnCustom = popup.querySelector(".custom");
-
-    let roster = [];
-    let remaining = [];
-    let calledLog = [];
-    let currentStudent = null;
-
-    function updateTopic() {
-      const topic = topicInput.value.trim();
-      if (topic) {
-        topicStatus.style.display = "block";
-        topicDisplay.textContent = topic;
-        dateDisplay.textContent = new Date().toLocaleString();
-      } else {
-        topicStatus.style.display = "none";
-      }
-    }
-    topicInput.addEventListener("input", updateTopic);
-
-    function initRoster() {
-      roster = studentTextarea.value.split("\n").map(n => n.trim()).filter(Boolean);
-      remaining = [...roster];
-      calledLog = [];
-      renderCalled();
-    }
-
-    function renderCalled() {
-      if (calledLog.length === 0) {
-        calledContainer.innerHTML =
-          `<p style="color:#888;text-align:center;font-style:italic;">No students called yet</p>`;
-        return;
-      }
-      calledContainer.innerHTML = "";
-      calledLog.forEach(entry => {
-        const div = document.createElement("div");
-        div.style.marginBottom = "6px";
-        div.textContent = `${entry.time} - ${entry.student} → ${entry.status}`;
-        calledContainer.appendChild(div);
+      // Add new handler for "Get Started" button
+      getStartedBtn.addEventListener('click', () => {
+        loginModal.style.display = 'flex';
+        loginSection.style.display = 'none';
+        signupSection.style.display = 'block';
       });
-    }
-
-    function logStudent(student, status) {
-      calledLog.push({
-        student,
-        status,
-        topic: topicInput.value.trim() || "Untitled Topic",
-        time: new Date().toLocaleTimeString()
+      
+      // Show login modal
+      showLoginBtn.addEventListener('click', () => {
+        loginModal.style.display = 'flex';
+        loginSection.style.display = 'block';
+        signupSection.style.display = 'none';
       });
-      renderCalled();
-    }
-
-    function pickStudent() {
-      if (remaining.length === 0) {
-        alert("All students have been called!");
-        return;
-      }
-      const idx = Math.floor(Math.random() * remaining.length);
-      currentStudent = remaining.splice(idx, 1)[0];
-      popupName.textContent = currentStudent;
-      popup.style.display = "flex";
-    }
-
-    // Popup actions
-    btnCalled.addEventListener("click", () => {
-      logStudent(currentStudent, "Called");
-      popup.style.display = "none";
-    });
-    btnSkip.addEventListener("click", () => {
-      logStudent(currentStudent, "Skip");
-      remaining.push(currentStudent);
-      popup.style.display = "none";
-    });
-    btnCustom.addEventListener("click", () => {
-      const note = prompt("Enter custom grade/remark:");
-      if (note) logStudent(currentStudent, "Custom - " + note);
-      else logStudent(currentStudent, "Custom - (empty)");
-      popup.style.display = "none";
-    });
-
-    pickBtn.addEventListener("click", () => {
-      if (roster.length === 0) initRoster();
-      pickStudent();
-    });
-
-    clearBtn.addEventListener("click", () => {
-      if (confirm("Clear all data?")) {
-        initRoster();
-        topicInput.value = "";
-        updateTopic();
-      }
-    });
-
-    saveBtn.addEventListener("click", () => {
-      if (calledLog.length === 0) {
-        alert("No data to export");
-        return;
-      }
-      let csv = "Topic,Student,Status,Timestamp\n";
-      calledLog.forEach(entry => {
-        csv += `"${entry.topic}","${entry.student}","${entry.status}","${entry.time}"\n`;
+      
+      // Close modal
+      closeLoginModal.addEventListener('click', () => {
+        loginModal.style.display = 'none';
       });
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `recita-export-${new Date().toISOString().slice(0,10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    });
+      
+      // Close modal when clicking outside
+      loginModal.addEventListener('click', (e) => {
+        if (e.target === loginModal) {
+          loginModal.style.display = 'none';
+        }
+      });
+      
+      // Switch to signup
+      showSignupBtn.addEventListener('click', () => {
+        loginSection.style.display = 'none';
+        signupSection.style.display = 'block';
+      });
+      
+      // Switch to login
+      showLoginBtn2.addEventListener('click', () => {
+        signupSection.style.display = 'none';
+        loginSection.style.display = 'block';
+      });
 
-    initRoster();
-  });
+      // Setup signup form handler with proper field names
+      const signupForm = document.getElementById('signupForm');
+      if (signupForm) {
+        signupForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const name = document.getElementById('signupName').value;
+          const email = document.getElementById('signupEmail').value;
+          const password = document.getElementById('signupPassword').value;
+          
+          console.log('Attempting signup for:', email);
+          
+          try {
+            const result = await apiFetch("/auth/signup", {
+              method: "POST",
+              body: JSON.stringify({ name, email, password }),
+            });
+            
+            console.log('Signup successful:', result);
+            
+            // Check if user came from export flow
+            const fromExport = localStorage.getItem('pendingExport');
+            if (fromExport === 'true') {
+              localStorage.removeItem('pendingExport');
+              loginModal.style.display = 'none';
+              // The app.js will handle showing the export modal
+            } else {
+              window.location.href = "dashboard.html";
+            }
+          } catch (err) {
+            console.error('Signup error:', err);
+            alert("Signup failed: " + err.message);
+          }
+        });
+      }
+
+      // Add hover effects
+      const pickBtn = document.getElementById('guestPickBtn');
+      if (pickBtn) {
+        pickBtn.addEventListener('mouseenter', () => {
+          pickBtn.style.background = '#ea580c';
+        });
+        pickBtn.addEventListener('mouseleave', () => {
+          pickBtn.style.background = '#F97316';
+        });
+      }
+    });
   </script>
 </body>
 </html>
