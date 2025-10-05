@@ -205,11 +205,13 @@
     </div>
   </div>
 
+  <!-- Load app.js FIRST - it contains all the guest mode functionality -->
   <script src="app.js"></script>
+  
+  <!-- Modal controls - ONLY handle modal UI, guest buttons are in app.js -->
   <script>
-    // Modal controls - MUST run after app.js loads
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('Index.html inline script running...');
+      console.log('Index.html modal controls initializing...');
       
       const loginModal = document.getElementById('loginModal');
       const showLoginBtn = document.getElementById('showLoginBtn');
@@ -220,10 +222,7 @@
       const signupSection = document.getElementById('signupSection');
       const getStartedBtn = document.getElementById('getStartedBtn');
 
-      // Guest mode buttons are handled by app.js
-      // No duplicate event listeners needed here
-
-      // Add new handler for "Get Started" button
+      // Get Started button - show signup form
       if (getStartedBtn) {
         getStartedBtn.addEventListener('click', () => {
           loginModal.style.display = 'flex';
@@ -273,7 +272,7 @@
         });
       }
 
-      // Setup signup form handler with proper field names
+      // Setup signup form handler
       const signupForm = document.getElementById('signupForm');
       if (signupForm) {
         signupForm.addEventListener('submit', async (e) => {
@@ -297,7 +296,7 @@
             if (fromExport === 'true') {
               localStorage.removeItem('pendingExport');
               loginModal.style.display = 'none';
-              // The app.js will handle showing the export modal
+              showExportSuccessModal();
             } else {
               window.location.href = "dashboard.html";
             }
@@ -308,7 +307,7 @@
         });
       }
 
-      // Add hover effects
+      // Add hover effects for pick button
       const pickBtn = document.getElementById('guestPickBtn');
       if (pickBtn) {
         pickBtn.addEventListener('mouseenter', () => {
@@ -319,7 +318,7 @@
         });
       }
       
-      console.log('Index.html inline script complete');
+      console.log('Index.html modal controls ready');
     });
   </script>
 </body>
