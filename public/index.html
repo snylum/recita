@@ -213,6 +213,19 @@
     document.addEventListener('DOMContentLoaded', () => {
       console.log('Index.html modal controls initializing...');
       
+      // DIAGNOSTIC: Check if buttons exist and have listeners
+      setTimeout(() => {
+        const pickBtn = document.getElementById('guestPickBtn');
+        const saveBtn = document.querySelector('.guestSaveBtn');
+        const clearBtn = document.getElementById('guestClearBtn');
+        
+        console.log('DIAGNOSTIC CHECK:');
+        console.log('Pick button exists:', !!pickBtn);
+        console.log('Save button exists:', !!saveBtn);
+        console.log('Clear button exists:', !!clearBtn);
+        console.log('Guest container exists:', !!document.getElementById('guestRecita'));
+      }, 1000);
+      
       const loginModal = document.getElementById('loginModal');
       const showLoginBtn = document.getElementById('showLoginBtn');
       const closeLoginModal = document.getElementById('closeLoginModal');
