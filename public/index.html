@@ -224,6 +224,17 @@
       console.log('Guest Pick Button:', document.getElementById('guestPickBtn'));
       console.log('Guest Clear Button:', document.getElementById('guestClearBtn'));
       console.log('Guest Save Button:', document.querySelector('.guestSaveBtn'));
+      
+      // Debug: Test if click events fire
+      document.getElementById('guestPickBtn').addEventListener('click', () => {
+        console.log('PICK BUTTON CLICKED FROM INDEX.HTML');
+      });
+      document.getElementById('guestClearBtn').addEventListener('click', () => {
+        console.log('CLEAR BUTTON CLICKED FROM INDEX.HTML');
+      });
+      document.querySelector('.guestSaveBtn').addEventListener('click', () => {
+        console.log('SAVE BUTTON CLICKED FROM INDEX.HTML');
+      });
 
       // Add new handler for "Get Started" button
       if (getStartedBtn) {
