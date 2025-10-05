@@ -148,3 +148,13 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
+button {
+  cursor: pointer !important;
+  pointer-events: auto !important; /* Force buttons to be clickable */
+}
+
+.recita-main, .recita-card, #guestRecita {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1;
+}
