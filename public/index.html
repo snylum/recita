@@ -207,8 +207,10 @@
 
   <script src="app.js"></script>
   <script>
-    // Modal controls
+    // Modal controls - MUST run after app.js loads
     document.addEventListener('DOMContentLoaded', () => {
+      console.log('Index.html inline script running...');
+      
       const loginModal = document.getElementById('loginModal');
       const showLoginBtn = document.getElementById('showLoginBtn');
       const closeLoginModal = document.getElementById('closeLoginModal');
@@ -218,43 +220,60 @@
       const signupSection = document.getElementById('signupSection');
       const getStartedBtn = document.getElementById('getStartedBtn');
 
+      // Debug: Check if guest buttons exist
+      console.log('Guest Pick Button:', document.getElementById('guestPickBtn'));
+      console.log('Guest Clear Button:', document.getElementById('guestClearBtn'));
+      console.log('Guest Save Button:', document.querySelector('.guestSaveBtn'));
+
       // Add new handler for "Get Started" button
-      getStartedBtn.addEventListener('click', () => {
-        loginModal.style.display = 'flex';
-        loginSection.style.display = 'none';
-        signupSection.style.display = 'block';
-      });
+      if (getStartedBtn) {
+        getStartedBtn.addEventListener('click', () => {
+          loginModal.style.display = 'flex';
+          loginSection.style.display = 'none';
+          signupSection.style.display = 'block';
+        });
+      }
       
       // Show login modal
-      showLoginBtn.addEventListener('click', () => {
-        loginModal.style.display = 'flex';
-        loginSection.style.display = 'block';
-        signupSection.style.display = 'none';
-      });
+      if (showLoginBtn) {
+        showLoginBtn.addEventListener('click', () => {
+          loginModal.style.display = 'flex';
+          loginSection.style.display = 'block';
+          signupSection.style.display = 'none';
+        });
+      }
       
       // Close modal
-      closeLoginModal.addEventListener('click', () => {
-        loginModal.style.display = 'none';
-      });
+      if (closeLoginModal) {
+        closeLoginModal.addEventListener('click', () => {
+          loginModal.style.display = 'none';
+        });
+      }
       
       // Close modal when clicking outside
-      loginModal.addEventListener('click', (e) => {
-        if (e.target === loginModal) {
-          loginModal.style.display = 'none';
-        }
-      });
+      if (loginModal) {
+        loginModal.addEventListener('click', (e) => {
+          if (e.target === loginModal) {
+            loginModal.style.display = 'none';
+          }
+        });
+      }
       
       // Switch to signup
-      showSignupBtn.addEventListener('click', () => {
-        loginSection.style.display = 'none';
-        signupSection.style.display = 'block';
-      });
+      if (showSignupBtn) {
+        showSignupBtn.addEventListener('click', () => {
+          loginSection.style.display = 'none';
+          signupSection.style.display = 'block';
+        });
+      }
       
       // Switch to login
-      showLoginBtn2.addEventListener('click', () => {
-        signupSection.style.display = 'none';
-        loginSection.style.display = 'block';
-      });
+      if (showLoginBtn2) {
+        showLoginBtn2.addEventListener('click', () => {
+          signupSection.style.display = 'none';
+          loginSection.style.display = 'block';
+        });
+      }
 
       // Setup signup form handler with proper field names
       const signupForm = document.getElementById('signupForm');
@@ -301,6 +320,8 @@
           pickBtn.style.background = '#F97316';
         });
       }
+      
+      console.log('Index.html inline script complete');
     });
   </script>
 </body>
