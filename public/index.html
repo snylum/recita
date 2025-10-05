@@ -207,9 +207,9 @@
 
   <script src="app.js"></script>
   <script>
-    // Modal controls - MUST run after app.js loads
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('Index.html inline script running...');
+    // Modal controls - Wait for both DOM and app.js to be ready
+    window.addEventListener('load', function() {
+      console.log('Window fully loaded - setting up modal controls');
       
       const loginModal = document.getElementById('loginModal');
       const showLoginBtn = document.getElementById('showLoginBtn');
@@ -220,23 +220,7 @@
       const signupSection = document.getElementById('signupSection');
       const getStartedBtn = document.getElementById('getStartedBtn');
 
-      // Debug: Check if guest buttons exist
-      console.log('Guest Pick Button:', document.getElementById('guestPickBtn'));
-      console.log('Guest Clear Button:', document.getElementById('guestClearBtn'));
-      console.log('Guest Save Button:', document.querySelector('.guestSaveBtn'));
-      
-      // Debug: Test if click events fire
-      document.getElementById('guestPickBtn').addEventListener('click', () => {
-        console.log('PICK BUTTON CLICKED FROM INDEX.HTML');
-      });
-      document.getElementById('guestClearBtn').addEventListener('click', () => {
-        console.log('CLEAR BUTTON CLICKED FROM INDEX.HTML');
-      });
-      document.querySelector('.guestSaveBtn').addEventListener('click', () => {
-        console.log('SAVE BUTTON CLICKED FROM INDEX.HTML');
-      });
-
-      // Add new handler for "Get Started" button
+      // Show modal with Get Started -> Signup
       if (getStartedBtn) {
         getStartedBtn.addEventListener('click', () => {
           loginModal.style.display = 'flex';
@@ -245,7 +229,7 @@
         });
       }
       
-      // Show login modal
+      // Show modal with Login
       if (showLoginBtn) {
         showLoginBtn.addEventListener('click', () => {
           loginModal.style.display = 'flex';
@@ -261,7 +245,7 @@
         });
       }
       
-      // Close modal when clicking outside
+      // Close modal on backdrop click
       if (loginModal) {
         loginModal.addEventListener('click', (e) => {
           if (e.target === loginModal) {
@@ -286,7 +270,7 @@
         });
       }
 
-      // Setup signup form handler with proper field names
+      // Signup form handler
       const signupForm = document.getElementById('signupForm');
       if (signupForm) {
         signupForm.addEventListener('submit', async (e) => {
@@ -305,12 +289,10 @@
             
             console.log('Signup successful:', result);
             
-            // Check if user came from export flow
             const fromExport = localStorage.getItem('pendingExport');
             if (fromExport === 'true') {
               localStorage.removeItem('pendingExport');
               loginModal.style.display = 'none';
-              // The app.js will handle showing the export modal
             } else {
               window.location.href = "dashboard.html";
             }
@@ -321,7 +303,7 @@
         });
       }
 
-      // Add hover effects
+      // Hover effects for pick button
       const pickBtn = document.getElementById('guestPickBtn');
       if (pickBtn) {
         pickBtn.addEventListener('mouseenter', () => {
@@ -332,7 +314,7 @@
         });
       }
       
-      console.log('Index.html inline script complete');
+      console.log('Modal controls setup complete');
     });
   </script>
 </body>
