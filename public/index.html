@@ -207,9 +207,9 @@
 
   <script src="app.js"></script>
   <script>
-    // Modal controls - Wait for both DOM and app.js to be ready
-    window.addEventListener('load', function() {
-      console.log('Window fully loaded - setting up modal controls');
+    // Modal controls - MUST run after app.js loads
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Index.html inline script running...');
       
       const loginModal = document.getElementById('loginModal');
       const showLoginBtn = document.getElementById('showLoginBtn');
@@ -220,7 +220,10 @@
       const signupSection = document.getElementById('signupSection');
       const getStartedBtn = document.getElementById('getStartedBtn');
 
-      // Show modal with Get Started -> Signup
+      // Guest mode buttons are handled by app.js
+      // No duplicate event listeners needed here
+
+      // Add new handler for "Get Started" button
       if (getStartedBtn) {
         getStartedBtn.addEventListener('click', () => {
           loginModal.style.display = 'flex';
@@ -229,7 +232,7 @@
         });
       }
       
-      // Show modal with Login
+      // Show login modal
       if (showLoginBtn) {
         showLoginBtn.addEventListener('click', () => {
           loginModal.style.display = 'flex';
@@ -245,7 +248,7 @@
         });
       }
       
-      // Close modal on backdrop click
+      // Close modal when clicking outside
       if (loginModal) {
         loginModal.addEventListener('click', (e) => {
           if (e.target === loginModal) {
@@ -270,7 +273,7 @@
         });
       }
 
-      // Signup form handler
+      // Setup signup form handler with proper field names
       const signupForm = document.getElementById('signupForm');
       if (signupForm) {
         signupForm.addEventListener('submit', async (e) => {
@@ -289,10 +292,12 @@
             
             console.log('Signup successful:', result);
             
+            // Check if user came from export flow
             const fromExport = localStorage.getItem('pendingExport');
             if (fromExport === 'true') {
               localStorage.removeItem('pendingExport');
               loginModal.style.display = 'none';
+              // The app.js will handle showing the export modal
             } else {
               window.location.href = "dashboard.html";
             }
@@ -303,7 +308,7 @@
         });
       }
 
-      // Hover effects for pick button
+      // Add hover effects
       const pickBtn = document.getElementById('guestPickBtn');
       if (pickBtn) {
         pickBtn.addEventListener('mouseenter', () => {
@@ -314,7 +319,7 @@
         });
       }
       
-      console.log('Modal controls setup complete');
+      console.log('Index.html inline script complete');
     });
   </script>
 </body>
