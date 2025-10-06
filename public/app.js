@@ -1551,7 +1551,7 @@ function addRecitaLogos() {
         `vertical-align: baseline; ` +
         `margin-right: 0.2em; ` +
         `display: inline;">` +
-        `<span style="color: #fe731f; font-weight: bold;">Recita</span>`
+        `<span style="color: #E75880; font-weight: bold;">Recita</span>`
       );
       
       el.dataset.recitaProcessed = 'true';
