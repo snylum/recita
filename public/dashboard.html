@@ -27,7 +27,7 @@
 <!-- Header -->
 <nav style="background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
   <h1 style="color: #2c3e50; margin: 0; font-size: 20px; font-weight: bold;">Recita</h1>
-  <button id="logoutBtn" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s; display: flex; align-items: center; gap: 8px;">
+  <button id="logoutBtn" style="background: #6b7280; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s; max-width: 200px; display: flex; align-items: center; gap: 8px;">
     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
     </svg>
@@ -37,7 +37,7 @@
 </nav>
 
   <!-- Main content -->
-  <main style="flex: 1; max-width: 1400px; margin: 0 auto; padding: 24px; width: 100%;">
+<main style="padding: 24px; max-width: 800px; margin: 0 auto;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
       <h2 style="color: #2c3e50; font-size: 24px; font-weight: 600; margin: 0;">My Classes</h2>
       <button id="openCreateClassModal" style="background: #4f46e5; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s; display: flex; align-items: center; gap: 8px;">
@@ -94,9 +94,9 @@
       display: flex !important;
     }
 
-    #logoutBtn:hover:not(:disabled) {
-      background: #dc2626 !important;
-    }
+  #logoutBtn:hover:not(:disabled) {
+    background: #4b5563 !important;
+  }
 
     #logoutBtn:disabled {
       opacity: 0.6;
