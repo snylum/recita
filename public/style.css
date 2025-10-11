@@ -15,6 +15,11 @@ body:has(#app) {
   padding: 20px;
 }
 
+/* Fix textarea overflow in class.html by ensuring box-sizing is applied globally */
+* {
+  box-sizing: border-box;
+}
+
 /* Only apply these styles to #app container (for other pages like recita.html) */
 #app {
   max-width: 700px;
