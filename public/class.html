@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-      <link rel="stylesheet" href="style.css"> 
+  <link rel="stylesheet" href="style.css"> 
   <title>Class Management</title>
   <style>
 body {
@@ -71,6 +71,7 @@ body {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 24px;
+      align-items: start;
     }
 
     @media (max-width: 1024px) {
@@ -79,12 +80,22 @@ body {
       }
     }
 
+    /* Column containers to match heights */
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      height: 100%;
+    }
+
     /* Card styling */
     .card {
       background: white;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       padding: 24px;
+      display: flex;
+      flex-direction: column;
     }
 
     .card h2 {
@@ -92,6 +103,12 @@ body {
       font-size: 18px;
       font-weight: bold;
       margin-bottom: 16px;
+    }
+
+    /* Make the list cards grow to fill available space */
+    .card.list-card {
+      flex: 1;
+      min-height: 0; /* Important for flex children with overflow */
     }
 
     /* Form styling */
@@ -195,8 +212,9 @@ body {
 
     /* List styling */
     .list-container {
-      max-height: 400px;
+      flex: 1;
       overflow-y: auto;
+      min-height: 0;
     }
 
     .list-header {
@@ -489,7 +507,7 @@ body {
     <div class="main-grid">
       
       <!-- Left Column: Recitas Management -->
-      <div style="display: flex; flex-direction: column; gap: 24px;">
+      <div class="column">
         <!-- Create New Recita -->
         <div class="card">
           <h2>Create New Recita</h2>
@@ -510,7 +528,7 @@ body {
         </div>
 
         <!-- Recitas List -->
-        <div class="card">
+        <div class="card list-card">
           <div class="list-header">
             <h2>Recitas</h2>
             <div class="select-all">
@@ -528,7 +546,7 @@ body {
       </div>
 
       <!-- Right Column: Students Management -->
-      <div style="display: flex; flex-direction: column; gap: 24px;">
+      <div class="column">
         <!-- Add Students Section -->
         <div class="card">
           <h2>Add Students</h2>
@@ -542,7 +560,7 @@ body {
         </div>
 
         <!-- Students List -->
-        <div class="card">
+        <div class="card list-card">
           <div class="list-header">
             <h2>Students</h2>
             <span id="studentCount" class="count-display">0 students</span>
